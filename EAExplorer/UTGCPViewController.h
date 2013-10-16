@@ -40,6 +40,10 @@
 @property (weak, nonatomic) IBOutlet UIActivityIndicatorView *indicator;
 
 
+@property (weak, nonatomic) IBOutlet UILabel *stopwatchLabel;
+
+
+
 - (IBAction)generateButtonAction:(id)sender;
 
 - (IBAction)verificationButtonAction:(id)sender;

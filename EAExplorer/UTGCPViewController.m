@@ -9,6 +9,7 @@
 #import "UTGCPViewController.h"
 #import "UTGCP.h"
 #import "UTInfoViewController.h"
+#import "UTStopwatch.h"
 
 #define MAX_NUMBER_OF_VERTICES 100
 
@@ -20,6 +21,8 @@
 	UTGCP *gcp;
 	NSMutableArray *vertexButtons;
 	BOOL repeatability;
+	UTStopwatch *stopwatch;
+	NSTimer *timer;
 }
 
 @synthesize showVertexNumber;
@@ -30,6 +33,7 @@
 @synthesize numberOfVerticesField, numberOfEdgesField, numberOfColorsField;
 @synthesize resultLabel;
 @synthesize indicator;
+@synthesize stopwatchLabel;
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
@@ -44,6 +48,8 @@
 {
     [super viewDidLoad];
 	// Do any additional setup after loading the view.
+	
+	stopwatch = [[UTStopwatch alloc] init];
 	
 	repeatability = NO;
 
@@ -66,9 +72,12 @@
 	NSUInteger numberOfVertices = numberOfColors * 3;
 //	NSUInteger numberOfEdges	= 3 * numberOfVertices; // e = c * v (sparse)
 	NSUInteger numberOfEdges	= numberOfVertices * (numberOfVertices - 1) / 4; // e = v * (v - 1) / 4 (dense)
-
-	gcp = [UTGCP GCPWithNumberOfVertices:numberOfVertices numberOfEdges:numberOfEdges numberOfColors:numberOfColors];
 	
+	numberOfColorsField.text = [NSString stringWithFormat:@"%d", numberOfColors];
+	numberOfVerticesField.text = [NSString stringWithFormat:@"%d", numberOfVertices];
+	numberOfEdgesField.text = [NSString stringWithFormat:@"%d", numberOfEdges];
+
+	[self generateNewGCP];
 	[self updateGraphView];
 	[self updateFields];
 	resultLabel.hidden = YES;
@@ -140,13 +149,6 @@
 	CGContextStrokePath(context);
 	circleImageView.image = UIGraphicsGetImageFromCurrentImageContext();
 	
-//	// randomize vertices index
-//	NSMutableArray *vertexButtonsCopy = [vertexButtons copy];
-//	[vertexButtons removeAllObjects];
-//	for (NSUInteger i = 0; i < gcp.numberOfVertices; i++) {
-//		[vertexButtons addObject:vertexButtonsCopy[gcp.randomIndexMap[i]]];
-//	}
-	
 	// draw edges
 	for (int i = 0; i < gcp.numberOfVertices; i++) {
 		UIButton *aButton = vertexButtons[i];
@@ -211,6 +213,10 @@
 									numberOfEdges:[numberOfEdgesField.text integerValue]
 								   numberOfColors:[numberOfColorsField.text integerValue]];
 	[self updateGraphView];
+
+	timer = [NSTimer timerWithTimeInterval:0.01 target:self selector:@selector(updateStopwatchLabel) userInfo:nil repeats:YES];
+	[[NSRunLoop mainRunLoop] addTimer:timer forMode:NSDefaultRunLoopMode];
+	[stopwatch start];
 }
 
 - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
@@ -223,10 +229,13 @@
 }
 
 - (IBAction)verificationButtonAction:(id)sender {
+	NSTimeInterval t = stopwatch.time;
 	BOOL OK = [gcp verify];
 	if (OK) {
 		resultLabel.text = @"OK";
 		resultLabel.textColor = [UIColor greenColor];
+		[timer invalidate];
+		stopwatchLabel.text = [NSString stringWithFormat:@"%02d:%02d:%02d", (int)t / 60, (int)t % 60, (int)((t - (int)t) * 100)];
 	} else {
 		resultLabel.text = @"NG";
 		resultLabel.textColor = [UIColor redColor];
@@ -266,6 +275,12 @@
 			[aButton setTitle:@"" forState:UIControlStateNormal];
 		}
 	}
+}
+
+- (void)updateStopwatchLabel
+{
+	NSTimeInterval t = stopwatch.time;
+	stopwatchLabel.text = [NSString stringWithFormat:@"%02d:%02d:%02d", (int)t / 60, (int)t % 60, (int)((t - (int)t) * 100)];
 }
 
 - (void)textFieldDidBeginEditing:(UITextField *)textField

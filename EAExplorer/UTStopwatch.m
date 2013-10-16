@@ -21,7 +21,12 @@
 
 - (void)stop
 {
-	
+	stopTime = [NSDate date];
+}
+
+- (NSTimeInterval)time
+{
+	return [[NSDate date] timeIntervalSince1970] - [startTime timeIntervalSince1970];
 }
 
 @end
