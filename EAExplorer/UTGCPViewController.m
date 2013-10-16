@@ -214,7 +214,10 @@
 								   numberOfColors:[numberOfColorsField.text integerValue]];
 	[self updateGraphView];
 
-	timer = [NSTimer timerWithTimeInterval:0.01 target:self selector:@selector(updateStopwatchLabel) userInfo:nil repeats:YES];
+	if (timer.isValid) { // invalidate old timer
+		[timer invalidate];
+	}
+	timer = [NSTimer timerWithTimeInterval:0.03125 target:self selector:@selector(updateStopwatchLabel) userInfo:nil repeats:YES];
 	[[NSRunLoop mainRunLoop] addTimer:timer forMode:NSDefaultRunLoopMode];
 	[stopwatch start];
 }

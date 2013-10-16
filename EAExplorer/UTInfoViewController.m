@@ -35,6 +35,7 @@
 	// Do any additional setup after loading the view.
 	
 	vertexNumberSwitch.on = delegate.showVertexNumber;
+	timeSwitch.on = !(delegate.stopwatchLabel.hidden);
 }
 
 - (void)didReceiveMemoryWarning
@@ -49,6 +50,7 @@
 }
 
 - (IBAction)timeSwitchValueChanged:(id)sender {
+	delegate.stopwatchLabel.hidden = !(((UISwitch *)sender).on);
 }
 
 - (IBAction)backButtonAction:(id)sender {
