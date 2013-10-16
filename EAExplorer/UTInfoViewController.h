@@ -8,8 +8,25 @@
 
 #import <UIKit/UIKit.h>
 
+@class UTGCPViewController;
+
 @interface UTInfoViewController : UIViewController
+
+@property UTGCPViewController *delegate;
+
+@property (weak, nonatomic) IBOutlet UISwitch *vertexNumberSwitch;
+@property (weak, nonatomic) IBOutlet UISwitch *timeSwitch;
+
+
+- (IBAction)vertexNumberSwitchValueChanged:(id)sender;
+- (IBAction)timeSwitchValueChanged:(id)sender;
 
 - (IBAction)backButtonAction:(id)sender;
 
 @end
+
+
+/*
+ 
+
+*/

@@ -8,6 +8,9 @@
 
 #import "UTGCPViewController.h"
 #import "UTGCP.h"
+#import "UTInfoViewController.h"
+
+#define MAX_NUMBER_OF_VERTICES 30
 
 @interface UTGCPViewController ()
 
@@ -17,7 +20,10 @@
 	UTGCP *gcp;
 	NSMutableArray *vertexButtons;
 	BOOL repeatability;
+//	NSUInteger indexMapping[MAX_NUMBER_OF_VERTICES];
 }
+
+@synthesize showVertexNumber;
 
 @synthesize titleLabel;
 @synthesize graphView;
@@ -77,9 +83,9 @@
 
 - (void)updateFields
 {
-	numberOfVerticesField.text	= [NSString stringWithFormat:@"%lu", (unsigned long)gcp.numberOfVertices];
-	numberOfEdgesField.text		= [NSString stringWithFormat:@"%lu", (unsigned long)gcp.numberOfEdges];
-	numberOfColorsField.text	= [NSString stringWithFormat:@"%lu", (unsigned long)gcp.numberOfColors];
+	numberOfVerticesField.text	= [NSString stringWithFormat:@"%d", gcp.numberOfVertices];
+	numberOfEdgesField.text		= [NSString stringWithFormat:@"%d", gcp.numberOfEdges];
+	numberOfColorsField.text	= [NSString stringWithFormat:@"%d", gcp.numberOfColors];
 }
 
 
@@ -89,40 +95,35 @@
 	UIColor *lineColor = [UIColor blackColor];
 	CGFloat R = graphView.frame.size.height * 2.0 / 5.0; // graph visual radius
 	CGFloat r = 2 * M_PI * R / gcp.numberOfVertices / 2.0 / 2.0; // vertex visual radius
+	if (gcp.numberOfVertices < 7) { // view boundary check
+		r = 2 * M_PI * R / 7.0 / 2.0 / 2.0;
+	}
 	
 	// draw vertices
-	if ([vertexButtons count] == gcp.numberOfVertices) {
-		for (UIButton *aButton in vertexButtons) {
-			[aButton setBackgroundColor:[self colorWithTapCount:0]];
-		}
-	} else {
-		for (UIButton *aButton in vertexButtons) {
-			[aButton removeFromSuperview];
-		}
-		if (vertexButtons == nil) {
-			vertexButtons = [NSMutableArray array];
-		} else {
-			[vertexButtons removeAllObjects];
-		}
-		CGFloat theta = 2.0 * M_PI / gcp.numberOfVertices;
-		for (int i = 0; i < gcp.numberOfVertices; i++) {
-			UIButton *aButton = [UIButton buttonWithType:UIButtonTypeSystem];
-			aButton.frame = CGRectMake(graphView.frame.size.width / 2.0 + R * cos(theta * i + M_PI_2) - r,
-									   graphView.frame.size.height / 2.0 - R * sin(theta * i + M_PI_2) - r,
-									   2 * r, 2 * r);
-//			[aButton setTitle:[NSString stringWithFormat:@"%d", i] forState:UIControlStateNormal]; // debug
-//			[aButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
-//			aButton.titleLabel.adjustsFontSizeToFitWidth = YES;
-//			aButton.titleLabel.font = [UIFont fontWithName:@"Futura" size:18];
-			[aButton addTarget:self action:@selector(vertexButtonAction:) forControlEvents:UIControlEventTouchDown];
-			[aButton setBackgroundColor:[self colorWithTapCount:0]];
-//			aButton.layer.borderColor = [lineColor CGColor];
-//			aButton.layer.borderWidth = lineWidth;
-			aButton.layer.cornerRadius = r;
-			[graphView addSubview:aButton];
-			[vertexButtons addObject:aButton];
-		}
+	for (UIButton *aButton in vertexButtons) {
+		[aButton removeFromSuperview];
 	}
+	if (vertexButtons == nil) {
+		vertexButtons = [NSMutableArray array];
+	} else {
+		[vertexButtons removeAllObjects];
+	}
+	CGFloat theta = 2.0 * M_PI / gcp.numberOfVertices;
+	for (int i = 0; i < gcp.numberOfVertices; i++) {
+		UIButton *aButton = [UIButton buttonWithType:UIButtonTypeSystem];
+		aButton.frame = CGRectMake(graphView.frame.size.width / 2.0 + R * cos(theta * i + M_PI_2) - r,
+								   graphView.frame.size.height / 2.0 - R * sin(theta * i + M_PI_2) - r,
+								   2 * r, 2 * r);
+		[aButton addTarget:self action:@selector(vertexButtonAction:) forControlEvents:UIControlEventTouchDown];
+		[aButton setBackgroundColor:[self colorWithTapCount:0]];
+		[aButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+		aButton.titleLabel.adjustsFontSizeToFitWidth = YES;
+		aButton.titleLabel.font = [UIFont fontWithName:@"Futura" size:18];
+		aButton.layer.cornerRadius = r;
+		[graphView addSubview:aButton];
+		[vertexButtons addObject:aButton];
+	}
+	[self updateVertexButtonLabels];
 	
 	UIGraphicsBeginImageContextWithOptions(graphView.frame.size, NO, 0);
 	CGContextRef context = UIGraphicsGetCurrentContext();
@@ -138,14 +139,12 @@
 	circleImageView.image = UIGraphicsGetImageFromCurrentImageContext();
 	
 	// randomize vertices index
-	for (NSUInteger i = [vertexButtons count] - 1; i > 0; i--) {
-		NSUInteger r = i * (double)rand() / (RAND_MAX + 1.0);
-		[vertexButtons exchangeObjectAtIndex:r withObjectAtIndex:i];
-	}
+//	for (NSUInteger i = [vertexButtons count] - 1; i > 0; i--) {
+//		NSUInteger r = i * (double)rand() / (RAND_MAX + 1.0);
+//		[vertexButtons exchangeObjectAtIndex:r withObjectAtIndex:i];
+//	}
 	
 	// draw edges
-//	UIGraphicsBeginImageContext(graphView.frame.size);
-
 	for (int i = 0; i < gcp.numberOfVertices; i++) {
 		UIButton *aButton = vertexButtons[i];
 		for (int j = 0; j < gcp.numberOfVertices; j++) {
@@ -248,6 +247,18 @@
 					 }];
 }
 
+- (void)updateVertexButtonLabels
+{
+//	for (NSUInteger i = 0; i < [vertexButtons count]; i++) {
+//		UIButton *aButton = vertexButtons[i];
+//		if (showVertexNumber) {
+//			[aButton setTitle:[NSString stringWithFormat:@"%d", indexMapping[i]] forState:UIControlStateNormal];
+//		} else {
+//			[aButton setTitle:@"" forState:UIControlStateNormal];
+//		}
+//	}
+}
+
 - (void)textFieldDidBeginEditing:(UITextField *)textField
 {
 	[UIView animateWithDuration:0.7 animations:^{
@@ -280,30 +291,35 @@
 	// check c
 	if (c < 2) { // 2 <= c <= 8
 		c = 2;
-		numberOfColorsField.text = [NSString stringWithFormat:@"%lu", (unsigned long)c];
+		numberOfColorsField.text = [NSString stringWithFormat:@"%d", c];
 	} else if (c > 8) {
 		c = 8;
-		numberOfColorsField.text = [NSString stringWithFormat:@"%lu", (unsigned long)c];
+		numberOfColorsField.text = [NSString stringWithFormat:@"%d", c];
 	}
 
 	// check v
 	if (v < c) {
 		v = c;
 	}
-	if (v > 30) {
-		v = 30;
+	if (v > MAX_NUMBER_OF_VERTICES) {
+		v = MAX_NUMBER_OF_VERTICES;
 	}
 	v = v / c * c;
-	numberOfVerticesField.text = [NSString stringWithFormat:@"%lu", (unsigned long)v];
+	numberOfVerticesField.text = [NSString stringWithFormat:@"%d", v];
 
 	// check e
 	if (e > (v / c) * (v / c) * c * (c - 1) / 2) {
 		e = (v / c) * (v / c) * c * (c - 1) / 2;
-		numberOfEdgesField.text = [NSString stringWithFormat:@"%lu", (unsigned long)e];
+		numberOfEdgesField.text = [NSString stringWithFormat:@"%d", e];
 	}
 		
 	return YES;
 }
 
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
+{
+	UTInfoViewController *destinationViewController = [segue destinationViewController];
+	destinationViewController.delegate = self;
+}
 
 @end

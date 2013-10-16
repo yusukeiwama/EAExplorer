@@ -17,8 +17,10 @@
 @property (readonly) NSUInteger numberOfEdges;
 @property (readonly) NSUInteger numberOfColors;
 
-@property (readonly) unsigned char *adjacencyMatrix;
+@property (readonly) NSUInteger *adjacencyMatrix;
+@property (readonly) NSUInteger *randomIndexMap;
 @property (readonly) NSUInteger *colorNumbers;
+
 
 /** 
  designated initializer

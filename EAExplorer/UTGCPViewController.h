@@ -10,6 +10,8 @@
 
 @interface UTGCPViewController : UIViewController <UITextFieldDelegate, UIAlertViewDelegate>
 
+@property BOOL showVertexNumber;
+@property BOOL showTimer;
 
 
 @property (weak, nonatomic) IBOutlet UILabel *titleLabel;
@@ -21,7 +23,6 @@
 @property (weak, nonatomic) IBOutlet UIImageView *circleImageView;
 
 @property (weak, nonatomic) IBOutlet UILabel *resultLabel;
-
 
 
 @property (weak, nonatomic) IBOutlet UITextField *numberOfColorsField;
@@ -43,7 +44,7 @@
 
 - (IBAction)verificationButtonAction:(id)sender;
 
-
+- (void)updateVertexButtonLabels;
 
 
 @end

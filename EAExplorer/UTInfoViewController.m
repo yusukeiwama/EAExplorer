@@ -7,12 +7,18 @@
 //
 
 #import "UTInfoViewController.h"
+#import "UTGCPViewController.h"
 
 @interface UTInfoViewController ()
 
 @end
 
 @implementation UTInfoViewController
+
+@synthesize delegate;
+
+@synthesize vertexNumberSwitch;
+@synthesize timeSwitch;
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
@@ -27,12 +33,22 @@
 {
     [super viewDidLoad];
 	// Do any additional setup after loading the view.
+	
+	vertexNumberSwitch.on = delegate.showVertexNumber;
 }
 
 - (void)didReceiveMemoryWarning
 {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
+}
+
+- (IBAction)vertexNumberSwitchValueChanged:(id)sender {
+	delegate.showVertexNumber = ((UISwitch *)sender).on;
+	[delegate updateVertexButtonLabels];
+}
+
+- (IBAction)timeSwitchValueChanged:(id)sender {
 }
 
 - (IBAction)backButtonAction:(id)sender {
