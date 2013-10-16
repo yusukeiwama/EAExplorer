@@ -20,8 +20,6 @@
 - (id)initWithNumberOfVertices:(NSUInteger)v numberOfEdges:(NSUInteger)e numberOfColors:(NSUInteger)c
 {
 	if (self = [super init]) {
-//		srand(383); // prime number
-		
 		numberOfVertices	= v;
 		numberOfEdges		= e;
 		numberOfColors		= c;
@@ -71,7 +69,7 @@
 	NSUInteger *tempMatrix = calloc(v * v, sizeof(NSUInteger));
 	memcpy(tempMatrix, adjacencyMatrix, sizeof(NSUInteger) * v * v);
 	randomIndexMap = calloc(v, sizeof(NSUInteger));
-	for (NSUInteger i = 0; i < v; i++) {
+	for (NSUInteger i = 0; i < v; i++) { // ordered uint array to numberOfVertices - 1
 		randomIndexMap[i] = i;
 	}
 	for (NSUInteger i = 1; i < v; i++) {
@@ -80,10 +78,6 @@
 		randomIndexMap[r] = randomIndexMap[v - i];
 		randomIndexMap[v - i] = temp;
 	}
-//	for (NSUInteger i = 0; i < v; i++) {
-//		memcpy(&tempMatrix[i * v], &adjacencyMatrix[indexMap[i] * v], sizeof(NSUInteger) * numberOfVertices);
-//	}
-//	memcpy(adjacencyMatrix, tempMatrix, sizeof(NSUInteger) * v * v);
 }
 
 - (BOOL)verify
@@ -103,13 +97,12 @@
 
 - (BOOL)solving
 {
-	// If color numbers are changed, this problem is being solved.
 	NSUInteger c = 0;
 	for (NSUInteger i = 0; i < numberOfVertices; i++) {
 		c += colorNumbers[i];
 	}
-	if (c) {
-		if ([self verify]) {
+	if (c) { // If color numbers are changed, this problem is being solved.
+		if ([self verify]) { // If the problem has already been solved,
 			return NO;
 		}
 		return YES;

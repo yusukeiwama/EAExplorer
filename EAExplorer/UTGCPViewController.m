@@ -10,7 +10,7 @@
 #import "UTGCP.h"
 #import "UTInfoViewController.h"
 
-#define MAX_NUMBER_OF_VERTICES 30
+#define MAX_NUMBER_OF_VERTICES 100
 
 @interface UTGCPViewController ()
 
@@ -20,7 +20,6 @@
 	UTGCP *gcp;
 	NSMutableArray *vertexButtons;
 	BOOL repeatability;
-//	NSUInteger indexMapping[MAX_NUMBER_OF_VERTICES];
 }
 
 @synthesize showVertexNumber;
@@ -65,7 +64,7 @@
 
 	NSUInteger numberOfColors	= 3;
 	NSUInteger numberOfVertices = numberOfColors * 3;
-//	NSUInteger numberOfEdges	= 3 * numberOfVertices; // e = 3 * v (sparse)
+//	NSUInteger numberOfEdges	= 3 * numberOfVertices; // e = c * v (sparse)
 	NSUInteger numberOfEdges	= numberOfVertices * (numberOfVertices - 1) / 4; // e = v * (v - 1) / 4 (dense)
 
 	gcp = [UTGCP GCPWithNumberOfVertices:numberOfVertices numberOfEdges:numberOfEdges numberOfColors:numberOfColors];
@@ -92,6 +91,9 @@
 - (void)updateGraphView
 {
 	CGFloat lineWidth = 15.0 / gcp.numberOfVertices;
+//	if (lineWidth < 0.5) {
+//		lineWidth = 0.5;
+//	}
 	UIColor *lineColor = [UIColor blackColor];
 	CGFloat R = graphView.frame.size.height * 2.0 / 5.0; // graph visual radius
 	CGFloat r = 2 * M_PI * R / gcp.numberOfVertices / 2.0 / 2.0; // vertex visual radius
@@ -99,7 +101,7 @@
 		r = 2 * M_PI * R / 7.0 / 2.0 / 2.0;
 	}
 	
-	// draw vertices
+	// draw vertices randomly
 	for (UIButton *aButton in vertexButtons) {
 		[aButton removeFromSuperview];
 	}
@@ -111,8 +113,8 @@
 	CGFloat theta = 2.0 * M_PI / gcp.numberOfVertices;
 	for (int i = 0; i < gcp.numberOfVertices; i++) {
 		UIButton *aButton = [UIButton buttonWithType:UIButtonTypeSystem];
-		aButton.frame = CGRectMake(graphView.frame.size.width / 2.0 + R * cos(theta * i + M_PI_2) - r,
-								   graphView.frame.size.height / 2.0 - R * sin(theta * i + M_PI_2) - r,
+		aButton.frame = CGRectMake(graphView.frame.size.width / 2.0 + R * cos(theta * gcp.randomIndexMap[i] + M_PI_2) - r,
+								   graphView.frame.size.height / 2.0 - R * sin(theta * gcp.randomIndexMap[i] + M_PI_2) - r,
 								   2 * r, 2 * r);
 		[aButton addTarget:self action:@selector(vertexButtonAction:) forControlEvents:UIControlEventTouchDown];
 		[aButton setBackgroundColor:[self colorWithTapCount:0]];
@@ -138,10 +140,11 @@
 	CGContextStrokePath(context);
 	circleImageView.image = UIGraphicsGetImageFromCurrentImageContext();
 	
-	// randomize vertices index
-//	for (NSUInteger i = [vertexButtons count] - 1; i > 0; i--) {
-//		NSUInteger r = i * (double)rand() / (RAND_MAX + 1.0);
-//		[vertexButtons exchangeObjectAtIndex:r withObjectAtIndex:i];
+//	// randomize vertices index
+//	NSMutableArray *vertexButtonsCopy = [vertexButtons copy];
+//	[vertexButtons removeAllObjects];
+//	for (NSUInteger i = 0; i < gcp.numberOfVertices; i++) {
+//		[vertexButtons addObject:vertexButtonsCopy[gcp.randomIndexMap[i]]];
 //	}
 	
 	// draw edges
@@ -249,34 +252,39 @@
 
 - (void)updateVertexButtonLabels
 {
-//	for (NSUInteger i = 0; i < [vertexButtons count]; i++) {
-//		UIButton *aButton = vertexButtons[i];
-//		if (showVertexNumber) {
-//			[aButton setTitle:[NSString stringWithFormat:@"%d", indexMapping[i]] forState:UIControlStateNormal];
-//		} else {
-//			[aButton setTitle:@"" forState:UIControlStateNormal];
-//		}
-//	}
+	for (NSUInteger i = 0; i < [vertexButtons count]; i++) {
+		NSUInteger r = 0;
+		for (r = 0; r < gcp.numberOfVertices; r++) {
+			if (i == gcp.randomIndexMap[r]) {
+				break;
+			}
+		}
+		UIButton *aButton = vertexButtons[r];
+		if (showVertexNumber) {
+			[aButton setTitle:[NSString stringWithFormat:@"%d", i] forState:UIControlStateNormal];
+		} else {
+			[aButton setTitle:@"" forState:UIControlStateNormal];
+		}
+	}
 }
 
 - (void)textFieldDidBeginEditing:(UITextField *)textField
 {
-	[UIView animateWithDuration:0.7 animations:^{
+//	[UIView animateWithDuration:0.3 animations:^{
 		self.view.frame = CGRectMake(self.view.frame.origin.x,
 									 self.view.frame.origin.y - 264,
 									 self.view.frame.size.width,
 									 self.view.frame.size.height);
-	}];
+//	}];
 }
 
 - (void)textFieldDidEndEditing:(UITextField *)textField
 {
-	[UIView animateWithDuration:0.7 animations:^{
+	[UIView animateWithDuration:0.3 animations:^{
 		self.view.frame = CGRectMake(self.view.frame.origin.x,
 									 self.view.frame.origin.y + 264,
 									 self.view.frame.size.width,
 									 self.view.frame.size.height);
-		
 	}];
 }
 
