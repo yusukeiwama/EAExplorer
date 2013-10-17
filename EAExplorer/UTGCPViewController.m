@@ -73,9 +73,9 @@
 //	NSUInteger numberOfEdges	= 3 * numberOfVertices; // e = c * v (sparse)
 	NSUInteger numberOfEdges	= numberOfVertices * (numberOfVertices - 1) / 4; // e = v * (v - 1) / 4 (dense)
 	
-	numberOfColorsField.text = [NSString stringWithFormat:@"%d", numberOfColors];
-	numberOfVerticesField.text = [NSString stringWithFormat:@"%d", numberOfVertices];
-	numberOfEdgesField.text = [NSString stringWithFormat:@"%d", numberOfEdges];
+	numberOfColorsField.text	= [NSString stringWithFormat:@"%lu", (unsigned long)numberOfColors];
+	numberOfVerticesField.text	= [NSString stringWithFormat:@"%lu", (unsigned long)numberOfVertices];
+	numberOfEdgesField.text		= [NSString stringWithFormat:@"%lu", (unsigned long)numberOfEdges];
 
 	[self generateNewGCP];
 	[self updateGraphView];
@@ -91,9 +91,9 @@
 
 - (void)updateFields
 {
-	numberOfVerticesField.text	= [NSString stringWithFormat:@"%d", gcp.numberOfVertices];
-	numberOfEdgesField.text		= [NSString stringWithFormat:@"%d", gcp.numberOfEdges];
-	numberOfColorsField.text	= [NSString stringWithFormat:@"%d", gcp.numberOfColors];
+	numberOfVerticesField.text	= [NSString stringWithFormat:@"%lu", (unsigned long)gcp.numberOfVertices];
+	numberOfEdgesField.text		= [NSString stringWithFormat:@"%lu", (unsigned long)gcp.numberOfEdges];
+	numberOfColorsField.text	= [NSString stringWithFormat:@"%lu", (unsigned long)gcp.numberOfColors];
 }
 
 
@@ -193,6 +193,15 @@
 
 
 - (IBAction)generateButtonAction:(id)sender {
+	// hide keyboard
+	if (numberOfColorsField.editing) {
+		[self textFieldShouldReturn:numberOfColorsField];
+	} else if (numberOfVerticesField.editing) {
+		[self textFieldShouldReturn:numberOfVerticesField];
+	} else if (numberOfEdgesField.editing) {
+		[self textFieldShouldReturn:numberOfEdgesField];
+	}
+
 	// alart when solving
 	if ([gcp solving]) {
 		UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"Generate New Graph"
@@ -273,7 +282,7 @@
 		}
 		UIButton *aButton = vertexButtons[r];
 		if (showVertexNumber) {
-			[aButton setTitle:[NSString stringWithFormat:@"%d", i] forState:UIControlStateNormal];
+			[aButton setTitle:[NSString stringWithFormat:@"%lu", (unsigned long)i] forState:UIControlStateNormal];
 		} else {
 			[aButton setTitle:@"" forState:UIControlStateNormal];
 		}
@@ -317,10 +326,11 @@
 	// check c
 	if (c < 2) { // 2 <= c <= 8
 		c = 2;
-		numberOfColorsField.text = [NSString stringWithFormat:@"%d", c];
+		numberOfColorsField.text = [NSString stringWithFormat:@"%lu", (unsigned long)c];
 	} else if (c > 8) {
 		c = 8;
-		numberOfColorsField.text = [NSString stringWithFormat:@"%d", c];
+		
+		numberOfColorsField.text = [NSString stringWithFormat:@"%lu", (unsigned long)c];
 	}
 
 	// check v
@@ -331,12 +341,12 @@
 		v = MAX_NUMBER_OF_VERTICES;
 	}
 	v = v / c * c;
-	numberOfVerticesField.text = [NSString stringWithFormat:@"%d", v];
+	numberOfVerticesField.text = [NSString stringWithFormat:@"%lu", (unsigned long)v];
 
 	// check e
 	if (e > (v / c) * (v / c) * c * (c - 1) / 2) {
 		e = (v / c) * (v / c) * c * (c - 1) / 2;
-		numberOfEdgesField.text = [NSString stringWithFormat:@"%d", e];
+		numberOfEdgesField.text = [NSString stringWithFormat:@"%lu", (unsigned long)e];
 	}
 		
 	return YES;
