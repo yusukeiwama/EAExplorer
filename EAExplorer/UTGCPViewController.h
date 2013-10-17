@@ -40,6 +40,8 @@
 @property (weak, nonatomic) IBOutlet UIActivityIndicatorView *indicator;
 
 
+@property (weak, nonatomic) IBOutlet UILabel *violationCountLabel;
+
 @property (weak, nonatomic) IBOutlet UILabel *stopwatchLabel;
 
 

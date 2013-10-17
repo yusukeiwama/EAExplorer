@@ -34,6 +34,8 @@
 
 - (BOOL)verify;
 
+- (NSUInteger)constraintViolationCount;
+
 - (BOOL)solving;
 
 - (void)printMatrix;
@@ -45,6 +47,6 @@
  実装したいことリスト
  平面性判定
  制約条件違反数判定
- ゲーム化（スコア、時間計測、
+ ゲーム化（スコア
  何色使っているか
  */

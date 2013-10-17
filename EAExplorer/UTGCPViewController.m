@@ -34,6 +34,7 @@
 @synthesize resultLabel;
 @synthesize indicator;
 @synthesize stopwatchLabel;
+@synthesize violationCountLabel;
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
@@ -174,6 +175,7 @@
 	NSInteger i = [vertexButtons indexOfObject:sender];
 	gcp.colorNumbers[i] = (gcp.colorNumbers[i] + 1) % gcp.numberOfColors;
 	[button setBackgroundColor:[self colorWithTapCount:gcp.colorNumbers[i]]]; // change color with tap count
+	violationCountLabel.text = [NSString stringWithFormat:@"Violation:%d", [gcp constraintViolationCount]];
 }
 
 - (UIColor *)colorWithTapCount:(NSUInteger)t
@@ -222,6 +224,7 @@
 									numberOfEdges:[numberOfEdgesField.text integerValue]
 								   numberOfColors:[numberOfColorsField.text integerValue]];
 	[self updateGraphView];
+	violationCountLabel.text = [NSString stringWithFormat:@"Violation:%d", [gcp constraintViolationCount]];
 
 	if (timer.isValid) { // invalidate old timer
 		[timer invalidate];
@@ -251,6 +254,7 @@
 	} else {
 		resultLabel.text = @"NG";
 		resultLabel.textColor = [UIColor redColor];
+		printf("Constraint Violation Count = %d\n", [gcp constraintViolationCount]);
 	}
 	resultLabel.hidden = NO;
 	[UIView animateWithDuration:0.2

@@ -85,14 +85,30 @@
 	for (NSUInteger i = 0; i < numberOfVertices - 1; i++) {
 		NSUInteger colorNumber = colorNumbers[i];
 		for (NSUInteger j = i + 1; j < numberOfVertices; j++) {
-			if (adjacencyMatrix[i * numberOfVertices + j]) {
-				if (colorNumbers[j] == colorNumber) {
+			if (adjacencyMatrix[i * numberOfVertices + j]) { // if edge exists between vi and vj
+				if (colorNumbers[j] == colorNumber) { // if violate constraint
 					return NO;
 				}
 			}
 		}
 	}
 	return YES;
+}
+
+- (NSUInteger)constraintViolationCount
+{
+	NSUInteger c = 0;
+	for (NSUInteger i = 0; i < numberOfVertices - 1; i++) {
+		NSUInteger colorNumber = colorNumbers[i];
+		for (NSUInteger j = i + 1; j < numberOfVertices; j++) {
+			if (adjacencyMatrix[i * numberOfVertices + j]) { // if edge exists between vi and vj
+				if (colorNumbers[j] == colorNumber) { // if violate constraint
+					c++;
+				}
+			}
+		}
+	}
+	return c;
 }
 
 - (BOOL)solving
