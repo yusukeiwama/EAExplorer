@@ -19,7 +19,7 @@
 
 @synthesize vertexNumberSwitch;
 @synthesize timeSwitch;
-@synthesize violationCounterSwitch;
+@synthesize conflictCounterSwitch;
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
@@ -37,7 +37,7 @@
 	
 	vertexNumberSwitch.on = delegate.showVertexNumber;
 	timeSwitch.on = !(delegate.stopwatchLabel.hidden);
-	violationCounterSwitch.on = !(delegate.violationCountLabel.hidden);
+	conflictCounterSwitch.on = !(delegate.ConflictCountLabel.hidden);
 	
 }
 
@@ -56,8 +56,8 @@
 	delegate.stopwatchLabel.hidden = !(((UISwitch *)sender).on);
 }
 
-- (IBAction)violationCounterSwitchValueChanged:(id)sender {
-	delegate.violationCountLabel.hidden = !(((UISwitch *)sender).on);
+- (IBAction)conflictCounterSwitchValueChanged:(id)sender {
+	delegate.ConflictCountLabel.hidden = !(((UISwitch *)sender).on);
 }
 
 - (IBAction)backButtonAction:(id)sender {

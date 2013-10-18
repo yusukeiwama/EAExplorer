@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4319738A1811072E0006B2B2 /* UTRadialButtonView.m in Sources */ = {isa = PBXBuildFile; fileRef = 431973891811072E0006B2B2 /* UTRadialButtonView.m */; };
 		43519B3E180AB3C80068A070 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 43519B3D180AB3C70068A070 /* Foundation.framework */; };
 		43519B40180AB3C80068A070 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 43519B3F180AB3C80068A070 /* CoreGraphics.framework */; };
 		43519B42180AB3C80068A070 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 43519B41180AB3C80068A070 /* UIKit.framework */; };
@@ -27,6 +28,8 @@
 		43519B84180BF6E40068A070 /* UTGCPViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 43519B83180BF6E40068A070 /* UTGCPViewController.m */; };
 		43519B86180C9BE20068A070 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 43519B85180C9BE20068A070 /* QuartzCore.framework */; };
 		43AA8B72180D47280039D227 /* UTStopwatch.m in Sources */ = {isa = PBXBuildFile; fileRef = 43AA8B71180D47280039D227 /* UTStopwatch.m */; };
+		43AA8B75180FACE00039D227 /* UTPlanarityDeterminer.m in Sources */ = {isa = PBXBuildFile; fileRef = 43AA8B74180FACE00039D227 /* UTPlanarityDeterminer.m */; };
+		43AA8B78180FAD1F0039D227 /* UTGCPSolver.m in Sources */ = {isa = PBXBuildFile; fileRef = 43AA8B77180FAD1F0039D227 /* UTGCPSolver.m */; };
 		43ABF0A8180EB5310040A21B /* UTInfoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 43ABF0A7180EB5310040A21B /* UTInfoViewController.m */; };
 /* End PBXBuildFile section */
 
@@ -41,6 +44,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		431973881811072E0006B2B2 /* UTRadialButtonView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UTRadialButtonView.h; sourceTree = "<group>"; };
+		431973891811072E0006B2B2 /* UTRadialButtonView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UTRadialButtonView.m; sourceTree = "<group>"; };
 		43519B3A180AB3C70068A070 /* EAExplorer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EAExplorer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		43519B3D180AB3C70068A070 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		43519B3F180AB3C80068A070 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -69,6 +74,10 @@
 		43519B85180C9BE20068A070 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		43AA8B70180D47280039D227 /* UTStopwatch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UTStopwatch.h; sourceTree = "<group>"; };
 		43AA8B71180D47280039D227 /* UTStopwatch.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UTStopwatch.m; sourceTree = "<group>"; };
+		43AA8B73180FACE00039D227 /* UTPlanarityDeterminer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UTPlanarityDeterminer.h; sourceTree = "<group>"; };
+		43AA8B74180FACE00039D227 /* UTPlanarityDeterminer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UTPlanarityDeterminer.m; sourceTree = "<group>"; };
+		43AA8B76180FAD1F0039D227 /* UTGCPSolver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UTGCPSolver.h; sourceTree = "<group>"; };
+		43AA8B77180FAD1F0039D227 /* UTGCPSolver.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UTGCPSolver.m; sourceTree = "<group>"; };
 		43ABF0A6180EB5310040A21B /* UTInfoViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UTInfoViewController.h; sourceTree = "<group>"; };
 		43ABF0A7180EB5310040A21B /* UTInfoViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UTInfoViewController.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -98,6 +107,41 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		4319738B1811086C0006B2B2 /* View */ = {
+			isa = PBXGroup;
+			children = (
+				431973881811072E0006B2B2 /* UTRadialButtonView.h */,
+				431973891811072E0006B2B2 /* UTRadialButtonView.m */,
+			);
+			name = View;
+			sourceTree = "<group>";
+		};
+		4319738C181108730006B2B2 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				43519B7C180BB9F50068A070 /* UTGCP.h */,
+				43519B7D180BB9F50068A070 /* UTGCP.m */,
+				43AA8B73180FACE00039D227 /* UTPlanarityDeterminer.h */,
+				43AA8B74180FACE00039D227 /* UTPlanarityDeterminer.m */,
+				43AA8B76180FAD1F0039D227 /* UTGCPSolver.h */,
+				43AA8B77180FAD1F0039D227 /* UTGCPSolver.m */,
+				43AA8B70180D47280039D227 /* UTStopwatch.h */,
+				43AA8B71180D47280039D227 /* UTStopwatch.m */,
+			);
+			name = Model;
+			sourceTree = "<group>";
+		};
+		4319738D181108790006B2B2 /* Controller */ = {
+			isa = PBXGroup;
+			children = (
+				43519B82180BF6E40068A070 /* UTGCPViewController.h */,
+				43519B83180BF6E40068A070 /* UTGCPViewController.m */,
+				43ABF0A6180EB5310040A21B /* UTInfoViewController.h */,
+				43ABF0A7180EB5310040A21B /* UTInfoViewController.m */,
+			);
+			name = Controller;
+			sourceTree = "<group>";
+		};
 		43519B31180AB3C70068A070 = {
 			isa = PBXGroup;
 			children = (
@@ -178,14 +222,9 @@
 		43519B81180BF6B90068A070 /* GCP */ = {
 			isa = PBXGroup;
 			children = (
-				43519B7C180BB9F50068A070 /* UTGCP.h */,
-				43519B7D180BB9F50068A070 /* UTGCP.m */,
-				43519B82180BF6E40068A070 /* UTGCPViewController.h */,
-				43519B83180BF6E40068A070 /* UTGCPViewController.m */,
-				43AA8B70180D47280039D227 /* UTStopwatch.h */,
-				43AA8B71180D47280039D227 /* UTStopwatch.m */,
-				43ABF0A6180EB5310040A21B /* UTInfoViewController.h */,
-				43ABF0A7180EB5310040A21B /* UTInfoViewController.m */,
+				4319738C181108730006B2B2 /* Model */,
+				4319738B1811086C0006B2B2 /* View */,
+				4319738D181108790006B2B2 /* Controller */,
 			);
 			name = GCP;
 			sourceTree = "<group>";
@@ -292,10 +331,13 @@
 			files = (
 				43AA8B72180D47280039D227 /* UTStopwatch.m in Sources */,
 				43ABF0A8180EB5310040A21B /* UTInfoViewController.m in Sources */,
+				43AA8B78180FAD1F0039D227 /* UTGCPSolver.m in Sources */,
+				4319738A1811072E0006B2B2 /* UTRadialButtonView.m in Sources */,
 				43519B4A180AB3C80068A070 /* main.m in Sources */,
 				43519B7E180BB9F50068A070 /* UTGCP.m in Sources */,
 				43519B57180AB3C80068A070 /* UTViewController.m in Sources */,
 				43519B4E180AB3C80068A070 /* UTAppDelegate.m in Sources */,
+				43AA8B75180FACE00039D227 /* UTPlanarityDeterminer.m in Sources */,
 				43519B84180BF6E40068A070 /* UTGCPViewController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

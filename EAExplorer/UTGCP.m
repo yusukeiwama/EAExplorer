@@ -16,6 +16,7 @@
 @synthesize adjacencyMatrix;
 @synthesize randomIndexMap;
 @synthesize colorNumbers;
+@synthesize solved;
 
 - (id)initWithNumberOfVertices:(NSUInteger)v numberOfEdges:(NSUInteger)e numberOfColors:(NSUInteger)c
 {
@@ -92,10 +93,11 @@
 			}
 		}
 	}
+	solved = YES;
 	return YES;
 }
 
-- (NSUInteger)constraintViolationCount
+- (NSUInteger)conflictCount
 {
 	NSUInteger c = 0;
 	for (NSUInteger i = 0; i < numberOfVertices - 1; i++) {
@@ -131,7 +133,7 @@
 {
 	for (NSUInteger i = 0; i < numberOfVertices; i++) {
 		for (NSUInteger j = 0; j < numberOfVertices; j++) {
-			printf("%d ", adjacencyMatrix[i * numberOfVertices + j]);
+			printf("%lu ", (unsigned long)adjacencyMatrix[i * numberOfVertices + j]);
 		}
 		printf("\n");
 	}

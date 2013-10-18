@@ -10,6 +10,7 @@
 #import "UTGCP.h"
 #import "UTInfoViewController.h"
 #import "UTStopwatch.h"
+#import "UTGCPSolver.h"
 
 #define MAX_NUMBER_OF_VERTICES 100
 
@@ -23,6 +24,7 @@
 	BOOL repeatability;
 	UTStopwatch *stopwatch;
 	NSTimer *timer;
+	UTRadialButtonView *radialButtonView;
 }
 
 @synthesize showVertexNumber;
@@ -34,7 +36,7 @@
 @synthesize resultLabel;
 @synthesize indicator;
 @synthesize stopwatchLabel;
-@synthesize violationCountLabel;
+@synthesize ConflictCountLabel;
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
@@ -52,12 +54,13 @@
 	
 	stopwatch = [[UTStopwatch alloc] init];
 	
-	repeatability = NO;
+	repeatability = YES;
 
 	if (repeatability) {
 		srand(383); // prime number (for repeatability)
-		UILabel *testLabel = [[UILabel alloc] initWithFrame:CGRectMake(-150, 60, 500, 72)];
-		testLabel.transform = CGAffineTransformMakeRotation(- M_PI_4);
+		UILabel *testLabel = [[UILabel alloc] initWithFrame:CGRectMake(self.view.frame.size.width - 350, 60, 500, 72)]; // top-right
+//		UILabel *testLabel = [[UILabel alloc] initWithFrame:CGRectMake(-150, 60, 500, 72)]; // top-left
+		testLabel.transform = CGAffineTransformMakeRotation(M_PI_4);
 		testLabel.backgroundColor = [UIColor colorWithRed:0.9 green:0.9 blue:0.9 alpha:0.8];
 		testLabel.text = @"BETA";
 		testLabel.font = [UIFont fontWithName:@"Optima-ExtraBlack" size:72];
@@ -65,6 +68,7 @@
 		testLabel.textAlignment = NSTextAlignmentCenter;
 		testLabel.adjustsFontSizeToFitWidth = YES;
 		[self.view addSubview:testLabel];
+		showVertexNumber = YES;
 	} else {
 		srand((unsigned)time(NULL));
 	}
@@ -77,6 +81,16 @@
 	numberOfColorsField.text	= [NSString stringWithFormat:@"%lu", (unsigned long)numberOfColors];
 	numberOfVerticesField.text	= [NSString stringWithFormat:@"%lu", (unsigned long)numberOfVertices];
 	numberOfEdgesField.text		= [NSString stringWithFormat:@"%lu", (unsigned long)numberOfEdges];
+
+	CGFloat radialButtonViewRadius = 50;
+	NSArray *buttonTitles = @[@"HC", @"IHC", @"?", @"?", @"?"];
+	radialButtonView = [[UTRadialButtonView alloc] initWithFrame:CGRectMake(graphView.center.x - radialButtonViewRadius,
+																		   graphView.center.y - radialButtonViewRadius,
+																		   2 * radialButtonViewRadius,
+																		   2 * radialButtonViewRadius)
+														   titles:buttonTitles
+														delegate:self];
+	[self.view addSubview:radialButtonView];
 
 	[self generateNewGCP];
 	[self updateGraphView];
@@ -175,7 +189,7 @@
 	NSInteger i = [vertexButtons indexOfObject:sender];
 	gcp.colorNumbers[i] = (gcp.colorNumbers[i] + 1) % gcp.numberOfColors;
 	[button setBackgroundColor:[self colorWithTapCount:gcp.colorNumbers[i]]]; // change color with tap count
-	violationCountLabel.text = [NSString stringWithFormat:@"Violation:%d", [gcp constraintViolationCount]];
+	ConflictCountLabel.text = [NSString stringWithFormat:@"%lu Conflicts", (unsigned long)[gcp conflictCount]];
 }
 
 - (UIColor *)colorWithTapCount:(NSUInteger)t
@@ -224,7 +238,7 @@
 									numberOfEdges:[numberOfEdgesField.text integerValue]
 								   numberOfColors:[numberOfColorsField.text integerValue]];
 	[self updateGraphView];
-	violationCountLabel.text = [NSString stringWithFormat:@"Violation:%d", [gcp constraintViolationCount]];
+	ConflictCountLabel.text = [NSString stringWithFormat:@"%lu Conflicts", (unsigned long)[gcp conflictCount]];
 
 	if (timer.isValid) { // invalidate old timer
 		[timer invalidate];
@@ -246,15 +260,18 @@
 - (IBAction)verificationButtonAction:(id)sender {
 	NSTimeInterval t = stopwatch.time;
 	BOOL OK = [gcp verify];
+
 	if (OK) {
 		resultLabel.text = @"OK";
 		resultLabel.textColor = [UIColor greenColor];
 		[timer invalidate];
-		stopwatchLabel.text = [NSString stringWithFormat:@"%02d:%02d:%02d", (int)t / 60, (int)t % 60, (int)((t - (int)t) * 100)];
+		if (gcp.solved == NO) {
+			stopwatchLabel.text = [NSString stringWithFormat:@"%02d:%02d:%02d", (int)t / 60, (int)t % 60, (int)((t - (int)t) * 100)];
+		}
 	} else {
 		resultLabel.text = @"NG";
 		resultLabel.textColor = [UIColor redColor];
-		printf("Constraint Violation Count = %d\n", [gcp constraintViolationCount]);
+		printf("%lu Contlicts\n", (unsigned long)[gcp conflictCount]);
 	}
 	resultLabel.hidden = NO;
 	[UIView animateWithDuration:0.2
@@ -286,7 +303,7 @@
 		}
 		UIButton *aButton = vertexButtons[r];
 		if (showVertexNumber) {
-			[aButton setTitle:[NSString stringWithFormat:@"%lu", (unsigned long)i] forState:UIControlStateNormal];
+			[aButton setTitle:[NSString stringWithFormat:@"%lu", (unsigned long)i + 1] forState:UIControlStateNormal];
 		} else {
 			[aButton setTitle:@"" forState:UIControlStateNormal];
 		}
@@ -360,6 +377,12 @@
 {
 	UTInfoViewController *destinationViewController = [segue destinationViewController];
 	destinationViewController.delegate = self;
+}
+
+- (void)radialButtonActionWithIndex:(NSUInteger)i sender:(id)sender
+{
+	printf("radial button %d\n", i);
+	
 }
 
 @end

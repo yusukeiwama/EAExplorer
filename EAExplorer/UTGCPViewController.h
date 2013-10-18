@@ -7,8 +7,9 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "UTRadialButtonView.h"
 
-@interface UTGCPViewController : UIViewController <UITextFieldDelegate, UIAlertViewDelegate>
+@interface UTGCPViewController : UIViewController <UITextFieldDelegate, UIAlertViewDelegate, UTRadialButtonViewProtocol>
 
 @property BOOL showVertexNumber;
 @property BOOL showTimer;
@@ -40,7 +41,7 @@
 @property (weak, nonatomic) IBOutlet UIActivityIndicatorView *indicator;
 
 
-@property (weak, nonatomic) IBOutlet UILabel *violationCountLabel;
+@property (weak, nonatomic) IBOutlet UILabel *ConflictCountLabel;
 
 @property (weak, nonatomic) IBOutlet UILabel *stopwatchLabel;
 

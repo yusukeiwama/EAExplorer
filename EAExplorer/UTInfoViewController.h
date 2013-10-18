@@ -16,12 +16,12 @@
 
 @property (weak, nonatomic) IBOutlet UISwitch *vertexNumberSwitch;
 @property (weak, nonatomic) IBOutlet UISwitch *timeSwitch;
-@property (weak, nonatomic) IBOutlet UISwitch *violationCounterSwitch;
+@property (weak, nonatomic) IBOutlet UISwitch *conflictCounterSwitch;
 
 
 - (IBAction)vertexNumberSwitchValueChanged:(id)sender;
 - (IBAction)timeSwitchValueChanged:(id)sender;
-- (IBAction)violationCounterSwitchValueChanged:(id)sender;
+- (IBAction)conflictCounterSwitchValueChanged:(id)sender;
 
 
 - (IBAction)backButtonAction:(id)sender;

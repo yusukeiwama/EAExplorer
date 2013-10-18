@@ -21,6 +21,8 @@
 @property (readonly) NSUInteger *randomIndexMap;
 @property (readonly) NSUInteger *colorNumbers;
 
+@property (readonly) BOOL solved;
+
 
 /** 
  designated initializer
@@ -34,7 +36,7 @@
 
 - (BOOL)verify;
 
-- (NSUInteger)constraintViolationCount;
+- (NSUInteger)conflictCount;
 
 - (BOOL)solving;
 
@@ -44,9 +46,15 @@
 
 
 /*
+ リファクタリング
+ UTGCPクラスは、
+ ・クラスメソッドとしてUTGCPインスタンスを返す問題ジェネレータとしての機能
+ ・クラスメソッドとしてUTGCPインスタンスを解く問題ソルバーとしての機能
+ を備えたものとする。つまり、現状のUTGCPとUTGCPSolverを一つのクラスにまとめる。
+ 全体として、GraphColoringProblemの生成から解決まで一手に担えるようなクラスにまとめる。
+ 
  実装したいことリスト
  平面性判定
- 制約条件違反数判定
  ゲーム化（スコア
  何色使っているか
  */
