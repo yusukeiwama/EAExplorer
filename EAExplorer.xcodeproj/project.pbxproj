@@ -28,8 +28,6 @@
 		43519B84180BF6E40068A070 /* UTGCPViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 43519B83180BF6E40068A070 /* UTGCPViewController.m */; };
 		43519B86180C9BE20068A070 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 43519B85180C9BE20068A070 /* QuartzCore.framework */; };
 		43AA8B72180D47280039D227 /* UTStopwatch.m in Sources */ = {isa = PBXBuildFile; fileRef = 43AA8B71180D47280039D227 /* UTStopwatch.m */; };
-		43AA8B75180FACE00039D227 /* UTPlanarityDeterminer.m in Sources */ = {isa = PBXBuildFile; fileRef = 43AA8B74180FACE00039D227 /* UTPlanarityDeterminer.m */; };
-		43AA8B78180FAD1F0039D227 /* UTGCPSolver.m in Sources */ = {isa = PBXBuildFile; fileRef = 43AA8B77180FAD1F0039D227 /* UTGCPSolver.m */; };
 		43ABF0A8180EB5310040A21B /* UTInfoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 43ABF0A7180EB5310040A21B /* UTInfoViewController.m */; };
 /* End PBXBuildFile section */
 
@@ -74,10 +72,6 @@
 		43519B85180C9BE20068A070 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		43AA8B70180D47280039D227 /* UTStopwatch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UTStopwatch.h; sourceTree = "<group>"; };
 		43AA8B71180D47280039D227 /* UTStopwatch.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UTStopwatch.m; sourceTree = "<group>"; };
-		43AA8B73180FACE00039D227 /* UTPlanarityDeterminer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UTPlanarityDeterminer.h; sourceTree = "<group>"; };
-		43AA8B74180FACE00039D227 /* UTPlanarityDeterminer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UTPlanarityDeterminer.m; sourceTree = "<group>"; };
-		43AA8B76180FAD1F0039D227 /* UTGCPSolver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UTGCPSolver.h; sourceTree = "<group>"; };
-		43AA8B77180FAD1F0039D227 /* UTGCPSolver.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UTGCPSolver.m; sourceTree = "<group>"; };
 		43ABF0A6180EB5310040A21B /* UTInfoViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UTInfoViewController.h; sourceTree = "<group>"; };
 		43ABF0A7180EB5310040A21B /* UTInfoViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UTInfoViewController.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -121,10 +115,6 @@
 			children = (
 				43519B7C180BB9F50068A070 /* UTGCP.h */,
 				43519B7D180BB9F50068A070 /* UTGCP.m */,
-				43AA8B73180FACE00039D227 /* UTPlanarityDeterminer.h */,
-				43AA8B74180FACE00039D227 /* UTPlanarityDeterminer.m */,
-				43AA8B76180FAD1F0039D227 /* UTGCPSolver.h */,
-				43AA8B77180FAD1F0039D227 /* UTGCPSolver.m */,
 				43AA8B70180D47280039D227 /* UTStopwatch.h */,
 				43AA8B71180D47280039D227 /* UTStopwatch.m */,
 			);
@@ -331,13 +321,11 @@
 			files = (
 				43AA8B72180D47280039D227 /* UTStopwatch.m in Sources */,
 				43ABF0A8180EB5310040A21B /* UTInfoViewController.m in Sources */,
-				43AA8B78180FAD1F0039D227 /* UTGCPSolver.m in Sources */,
 				4319738A1811072E0006B2B2 /* UTRadialButtonView.m in Sources */,
 				43519B4A180AB3C80068A070 /* main.m in Sources */,
 				43519B7E180BB9F50068A070 /* UTGCP.m in Sources */,
 				43519B57180AB3C80068A070 /* UTViewController.m in Sources */,
 				43519B4E180AB3C80068A070 /* UTAppDelegate.m in Sources */,
-				43AA8B75180FACE00039D227 /* UTPlanarityDeterminer.m in Sources */,
 				43519B84180BF6E40068A070 /* UTGCPViewController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
