@@ -10,7 +10,6 @@
 #import "UTGCP.h"
 #import "UTInfoViewController.h"
 #import "UTStopwatch.h"
-#import "UTGCPSolver.h"
 
 #define MAX_NUMBER_OF_VERTICES 100
 
@@ -61,7 +60,6 @@
 	if (repeatability) {
 		srand(383); // prime number (for repeatability)
 		UILabel *testLabel = [[UILabel alloc] initWithFrame:CGRectMake(self.view.frame.size.width - 350, 60, 500, 72)]; // top-right
-//		UILabel *testLabel = [[UILabel alloc] initWithFrame:CGRectMake(-150, 60, 500, 72)]; // top-left
 		testLabel.transform = CGAffineTransformMakeRotation(M_PI_4);
 		testLabel.backgroundColor = [UIColor colorWithRed:0.9 green:0.9 blue:0.9 alpha:0.8];
 		testLabel.text = @"BETA";
@@ -75,8 +73,8 @@
 		srand((unsigned)time(NULL));
 	}
 
-	NSUInteger numberOfColors	= 2;
-	NSUInteger numberOfVertices = numberOfColors * 10;
+	NSUInteger numberOfColors	= 3;
+	NSUInteger numberOfVertices = numberOfColors * 20;
 //	NSUInteger numberOfEdges	= 3 * numberOfVertices; // e = c * v (sparse)
 	NSUInteger numberOfEdges	= numberOfVertices * (numberOfVertices - 1) / 4; // e = v * (v - 1) / 4 (dense)
 	
@@ -123,6 +121,7 @@
 	UIColor *lineColor = [UIColor blackColor];
 	CGFloat R = graphView.frame.size.height * 2.0 / 5.0; // graph visual radius
 	CGFloat r = 2 * M_PI * R / gcp.numberOfVertices / 2.0 / 2.0; // vertex visual radius
+	CGFloat fontSize = r;
 	if (gcp.numberOfVertices < 7) { // view boundary check
 		r = 2 * M_PI * R / 7.0 / 2.0 / 2.0;
 	}
@@ -146,7 +145,7 @@
 		[aButton setBackgroundColor:[self colorWithTapCount:0]];
 		[aButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
 		aButton.titleLabel.adjustsFontSizeToFitWidth = YES;
-		aButton.titleLabel.font = [UIFont fontWithName:@"Futura" size:18];
+		aButton.titleLabel.font = [UIFont fontWithName:@"Futura" size:fontSize];
 		aButton.layer.cornerRadius = r;
 		[graphView addSubview:aButton];
 		[vertexButtons addObject:aButton];
@@ -396,7 +395,8 @@
 		case 0:
 			[gcp solveInHCWithMaxGeneration:1000];
 			break;
-			
+		case 1:
+			[gcp solveInIHCWithMaxGeneration:1000 iteration:10];
 		default:
 			break;
 	}

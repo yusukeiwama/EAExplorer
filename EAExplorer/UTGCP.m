@@ -128,12 +128,17 @@
 		for (NSUInteger j = i + 1; j < numberOfVertices; j++) {
 			if (adjacencyMatrix[i * numberOfVertices + j]
 				&& colorNumbers[i] == colorNumbers[j]) {
+				// conflict occurs between i and j
 				conflictVertexFlags[i] = 1;
+				conflictVertexFlags[j] = 1;
 			}
 		}
+	}
+	// print conflict indices
+	for (NSUInteger i = 0; i < numberOfVertices; i++) {
 		printf("%d ", conflictVertexFlags[i]);
 	}
-	printf("\n");
+	printf("(FLAG)\n");
 }
 
 - (BOOL)solveInHCWithMaxGeneration:(NSUInteger)maxGeneration
@@ -148,7 +153,7 @@
 
 	// 2. end judgement
 	NSUInteger conflictCount = [self conflictCount];
-	NSUInteger generation = 0;
+	NSUInteger generation = 1;
 	while (conflictCount) {
 		// if generation exceeds max generation, end HC and return NO(fail to solve)
 		if (generation > maxGeneration) {
@@ -170,7 +175,7 @@
 		NSUInteger conflictVertexOrder = 0;
 		for (int i = 0; i < numberOfVertices; i++) {
 			conflictVertexOrder += conflictVertexFlags[targetIndex];
-			if (conflictVertexCount == targetConflictVertexOrder) {
+			if (conflictVertexOrder == targetConflictVertexOrder) {
 				break;
 			}
 			targetIndex++;
@@ -178,7 +183,7 @@
 		printf("targetIndex = %3d\t", targetIndex);
 		
 		// 4. change vertex color to minimize the conflict count
-		NSUInteger minConflictCount = conflictCount;
+		NSUInteger minConflictCount = conflictCount;\
 		NSUInteger oldConflictCount = conflictCount;
 		NSUInteger oldTargetColorNumber = colorNumbers[targetIndex];
 		NSUInteger minColorNumbers[numberOfColors - 1];
@@ -218,10 +223,22 @@
 			printf("\n");
 		}
 		generation++;
+		printf("\n");
 	}
 	
 	printf("SUCCEED!\n");
 	return YES;
+}
+
+- (BOOL)solveInIHCWithMaxGeneration:(NSUInteger)maxGeneration iteration:(NSUInteger)iteration
+{
+	for (NSUInteger i = 0; i < iteration; i++) {
+		if ([self solveInHCWithMaxGeneration:maxGeneration]) {
+			return YES;
+		}
+	}
+	
+	return NO;
 }
 
 - (BOOL)solving

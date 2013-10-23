@@ -45,7 +45,8 @@ typedef enum UTGCPAlgorithm {
 - (NSUInteger)conflictCount;
 
 // Algorithms
-- (BOOL)solveInHCWithMaxGeneration:(NSUInteger)m; // solve with Hill Climbing method
+- (BOOL)solveInHCWithMaxGeneration:(NSUInteger)m; // solve in Hill Climbing method
+- (BOOL)solveInIHCWithMaxGeneration:(NSUInteger)maxGeneration iteration:(NSUInteger)iteration; // solve in Iterated Hill Climbing method
 
 - (BOOL)solving;
 - (void)printMatrix;
