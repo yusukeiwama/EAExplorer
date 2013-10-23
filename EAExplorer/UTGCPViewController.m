@@ -24,6 +24,7 @@
 	BOOL repeatability;
 	UTStopwatch *stopwatch;
 	NSTimer *timer;
+	NSTimeInterval timerTimeInterval;
 	UTRadialButtonView *radialButtonView;
 }
 
@@ -53,6 +54,7 @@
 	// Do any additional setup after loading the view.
 	
 	stopwatch = [[UTStopwatch alloc] init];
+	timerTimeInterval = 0.09;
 	
 	repeatability = YES;
 
@@ -73,8 +75,8 @@
 		srand((unsigned)time(NULL));
 	}
 
-	NSUInteger numberOfColors	= 3;
-	NSUInteger numberOfVertices = numberOfColors * 3;
+	NSUInteger numberOfColors	= 2;
+	NSUInteger numberOfVertices = numberOfColors * 10;
 //	NSUInteger numberOfEdges	= 3 * numberOfVertices; // e = c * v (sparse)
 	NSUInteger numberOfEdges	= numberOfVertices * (numberOfVertices - 1) / 4; // e = v * (v - 1) / 4 (dense)
 	
@@ -183,6 +185,14 @@
 	[indicator stopAnimating];
 }
 
+- (void)updateVertexColors
+{
+	for (int i = 0; i < gcp.numberOfVertices; i++) {
+		UIButton *aButton = vertexButtons[i];
+		[aButton setBackgroundColor:[self colorWithTapCount:gcp.colorNumbers[i]]];
+	}
+}
+
 - (void)vertexButtonAction:(id)sender
 {
 	UIButton *button = sender;
@@ -243,7 +253,7 @@
 	if (timer.isValid) { // invalidate old timer
 		[timer invalidate];
 	}
-	timer = [NSTimer timerWithTimeInterval:0.03125 target:self selector:@selector(updateStopwatchLabel) userInfo:nil repeats:YES];
+	timer = [NSTimer timerWithTimeInterval:timerTimeInterval target:self selector:@selector(updateStopwatchLabel) userInfo:nil repeats:YES];
 	[[NSRunLoop mainRunLoop] addTimer:timer forMode:NSDefaultRunLoopMode];
 	[stopwatch start];
 }
@@ -381,8 +391,17 @@
 
 - (void)radialButtonActionWithIndex:(NSUInteger)i sender:(id)sender
 {
-	printf("radial button %d\n", i);
-	
+	printf("radial button %lu\n", (unsigned long)i);
+	switch (i) {
+		case 0:
+			[gcp solveInHCWithMaxGeneration:1000];
+			break;
+			
+		default:
+			break;
+	}
+	[self updateVertexColors];
+	ConflictCountLabel.text = [NSString stringWithFormat:@"%lu Conflicts", (unsigned long)[gcp conflictCount]];
 }
 
 @end

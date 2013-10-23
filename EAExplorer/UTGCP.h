@@ -8,6 +8,13 @@
 
 #import <Foundation/Foundation.h>
 
+typedef enum UTGCPAlgorithm {
+	UTGCPAlgorithmHillClimbing = 1,
+	UTGCPAlgorithmHC = UTGCPAlgorithmHillClimbing,
+	UTGCPAlgorithmIteratedHillClimbing = 2,
+	UTGCPAlgorithmIHC = UTGCPAlgorithmIteratedHillClimbing
+} UTGCPAlgorithm;
+
 /**
  Graph Coloring Problem generator
  */
@@ -20,6 +27,7 @@
 @property (readonly) NSUInteger *adjacencyMatrix;
 @property (readonly) NSUInteger *randomIndexMap;
 @property (readonly) NSUInteger *colorNumbers;
+@property (readonly) NSUInteger *conflictVertexFlags;
 
 @property (readonly) BOOL solved;
 
@@ -31,15 +39,15 @@
  @param c number of colors
  */
 - (id)initWithNumberOfVertices:(NSUInteger)v numberOfEdges:(NSUInteger)e numberOfColors:(NSUInteger)c;
-
 + (id)GCPWithNumberOfVertices:(NSUInteger)v numberOfEdges:(NSUInteger)e numberOfColors:(NSUInteger)c;
 
 - (BOOL)verify;
-
 - (NSUInteger)conflictCount;
 
-- (BOOL)solving;
+// Algorithms
+- (BOOL)solveInHCWithMaxGeneration:(NSUInteger)m; // solve with Hill Climbing method
 
+- (BOOL)solving;
 - (void)printMatrix;
 
 @end

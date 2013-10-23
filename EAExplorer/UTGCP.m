@@ -16,6 +16,7 @@
 @synthesize adjacencyMatrix;
 @synthesize randomIndexMap;
 @synthesize colorNumbers;
+@synthesize conflictVertexFlags;
 @synthesize solved;
 
 - (id)initWithNumberOfVertices:(NSUInteger)v numberOfEdges:(NSUInteger)e numberOfColors:(NSUInteger)c
@@ -25,11 +26,11 @@
 		numberOfEdges		= e;
 		numberOfColors		= c;
 
-		adjacencyMatrix = calloc(v * v, sizeof(NSUInteger));
-		colorNumbers = calloc(v, sizeof(NSUInteger));
+		adjacencyMatrix			= calloc(v * v	, sizeof(NSUInteger));
+		colorNumbers			= calloc(v		, sizeof(NSUInteger));
+		conflictVertexFlags		= calloc(v		, sizeof(NSUInteger));
 		
 		[self generateNaively];
-		
 		[self printMatrix];
 	}
 	
@@ -101,16 +102,126 @@
 {
 	NSUInteger c = 0;
 	for (NSUInteger i = 0; i < numberOfVertices - 1; i++) {
-		NSUInteger colorNumber = colorNumbers[i];
 		for (NSUInteger j = i + 1; j < numberOfVertices; j++) {
-			if (adjacencyMatrix[i * numberOfVertices + j]) { // if edge exists between vi and vj
-				if (colorNumbers[j] == colorNumber) { // if violate constraint
-					c++;
-				}
+			if (adjacencyMatrix[i * numberOfVertices + j]
+				&& colorNumbers[i] == colorNumbers[j]) {
+				c++;
 			}
 		}
 	}
+
 	return c;
+}
+
+- (void)updateConflictIndices
+{
+	printf("conflictIndices: \n");
+	// clear conflict indices to 0
+	for (NSUInteger i = 0; i < numberOfVertices - 1; i++) {
+		for (NSUInteger j = i + 1; j < numberOfVertices; j++) {
+				conflictVertexFlags[i] = 0;
+		}
+	}
+	
+	// set conflict indices
+	for (NSUInteger i = 0; i < numberOfVertices - 1; i++) {
+		for (NSUInteger j = i + 1; j < numberOfVertices; j++) {
+			if (adjacencyMatrix[i * numberOfVertices + j]
+				&& colorNumbers[i] == colorNumbers[j]) {
+				conflictVertexFlags[i] = 1;
+			}
+		}
+		printf("%d ", conflictVertexFlags[i]);
+	}
+	printf("\n");
+}
+
+- (BOOL)solveInHCWithMaxGeneration:(NSUInteger)maxGeneration
+{
+	// 1. initialize vertex colors in random
+	printf("initialized random vertex colors\n");
+	for (NSUInteger i = 0; i < numberOfVertices; i++) {
+		colorNumbers[i] = numberOfColors * (double)rand() / (RAND_MAX + 1.0);
+		printf("%d ", colorNumbers[i]);
+	}
+	printf("\n");
+
+	// 2. end judgement
+	NSUInteger conflictCount = [self conflictCount];
+	NSUInteger generation = 0;
+	while (conflictCount) {
+		// if generation exceeds max generation, end HC and return NO(fail to solve)
+		if (generation > maxGeneration) {
+			printf("fail to solve...\n");
+			return NO;
+		}
+		printf("generation = %4d\t", generation);
+		printf("Conflict Count = %d\t", conflictCount);
+		
+		// 3. pick a vertex
+		[self updateConflictIndices];
+		NSUInteger conflictVertexCount = 0;
+		for (int i = 0; i < numberOfVertices; i++) {
+			conflictVertexCount += conflictVertexFlags[i];
+		}
+		printf("Conflict Vertex Count = %3d\t", conflictVertexCount);
+		NSUInteger targetConflictVertexOrder = conflictVertexCount * (double)rand() / (RAND_MAX + 1.0) + 1;
+		NSUInteger targetIndex = 0;
+		NSUInteger conflictVertexOrder = 0;
+		for (int i = 0; i < numberOfVertices; i++) {
+			conflictVertexOrder += conflictVertexFlags[targetIndex];
+			if (conflictVertexCount == targetConflictVertexOrder) {
+				break;
+			}
+			targetIndex++;
+		}
+		printf("targetIndex = %3d\t", targetIndex);
+		
+		// 4. change vertex color to minimize the conflict count
+		NSUInteger minConflictCount = conflictCount;
+		NSUInteger oldConflictCount = conflictCount;
+		NSUInteger oldTargetColorNumber = colorNumbers[targetIndex];
+		NSUInteger minColorNumbers[numberOfColors - 1];
+		for (int i = 0; i < numberOfColors - 1; i++) {
+			minColorNumbers[i] = -1;
+		}
+		NSUInteger minColorNumberIndex = 0;
+		NSUInteger tempConflictCount;
+		NSUInteger tempColorNumber = colorNumbers[targetIndex];
+		for (int i = 0; i < numberOfColors - 1; i++) {
+			tempColorNumber = (tempColorNumber + 1) % numberOfColors;
+			colorNumbers[targetIndex] = tempColorNumber;
+			tempConflictCount = [self conflictCount];
+			if (tempConflictCount <= minConflictCount) {
+				minConflictCount = tempConflictCount;
+				minColorNumbers[minColorNumberIndex] = tempColorNumber;
+				minColorNumberIndex++;
+			}
+		}
+		NSUInteger minIndexCount = 0;
+		if (minConflictCount == oldConflictCount) {
+			colorNumbers[targetIndex] = oldTargetColorNumber;
+		} else {
+			for (int i = 0; i < numberOfColors - 1; i++) {
+				if (minColorNumbers[i] != -1) {
+					minIndexCount++;
+				}
+			}
+			NSUInteger newColorNumberIndex = minIndexCount * (double)rand() / (RAND_MAX + 1.0);
+			NSUInteger newColorNumber = minColorNumbers[newColorNumberIndex];
+			colorNumbers[targetIndex] = newColorNumber;
+			conflictCount = [self conflictCount];
+			printf("new vertex colors\n");
+			for (int i = 0; i < numberOfVertices; i++) {
+				printf("%d ", colorNumbers[i]);
+			}
+			printf("\n");
+		}
+		generation++;
+	}
+	
+	printf("SUCCEED!\n");
+	return YES;
 }
 
 - (BOOL)solving
@@ -139,7 +250,6 @@
 	}
 	printf("\n");
 }
-
 
 - (void)dealloc
 {
