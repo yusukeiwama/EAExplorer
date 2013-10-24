@@ -183,37 +183,37 @@
 		printf("targetIndex = %3d\t", targetIndex);
 		
 		// 4. change vertex color to minimize the conflict count
-		NSUInteger minConflictCount = conflictCount;
+		NSUInteger minConflictCount = conflictCount;\
 		NSUInteger oldConflictCount = conflictCount;
 		NSUInteger oldTargetColorNumber = colorNumbers[targetIndex];
-		NSUInteger minTargetColorNumbers[numberOfColors];
-		for (int i = 0; i < numberOfColors; i++) {
-			minTargetColorNumbers[i] = -1;
+		NSUInteger minColorNumbers[numberOfColors - 1];
+		for (int i = 0; i < numberOfColors - 1; i++) {
+			minColorNumbers[i] = -1;
 		}
 		NSUInteger minColorNumberIndex = 0;
 		NSUInteger tempConflictCount;
 		NSUInteger tempColorNumber = colorNumbers[targetIndex];
-		for (int i = 0; i < numberOfColors; i++) {
+		for (int i = 0; i < numberOfColors - 1; i++) {
 			tempColorNumber = (tempColorNumber + 1) % numberOfColors;
 			colorNumbers[targetIndex] = tempColorNumber;
 			tempConflictCount = [self conflictCount];
 			if (tempConflictCount <= minConflictCount) {
 				minConflictCount = tempConflictCount;
-				minTargetColorNumbers[minColorNumberIndex] = tempColorNumber;
+				minColorNumbers[minColorNumberIndex] = tempColorNumber;
 				minColorNumberIndex++;
 			}
 		}
 		NSUInteger minIndexCount = 0;
-//		if (minConflictCount == oldConflictCount) {
-//			colorNumbers[targetIndex] = oldTargetColorNumber;
-//		} else {
-			for (int i = 0; i < numberOfColors; i++) {
-				if (minTargetColorNumbers[i] != -1) {
+		if (minConflictCount == oldConflictCount) {
+			colorNumbers[targetIndex] = oldTargetColorNumber;
+		} else {
+			for (int i = 0; i < numberOfColors - 1; i++) {
+				if (minColorNumbers[i] != -1) {
 					minIndexCount++;
 				}
-//			}
+			}
 			NSUInteger newColorNumberIndex = minIndexCount * (double)rand() / (RAND_MAX + 1.0);
-			NSUInteger newColorNumber = minTargetColorNumbers[newColorNumberIndex];
+			NSUInteger newColorNumber = minColorNumbers[newColorNumberIndex];
 			colorNumbers[targetIndex] = newColorNumber;
 			conflictCount = [self conflictCount];
 			printf("new vertex colors\n");
