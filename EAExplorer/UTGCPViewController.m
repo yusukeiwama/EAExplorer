@@ -391,13 +391,14 @@
 
 - (void)radialButtonActionWithIndex:(NSUInteger)i sender:(id)sender
 {
-	printf("radial button %lu\n", (unsigned long)i);
+	NSUInteger maxGeneration	= 100;
+	NSUInteger maxIteration		= 10;
 	switch (i) {
 		case 0:
-			[gcp solveInHCWithMaxGeneration:1000];
+			[gcp solveInHCWithMaxGeneration:maxGeneration];
 			break;
 		case 1:
-			[gcp solveInIHCWithMaxGeneration:1000 iteration:10];
+			[gcp solveInIHCWithMaxGeneration:maxGeneration iteration:maxIteration];
 		default:
 			break;
 	}
