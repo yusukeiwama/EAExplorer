@@ -53,7 +53,7 @@
 	// Do any additional setup after loading the view.
 	
 	stopwatch = [[UTStopwatch alloc] init];
-	timerTimeInterval = 1.00;
+	timerTimeInterval = 1.0;
 	
 	repeatability = YES;
 
@@ -74,16 +74,17 @@
 	}
 
 	NSUInteger numberOfColors	= 3;
-	NSUInteger numberOfVertices = numberOfColors * 10;
-	NSUInteger numberOfEdges	= 3 * numberOfVertices; // e = c * v (sparse)
-//	NSUInteger numberOfEdges	= numberOfVertices * (numberOfVertices - 1) / 4; // e = v * (v - 1) / 4 (dense)
+	NSUInteger numberOfVertices = numberOfColors * 3;
+//	NSUInteger numberOfEdges	= 3 * numberOfVertices; // e = c * v (sparse)
+	NSUInteger numberOfEdges	= numberOfVertices * (numberOfVertices - 1) / 4; // e = v * (v - 1) / 4 (dense)
 	
 	numberOfColorsField.text	= [NSString stringWithFormat:@"%lu", (unsigned long)numberOfColors];
 	numberOfVerticesField.text	= [NSString stringWithFormat:@"%lu", (unsigned long)numberOfVertices];
 	numberOfEdgesField.text		= [NSString stringWithFormat:@"%lu", (unsigned long)numberOfEdges];
 
 	CGFloat radialButtonViewRadius = 50;
-	NSArray *buttonTitles = @[@"HC", @"IHC", @"?", @"?", @"?"];
+//	NSArray *buttonTitles = @[@"HC", @"IHC", @"?", @"?", @"?"];
+	NSArray *buttonTitles = @[@"HC", @"IHC"];
 	radialButtonView = [[UTRadialButtonView alloc] initWithFrame:CGRectMake(graphView.center.x - radialButtonViewRadius,
 																		   graphView.center.y - radialButtonViewRadius,
 																		   2 * radialButtonViewRadius,
@@ -229,16 +230,19 @@
 	}
 
 	// alart when solving
-	if ([gcp solving]) {
+	if (gcp.solved || gcp.solving == NO) {
+		[indicator startAnimating];
+//		if (radialButtonView.selectingMenus) { // hide radial menus when generate button action occurs
+//			[radialButtonView hideMenus];
+//		}
+		[self performSelector:@selector(generateNewGCP) withObject:nil afterDelay:0.01];
+	} else {
 		UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"Generate New Graph"
 															message:@"The problem you are solving will be discarded."
 														   delegate:self
 												  cancelButtonTitle:@"Cancel"
 												  otherButtonTitles:@"OK", nil];
 		[alertView show];
-	} else {
-		[indicator startAnimating];
-		[self performSelector:@selector(generateNewGCP) withObject:nil afterDelay:0.01];
 	}
 }
 
@@ -256,6 +260,7 @@
 	timer = [NSTimer timerWithTimeInterval:timerTimeInterval target:self selector:@selector(updateStopwatchLabel) userInfo:nil repeats:YES];
 	[[NSRunLoop mainRunLoop] addTimer:timer forMode:NSDefaultRunLoopMode];
 	[stopwatch start];
+	stopwatchLabel.text = @"00:00:00";
 }
 
 - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
@@ -276,14 +281,14 @@
 	BOOL OK = [gcp verify];
 
 	if (OK) {
-		resultLabel.text = @"OK";
+		resultLabel.text = @"Correct!";
 		resultLabel.textColor = [UIColor greenColor];
 		[timer invalidate];
 		if (shouldUpdateStopwatchLabel) {
 			stopwatchLabel.text = [NSString stringWithFormat:@"%02d:%02d:%02d", (int)t / 60, (int)t % 60, (int)((t - (int)t) * 100)];
 		}
 	} else {
-		resultLabel.text = @"NG";
+		resultLabel.text = @"Wrong...";
 		resultLabel.textColor = [UIColor redColor];
 		printf("%lu Contlicts\n", (unsigned long)[gcp conflictCount]);
 	}
@@ -402,7 +407,7 @@
 			[gcp solveInHCWithMaxGeneration:maxGeneration];
 			break;
 		case 1:
-			[gcp solveInIHCWithMaxGeneration:maxGeneration iteration:maxIteration];
+			[gcp solveInIHCWithMaxGeneration:maxGeneration maxIteration:maxIteration];
 		default:
 			break;
 	}

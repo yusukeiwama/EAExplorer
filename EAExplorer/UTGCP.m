@@ -141,8 +141,12 @@
 	printf("(FLAG)\n");
 }
 
-- (BOOL)solveInHCWithMaxGeneration:(NSUInteger)maxGeneration
+- (NSUInteger)solveInHCWithMaxGeneration:(NSUInteger)maxGeneration
 {
+	NSUInteger minConflictCount = [self conflictCount];
+	NSUInteger *minConflictColorNumbers = calloc(numberOfVertices, sizeof(NSUInteger));
+	memcpy(minConflictColorNumbers, colorNumbers, numberOfVertices * sizeof(NSUInteger));
+
 	// 1. initialize vertex colors in random
 	printf("initialized random vertex colors\n");
 	for (NSUInteger i = 0; i < numberOfVertices; i++) {
@@ -156,7 +160,13 @@
 		// if generation exceeds max generation, end HC and return NO(fail to solve)
 		if (generation > maxGeneration) {
 			printf("fail to solve...\n");
-			return NO;
+			if ([self conflictCount] > minConflictCount) {
+				// restore minimum conflict color numbers
+				// CAUTION: If there's no improvement, before-calculation states is restored.
+				memcpy(colorNumbers, minConflictColorNumbers, numberOfVertices * sizeof(NSUInteger));
+				free(minConflictColorNumbers);
+			}
+			return 0;
 		}
 		printf("generation = %4lu\t", (unsigned long)generation);
 		printf("Conflict Count = %lu\t", (unsigned long)conflictCount);
@@ -226,30 +236,48 @@
 	}
 	
 	printf("SUCCEED!\n");
-	return YES;
+	return generation;
 }
 
-- (BOOL)solveInIHCWithMaxGeneration:(NSUInteger)maxGeneration iteration:(NSUInteger)iteration
+- (NSUInteger)solveInIHCWithMaxGeneration:(NSUInteger)maxGeneration maxIteration:(NSUInteger)maxIteration
 {
-	for (NSUInteger i = 0; i < iteration; i++) {
-		if ([self solveInHCWithMaxGeneration:maxGeneration]) {
-			return YES;
+	NSUInteger generation	= 0;
+	// select minimum conflict answer
+	NSUInteger minConflictCount = [self conflictCount];
+	NSUInteger *minConflictColorNumbers = calloc(numberOfVertices, sizeof(NSUInteger));
+	memcpy(minConflictColorNumbers, colorNumbers, numberOfVertices * sizeof(NSUInteger));
+	for (NSUInteger i = 0; i < maxIteration; i++) {
+		NSUInteger tempGeneration = [self solveInHCWithMaxGeneration:maxGeneration];
+		if (tempGeneration) {
+			generation += tempGeneration;
+			free(minConflictColorNumbers);
+			return generation;
 		}
+		if ([self conflictCount] < minConflictCount) { // update minimum conflict count
+			minConflictCount = [self conflictCount];
+			memcpy(minConflictColorNumbers, colorNumbers, numberOfVertices * sizeof(NSUInteger));
+		}
+		generation += maxGeneration;
 	}
+	// restore minimum conflict color numbers
+	// CAUTION: If there's no improvement, before-calculation states is restored.
+	memcpy(colorNumbers, minConflictColorNumbers, numberOfVertices * sizeof(NSUInteger));
+
+	free(minConflictColorNumbers);
 	
-	return NO;
+	return 0;
 }
 
 - (BOOL)solving
 {
-	NSUInteger c = 0;
+	NSUInteger editedAmount = 0;
 	for (NSUInteger i = 0; i < numberOfVertices; i++) {
-		c += colorNumbers[i];
+		editedAmount += colorNumbers[i];
 	}
-	if (c) { // If color numbers are changed, this problem is being solved.
-		if ([self verify]) { // If the problem has already been solved,
-			return NO;
-		}
+	if (editedAmount) { // If color numbers are changed, this problem is being solved.
+//		if ([self verify]) { // If the problem has already been solved, it is regarded as solved
+//			return NO;
+//		}
 		return YES;
 	} else {
 		return NO;
@@ -271,6 +299,7 @@
 {
 	free(adjacencyMatrix);
 	free(colorNumbers);
+	free(conflictVertexFlags);
 }
 
 @end

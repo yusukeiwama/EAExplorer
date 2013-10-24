@@ -25,8 +25,12 @@
 
 @property UILabel *label;
 
+@property BOOL selectingMenus;
+
 @property (nonatomic) CGFloat buttonAlpha;
 
 - (id<UTRadialButtonViewProtocol>)initWithFrame:(CGRect)frame titles:(NSArray *)titles delegate:(id)delegate;
+
+- (void)hideMenus;
 
 @end

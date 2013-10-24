@@ -49,10 +49,10 @@ typedef enum UTGCPAlgorithm {
 
 /* Algorithms ====================================================== */
 // solve in Hill Climbing method
-- (BOOL)solveInHCWithMaxGeneration:(NSUInteger)m;
+- (NSUInteger)solveInHCWithMaxGeneration:(NSUInteger)m;
 
 // solve in Iterated Hill Climbing method
-- (BOOL)solveInIHCWithMaxGeneration:(NSUInteger)maxGeneration iteration:(NSUInteger)iteration;
+- (NSUInteger)solveInIHCWithMaxGeneration:(NSUInteger)maxGeneration maxIteration:(NSUInteger)maxIteration;
 
 - (BOOL)solving;
 

@@ -12,11 +12,11 @@
 
 @implementation UTRadialButtonView {
 	NSMutableArray *buttons;
-	BOOL selectingCommand;
 }
 
 @synthesize x, y, w, h;
 @synthesize label;
+@synthesize selectingMenus;
 @synthesize buttonAlpha;
 @synthesize delegate;
 
@@ -91,8 +91,9 @@
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
 {
 	// Animation
-	if (selectingCommand) {
-		selectingCommand = NO;
+	if (selectingMenus) {
+		// hide radial menus
+		selectingMenus = NO;
 		[UIView animateWithDuration:DURATION animations:^{
 			for (int i = 0; i < [buttons count]; i++) {
 				UIView *aBoxView = buttons[i];
@@ -106,6 +107,7 @@
 			}
 		}];
 	} else {
+		// show radial menus
 		[UIView animateWithDuration:DURATION animations:^{
 			for (int i = 0; i < [buttons count]; i++) {
 				UIView *aBoxView = buttons[i];
@@ -117,8 +119,13 @@
 				aBoxView.hidden = NO;
 			}
 		}];
-		selectingCommand = YES;
+		selectingMenus = YES;
 	}
+}
+
+- (void)hideMenus
+{
+	[self touchesBegan:nil withEvent:nil];
 }
 
 /*
