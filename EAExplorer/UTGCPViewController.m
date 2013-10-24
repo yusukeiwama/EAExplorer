@@ -124,6 +124,7 @@
 	CGFloat fontSize = r;
 	if (gcp.numberOfVertices < 7) { // view boundary check
 		r = 2 * M_PI * R / 7.0 / 2.0 / 2.0;
+		fontSize = r;
 	}
 	
 	// draw vertices randomly
