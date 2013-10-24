@@ -136,7 +136,7 @@
 	}
 	// print conflict indices
 	for (NSUInteger i = 0; i < numberOfVertices; i++) {
-		printf("%d ", conflictVertexFlags[i]);
+		printf("%lu ", (unsigned long)conflictVertexFlags[i]);
 	}
 	printf("(FLAG)\n");
 }
@@ -147,9 +147,7 @@
 	printf("initialized random vertex colors\n");
 	for (NSUInteger i = 0; i < numberOfVertices; i++) {
 		colorNumbers[i] = numberOfColors * (double)rand() / (RAND_MAX + 1.0);
-		printf("%d ", colorNumbers[i]);
 	}
-	printf("\n");
 
 	// 2. end judgement
 	NSUInteger conflictCount = [self conflictCount];
@@ -160,8 +158,8 @@
 			printf("fail to solve...\n");
 			return NO;
 		}
-		printf("generation = %4d\t", generation);
-		printf("Conflict Count = %d\t", conflictCount);
+		printf("generation = %4lu\t", (unsigned long)generation);
+		printf("Conflict Count = %lu\t", (unsigned long)conflictCount);
 		
 		// 3. pick a vertex
 		[self updateConflictIndices];
@@ -169,7 +167,7 @@
 		for (int i = 0; i < numberOfVertices; i++) {
 			conflictVertexCount += conflictVertexFlags[i];
 		}
-		printf("Conflict Vertex Count = %3d\t", conflictVertexCount);
+		printf("Conflict Vertex Count = %3lu\t", (unsigned long)conflictVertexCount);
 		NSUInteger targetConflictVertexOrder = conflictVertexCount * (double)rand() / (RAND_MAX + 1.0) + 1;
 		NSUInteger targetIndex = 0;
 		NSUInteger conflictVertexOrder = 0;
@@ -180,7 +178,7 @@
 			}
 			targetIndex++;
 		}
-		printf("targetIndex = %3d\t", targetIndex);
+		printf("targetIndex = %3lu\t", (unsigned long)targetIndex);
 		
 		// 4. change vertex color to minimize the conflict count
 		NSUInteger minConflictCount = conflictCount;\
@@ -205,6 +203,7 @@
 		}
 		NSUInteger minIndexCount = 0;
 		if (minConflictCount == oldConflictCount) {
+			// if there is no improvement, revert color
 			colorNumbers[targetIndex] = oldTargetColorNumber;
 		} else {
 			for (int i = 0; i < numberOfColors - 1; i++) {
@@ -218,7 +217,7 @@
 			conflictCount = [self conflictCount];
 			printf("new vertex colors\n");
 			for (int i = 0; i < numberOfVertices; i++) {
-				printf("%d ", colorNumbers[i]);
+				printf("%lu ", (unsigned long)colorNumbers[i]);
 			}
 			printf("\n");
 		}

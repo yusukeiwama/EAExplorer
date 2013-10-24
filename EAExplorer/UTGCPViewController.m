@@ -53,7 +53,7 @@
 	// Do any additional setup after loading the view.
 	
 	stopwatch = [[UTStopwatch alloc] init];
-	timerTimeInterval = 0.09;
+	timerTimeInterval = 1.00;
 	
 	repeatability = YES;
 
@@ -74,9 +74,9 @@
 	}
 
 	NSUInteger numberOfColors	= 3;
-	NSUInteger numberOfVertices = numberOfColors * 20;
-//	NSUInteger numberOfEdges	= 3 * numberOfVertices; // e = c * v (sparse)
-	NSUInteger numberOfEdges	= numberOfVertices * (numberOfVertices - 1) / 4; // e = v * (v - 1) / 4 (dense)
+	NSUInteger numberOfVertices = numberOfColors * 10;
+	NSUInteger numberOfEdges	= 3 * numberOfVertices; // e = c * v (sparse)
+//	NSUInteger numberOfEdges	= numberOfVertices * (numberOfVertices - 1) / 4; // e = v * (v - 1) / 4 (dense)
 	
 	numberOfColorsField.text	= [NSString stringWithFormat:@"%lu", (unsigned long)numberOfColors];
 	numberOfVerticesField.text	= [NSString stringWithFormat:@"%lu", (unsigned long)numberOfVertices];
@@ -269,13 +269,17 @@
 
 - (IBAction)verificationButtonAction:(id)sender {
 	NSTimeInterval t = stopwatch.time;
+	BOOL shouldUpdateStopwatchLabel;
+	if (gcp.solved == NO) {
+		shouldUpdateStopwatchLabel = YES;
+	}
 	BOOL OK = [gcp verify];
 
 	if (OK) {
 		resultLabel.text = @"OK";
 		resultLabel.textColor = [UIColor greenColor];
 		[timer invalidate];
-		if (gcp.solved == NO) {
+		if (shouldUpdateStopwatchLabel) {
 			stopwatchLabel.text = [NSString stringWithFormat:@"%02d:%02d:%02d", (int)t / 60, (int)t % 60, (int)((t - (int)t) * 100)];
 		}
 	} else {

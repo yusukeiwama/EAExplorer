@@ -32,6 +32,7 @@ typedef enum UTGCPAlgorithm {
 @property (readonly) BOOL solved;
 
 
+/* Graph Coloring Problem Generator ================================ */
 /** 
  designated initializer
  
@@ -41,27 +42,26 @@ typedef enum UTGCPAlgorithm {
 - (id)initWithNumberOfVertices:(NSUInteger)v numberOfEdges:(NSUInteger)e numberOfColors:(NSUInteger)c;
 + (id)GCPWithNumberOfVertices:(NSUInteger)v numberOfEdges:(NSUInteger)e numberOfColors:(NSUInteger)c;
 
+// Check if there's no conflict
 - (BOOL)verify;
+
 - (NSUInteger)conflictCount;
 
-// Algorithms
-- (BOOL)solveInHCWithMaxGeneration:(NSUInteger)m; // solve in Hill Climbing method
-- (BOOL)solveInIHCWithMaxGeneration:(NSUInteger)maxGeneration iteration:(NSUInteger)iteration; // solve in Iterated Hill Climbing method
+/* Algorithms ====================================================== */
+// solve in Hill Climbing method
+- (BOOL)solveInHCWithMaxGeneration:(NSUInteger)m;
+
+// solve in Iterated Hill Climbing method
+- (BOOL)solveInIHCWithMaxGeneration:(NSUInteger)maxGeneration iteration:(NSUInteger)iteration;
 
 - (BOOL)solving;
+
 - (void)printMatrix;
 
 @end
 
 
 /*
- リファクタリング
- UTGCPクラスは、
- ・クラスメソッドとしてUTGCPインスタンスを返す問題ジェネレータとしての機能
- ・クラスメソッドとしてUTGCPインスタンスを解く問題ソルバーとしての機能
- を備えたものとする。つまり、現状のUTGCPとUTGCPSolverを一つのクラスにまとめる。
- 全体として、GraphColoringProblemの生成から解決まで一手に担えるようなクラスにまとめる。
- 
  実装したいことリスト
  平面性判定
  ゲーム化（スコア
