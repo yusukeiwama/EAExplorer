@@ -29,6 +29,7 @@
 		43519B86180C9BE20068A070 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 43519B85180C9BE20068A070 /* QuartzCore.framework */; };
 		43AA8B72180D47280039D227 /* UTStopwatch.m in Sources */ = {isa = PBXBuildFile; fileRef = 43AA8B71180D47280039D227 /* UTStopwatch.m */; };
 		43ABF0A8180EB5310040A21B /* UTInfoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 43ABF0A7180EB5310040A21B /* UTInfoViewController.m */; };
+		43DDDC07181CC79200205322 /* UTPlotView.m in Sources */ = {isa = PBXBuildFile; fileRef = 43DDDC06181CC79200205322 /* UTPlotView.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -74,6 +75,8 @@
 		43AA8B71180D47280039D227 /* UTStopwatch.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UTStopwatch.m; sourceTree = "<group>"; };
 		43ABF0A6180EB5310040A21B /* UTInfoViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UTInfoViewController.h; sourceTree = "<group>"; };
 		43ABF0A7180EB5310040A21B /* UTInfoViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UTInfoViewController.m; sourceTree = "<group>"; };
+		43DDDC05181CC79200205322 /* UTPlotView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UTPlotView.h; sourceTree = "<group>"; };
+		43DDDC06181CC79200205322 /* UTPlotView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UTPlotView.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -106,6 +109,8 @@
 			children = (
 				431973881811072E0006B2B2 /* UTRadialButtonView.h */,
 				431973891811072E0006B2B2 /* UTRadialButtonView.m */,
+				43DDDC05181CC79200205322 /* UTPlotView.h */,
+				43DDDC06181CC79200205322 /* UTPlotView.m */,
 			);
 			name = View;
 			sourceTree = "<group>";
@@ -326,6 +331,7 @@
 				43519B7E180BB9F50068A070 /* UTGCP.m in Sources */,
 				43519B57180AB3C80068A070 /* UTViewController.m in Sources */,
 				43519B4E180AB3C80068A070 /* UTAppDelegate.m in Sources */,
+				43DDDC07181CC79200205322 /* UTPlotView.m in Sources */,
 				43519B84180BF6E40068A070 /* UTGCPViewController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="4510" systemVersion="12F45" targetRuntime="iOS.CocoaTouch.iPad" propertyAccessControl="none" useAutolayout="YES" initialViewController="JHF-V2-ReP">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="4514" systemVersion="13A603" targetRuntime="iOS.CocoaTouch.iPad" propertyAccessControl="none" useAutolayout="YES" initialViewController="JHF-V2-ReP">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="3742"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="3746"/>
     </dependencies>
     <scenes>
         <!--View Controller-->
@@ -323,6 +323,11 @@
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <color key="color" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
                             </activityIndicatorView>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="PfJ-OB-DED" customClass="UTPlotView">
+                                <rect key="frame" x="24" y="765" width="233" height="123"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+                            </imageView>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <constraints>
@@ -369,6 +374,7 @@
                         <outlet property="numberOfColorsField" destination="lx9-a5-SJV" id="Z1f-b5-9Q0"/>
                         <outlet property="numberOfEdgesField" destination="Jni-0n-NHn" id="Vaa-cE-3qU"/>
                         <outlet property="numberOfVerticesField" destination="re8-hW-qer" id="bsX-A2-550"/>
+                        <outlet property="plotView" destination="PfJ-OB-DED" id="Nfw-Bb-ImS"/>
                         <outlet property="resultLabel" destination="mt7-IM-2JB" id="SSQ-e3-hTK"/>
                         <outlet property="stopwatchLabel" destination="o52-Lp-xZp" id="2DC-Y1-QpG"/>
                         <outlet property="titleLabel" destination="aSe-NC-qvq" id="o0v-RH-gPq"/>

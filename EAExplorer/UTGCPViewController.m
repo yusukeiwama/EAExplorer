@@ -32,6 +32,7 @@
 @synthesize titleLabel;
 @synthesize graphView;
 @synthesize edgeImageView, circleImageView;
+@synthesize plotView;
 @synthesize numberOfVerticesField, numberOfEdgesField, numberOfColorsField;
 @synthesize resultLabel;
 @synthesize indicator;
@@ -92,7 +93,7 @@
 														   titles:buttonTitles
 														delegate:self];
 	[self.view addSubview:radialButtonView];
-
+	
 	[self generateNewGCP];
 	[self updateGraphView];
 	[self updateFields];
@@ -196,6 +197,7 @@
 
 - (void)vertexButtonAction:(id)sender
 {
+	
 	UIButton *button = sender;
 	NSInteger i = [vertexButtons indexOfObject:sender];
 	gcp.colorNumbers[i] = (gcp.colorNumbers[i] + 1) % gcp.numberOfColors;
@@ -408,10 +410,12 @@
 			break;
 		case 1:
 			[gcp solveInIHCWithMaxGeneration:maxGeneration maxIteration:maxIteration];
+			break;
 		default:
 			break;
 	}
 	[self updateVertexColors];
+	[plotView plotWithX:nil Y:gcp.conflictCounts];
 	ConflictCountLabel.text = [NSString stringWithFormat:@"%lu Conflicts", (unsigned long)[gcp conflictCount]];
 }
 

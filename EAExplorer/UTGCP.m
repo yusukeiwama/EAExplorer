@@ -19,6 +19,10 @@
 @synthesize conflictVertexFlags;
 @synthesize solved;
 
+@synthesize conflictCounts;
+
+// @synthesize numberOfTraials;
+
 - (id)initWithNumberOfVertices:(NSUInteger)v numberOfEdges:(NSUInteger)e numberOfColors:(NSUInteger)c
 {
 	if (self = [super init]) {
@@ -29,6 +33,8 @@
 		adjacencyMatrix			= calloc(v * v	, sizeof(NSUInteger));
 		colorNumbers			= calloc(v		, sizeof(NSUInteger));
 		conflictVertexFlags		= calloc(v		, sizeof(NSUInteger));
+		
+		conflictCounts = [NSMutableArray array];
 		
 		[self generateNaively];
 		[self printMatrix];
@@ -143,6 +149,8 @@
 
 - (NSUInteger)solveInHCWithMaxGeneration:(NSUInteger)maxGeneration
 {
+	[conflictCounts removeAllObjects];
+	
 	NSUInteger minConflictCount = [self conflictCount];
 	NSUInteger *minConflictColorNumbers = calloc(numberOfVertices, sizeof(NSUInteger));
 	memcpy(minConflictColorNumbers, colorNumbers, numberOfVertices * sizeof(NSUInteger));
@@ -156,6 +164,7 @@
 	// 2. end judgement
 	NSUInteger conflictCount = [self conflictCount];
 	NSUInteger generation = 1;
+	[conflictCounts addObject:[NSNumber numberWithUnsignedInteger:conflictCount]];
 	while (conflictCount) {
 		// if generation exceeds max generation, end HC and return NO(fail to solve)
 		if (generation > maxGeneration) {
@@ -233,14 +242,20 @@
 		}
 		generation++;
 		printf("\n");
+		printf("conflictCount = %d\n", [[conflictCounts lastObject] unsignedIntegerValue]);
+		[conflictCounts addObject:[NSNumber numberWithUnsignedInteger:conflictCount]];
 	}
 	
+	[conflictCounts addObject:[NSNumber numberWithUnsignedInteger:conflictCount]];
 	printf("SUCCEED!\n");
 	return generation;
 }
 
 - (NSUInteger)solveInIHCWithMaxGeneration:(NSUInteger)maxGeneration maxIteration:(NSUInteger)maxIteration
 {
+	[conflictCounts removeAllObjects];
+	NSMutableArray *tempConflictCounts = [NSMutableArray array];
+	
 	NSUInteger generation	= 0;
 	// select minimum conflict answer
 	NSUInteger minConflictCount = [self conflictCount];
@@ -248,14 +263,22 @@
 	memcpy(minConflictColorNumbers, colorNumbers, numberOfVertices * sizeof(NSUInteger));
 	for (NSUInteger i = 0; i < maxIteration; i++) {
 		NSUInteger tempGeneration = [self solveInHCWithMaxGeneration:maxGeneration];
-		if (tempGeneration) {
+		if (tempGeneration) { // non zero tempGeneration means success in solving in HC
 			generation += tempGeneration;
 			free(minConflictColorNumbers);
+			for (NSUInteger i = 0; i < [conflictCounts count]; i++) { // save conflict counts
+				[tempConflictCounts addObject:conflictCounts[i]];
+			}
+			[conflictCounts removeAllObjects];
+			conflictCounts = tempConflictCounts;
 			return generation;
 		}
-		if ([self conflictCount] < minConflictCount) { // update minimum conflict count
+		if ([self conflictCount] < minConflictCount) { // update minimum conflict count and colors
 			minConflictCount = [self conflictCount];
 			memcpy(minConflictColorNumbers, colorNumbers, numberOfVertices * sizeof(NSUInteger));
+		}
+		for (NSUInteger i = 0; i < [conflictCounts count]; i++) { // save conflict counts
+			[tempConflictCounts addObject:conflictCounts[i]];
 		}
 		generation += maxGeneration;
 	}
@@ -264,6 +287,9 @@
 	memcpy(colorNumbers, minConflictColorNumbers, numberOfVertices * sizeof(NSUInteger));
 
 	free(minConflictColorNumbers);
+
+	[conflictCounts removeAllObjects];
+	conflictCounts = tempConflictCounts;
 	
 	return 0;
 }

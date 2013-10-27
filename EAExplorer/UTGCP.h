@@ -31,6 +31,10 @@ typedef enum UTGCPAlgorithm {
 
 @property (readonly) BOOL solved;
 
+@property (readonly) NSMutableArray *conflictCounts; // conflict count in each generation
+
+// @property (readonly) NSUInteger numberOfTraials;
+
 
 /* Graph Coloring Problem Generator ================================ */
 /** 
@@ -48,10 +52,10 @@ typedef enum UTGCPAlgorithm {
 - (NSUInteger)conflictCount;
 
 /* Algorithms ====================================================== */
-// solve in Hill Climbing method
-- (NSUInteger)solveInHCWithMaxGeneration:(NSUInteger)m;
+// solve in Hill Climbing method. return 0 if fails
+- (NSUInteger)solveInHCWithMaxGeneration:(NSUInteger)maxGeneration;
 
-// solve in Iterated Hill Climbing method
+// solve in Iterated Hill Climbing method. return 0 if fails
 - (NSUInteger)solveInIHCWithMaxGeneration:(NSUInteger)maxGeneration maxIteration:(NSUInteger)maxIteration;
 
 - (BOOL)solving;

@@ -8,6 +8,7 @@
 
 #import <UIKit/UIKit.h>
 #import "UTRadialButtonView.h"
+#import "UTPlotView.h"
 
 @interface UTGCPViewController : UIViewController <UITextFieldDelegate, UIAlertViewDelegate, UTRadialButtonViewProtocol>
 
@@ -24,6 +25,9 @@
 @property (weak, nonatomic) IBOutlet UIImageView *circleImageView;
 
 @property (weak, nonatomic) IBOutlet UILabel *resultLabel;
+
+@property (weak, nonatomic) IBOutlet UTPlotView *plotView;
+
 
 
 @property (weak, nonatomic) IBOutlet UITextField *numberOfColorsField;
