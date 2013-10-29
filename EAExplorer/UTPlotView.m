@@ -47,16 +47,18 @@
 	
 //	CGRect axisRect = CGRectMake(20.0, 0.0, self.frame.size.width - 20.0, self.frame.size.height - 20.0);
 	
+	CGFloat margin = 6.0;
+	
 	// draw axis
-	CGContextMoveToPoint(context, 0.0, self.frame.size.height);
-	CGContextAddLineToPoint(context, self.frame.size.width, self.frame.size.height);
-	CGContextMoveToPoint(context, 0.0, self.frame.size.height);
-	CGContextAddLineToPoint(context, 0.0, 0.0);
+	CGContextMoveToPoint(context, lineWidth / 2.0, self.frame.size.height - margin);
+	CGContextAddLineToPoint(context, self.frame.size.width, self.frame.size.height - margin);
+	CGContextMoveToPoint(context, lineWidth / 2.0, self.frame.size.height - margin);
+	CGContextAddLineToPoint(context, lineWidth / 2.0, 0.0);
 	CGContextStrokePath(context);
 	CGContextSetStrokeColorWithColor(context, [[UIColor lightGrayColor] CGColor]);
 	
 	// plot
-	CGFloat pitch = self.frame.size.width / Y.count;
+	CGFloat pitch = (self.frame.size.width - margin) / Y.count;
 	NSUInteger maxY = 0;
 	for (NSUInteger i = 0; i < Y.count; i++) {
 		if (maxY < [Y[i] unsignedIntegerValue]) {
@@ -67,7 +69,7 @@
 	CGFloat x, y;
 	for (NSUInteger i = 1; i < [Y count]; i++) {
 		x = pitch * i;
-		y = (1 - (double)[Y[i] unsignedIntegerValue] / maxY) * (self.frame.size.height - lineWidth) + lineWidth;
+		y = (1 - (double)[Y[i] unsignedIntegerValue] / maxY) * (self.frame.size.height - lineWidth - margin) + lineWidth;
 		CGContextAddLineToPoint(context, x, y);
 	}
 	CGContextSetStrokeColorWithColor(context, [[UIColor colorWithRed:0.0 green:122.0/255.0 blue:1.0 alpha:1.0] CGColor]);
@@ -75,10 +77,10 @@
 	
 	// plot red point if success
 	if ([Y[Y.count - 1] unsignedIntegerValue] == 0) {
-		CGFloat r = 3.0;
+		CGFloat r = 4.0;
 		CGContextSetFillColorWithColor(context, [[UIColor colorWithRed:1.0 green:0.0 blue:122.0/255.0 alpha:1.0] CGColor]);
 		CGContextFillEllipseInRect(context, CGRectMake(pitch * (Y.count - 1) - r,
-													  self.frame.size.height - lineWidth - r,
+													  self.frame.size.height - lineWidth - r - margin,
 													  2.0 * r,
 													  2.0 * r));
 	}

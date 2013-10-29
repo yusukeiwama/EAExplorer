@@ -293,6 +293,31 @@
 	return 0;
 }
 
+- (NSUInteger)solveInESIncludeParents:(BOOL)includeParents
+					  numberOfParents:(NSUInteger)numberOfParents
+					 numberOfChildren:(NSUInteger)numberOfChildren
+						 mutationRate:(double)mutationRate
+{
+	// initialize parents
+	NSUInteger **parents = calloc(numberOfParents, sizeof(NSUInteger));
+	for (NSUInteger i = 0; i < numberOfParents; i++) {
+		parents[i] = calloc(numberOfVertices, sizeof(NSUInteger)); // parent[i] is array of colorNumbers
+		for (NSUInteger j = 0; j < numberOfVertices; j++) {
+			parents[i][j] = numberOfColors * (double)rand() / (RAND_MAX + 1.0);
+		}
+	}
+	// initialize children
+	NSUInteger **children = calloc(numberOfChildren, sizeof(NSUInteger));
+	for (NSUInteger i = 0; i < numberOfChildren; i++) {
+		children[i] = calloc(numberOfVertices, sizeof(NSUInteger)); // children[i] is array of colorNumbers
+		memcpy(children[i], parents[(int)(numberOfParents * (double)rand() / (RAND_MAX + 1.0))], numberOfVertices * sizeof(NSUInteger)); // select a parent as a child
+		children[i][(int)(numberOfVertices * (double)rand() / (RAND_MAX + 1.0))] = numberOfColors * (double)rand() / (RAND_MAX + 1.0); // mutate random index into random color
+	}
+	
+	
+	return 0;
+}
+
 - (BOOL)solving
 {
 	NSUInteger editedAmount = 0;

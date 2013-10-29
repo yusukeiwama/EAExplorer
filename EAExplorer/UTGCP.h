@@ -52,11 +52,17 @@ typedef enum UTGCPAlgorithm {
 - (NSUInteger)conflictCount;
 
 /* Algorithms ====================================================== */
-// solve in Hill Climbing method. return 0 if fails
+// solve in Hill Climbing method. returns generation or 0 if fails
 - (NSUInteger)solveInHCWithMaxGeneration:(NSUInteger)maxGeneration;
 
-// solve in Iterated Hill Climbing method. return 0 if fails
+// solve in Iterated Hill Climbing method. returns generation or 0 if fails
 - (NSUInteger)solveInIHCWithMaxGeneration:(NSUInteger)maxGeneration maxIteration:(NSUInteger)maxIteration;
+
+// solve in Evolutionary Computation (a.k.a. EC). returns generation or 0 if fails.
+- (NSUInteger)solveInESIncludeParents:(BOOL)includeParents
+					  numberOfParents:(NSUInteger)numberOfParents
+					 numberOfChildren:(NSUInteger)numberOfChildren
+						 mutationRate:(double)mutationRate;
 
 - (BOOL)solving;
 

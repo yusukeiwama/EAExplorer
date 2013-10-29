@@ -10,7 +10,7 @@
 #import "UTInfoViewController.h"
 #import "UTStopwatch.h"
 
-#define MAX_NUMBER_OF_VERTICES 100
+#define MAX_NUMBER_OF_VERTICES 300
 
 @interface UTGCPViewController ()
 

@@ -23,7 +23,6 @@
 		43519B62180AB3C80068A070 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 43519B41180AB3C80068A070 /* UIKit.framework */; };
 		43519B6A180AB3C80068A070 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 43519B68180AB3C80068A070 /* InfoPlist.strings */; };
 		43519B6C180AB3C80068A070 /* EAExplorerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 43519B6B180AB3C80068A070 /* EAExplorerTests.m */; };
-		43519B78180AE9AE0068A070 /* Garden_by_SolStock2048.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 43519B77180AE9AE0068A070 /* Garden_by_SolStock2048.jpg */; };
 		43519B7E180BB9F50068A070 /* UTGCP.m in Sources */ = {isa = PBXBuildFile; fileRef = 43519B7D180BB9F50068A070 /* UTGCP.m */; };
 		43519B84180BF6E40068A070 /* UTGCPViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 43519B83180BF6E40068A070 /* UTGCPViewController.m */; };
 		43519B86180C9BE20068A070 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 43519B85180C9BE20068A070 /* QuartzCore.framework */; };
@@ -65,7 +64,6 @@
 		43519B67180AB3C80068A070 /* EAExplorerTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "EAExplorerTests-Info.plist"; sourceTree = "<group>"; };
 		43519B69180AB3C80068A070 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		43519B6B180AB3C80068A070 /* EAExplorerTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = EAExplorerTests.m; sourceTree = "<group>"; };
-		43519B77180AE9AE0068A070 /* Garden_by_SolStock2048.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; name = Garden_by_SolStock2048.jpg; path = Images/Garden_by_SolStock2048.jpg; sourceTree = "<group>"; };
 		43519B7C180BB9F50068A070 /* UTGCP.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UTGCP.h; sourceTree = "<group>"; };
 		43519B7D180BB9F50068A070 /* UTGCP.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UTGCP.m; sourceTree = "<group>"; };
 		43519B82180BF6E40068A070 /* UTGCPViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UTGCPViewController.h; sourceTree = "<group>"; };
@@ -140,7 +138,6 @@
 		43519B31180AB3C70068A070 = {
 			isa = PBXGroup;
 			children = (
-				43519B77180AE9AE0068A070 /* Garden_by_SolStock2048.jpg */,
 				43519B43180AB3C80068A070 /* EAExplorer */,
 				43519B65180AB3C80068A070 /* EAExplorerTests */,
 				43519B3C180AB3C70068A070 /* Frameworks */,
@@ -305,7 +302,6 @@
 				43519B59180AB3C80068A070 /* Images.xcassets in Resources */,
 				43519B51180AB3C80068A070 /* Main_iPhone.storyboard in Resources */,
 				43519B48180AB3C80068A070 /* InfoPlist.strings in Resources */,
-				43519B78180AE9AE0068A070 /* Garden_by_SolStock2048.jpg in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
