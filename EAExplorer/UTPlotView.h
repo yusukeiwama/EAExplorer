@@ -10,6 +10,8 @@
 
 @interface UTPlotView : UIImageView
 
+@property id delegate;
+
 - (void)plotWithX:(NSMutableArray *)X Y:(NSMutableArray *)Y;
 
 @end

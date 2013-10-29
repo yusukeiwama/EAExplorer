@@ -106,17 +106,17 @@
 
 - (NSUInteger)conflictCount
 {
-	NSUInteger c = 0;
+	NSUInteger conflictCount = 0;
 	for (NSUInteger i = 0; i < numberOfVertices - 1; i++) {
 		for (NSUInteger j = i + 1; j < numberOfVertices; j++) {
 			if (adjacencyMatrix[i * numberOfVertices + j]
 				&& colorNumbers[i] == colorNumbers[j]) {
-				c++;
+				conflictCount++;
 			}
 		}
 	}
 
-	return c;
+	return conflictCount;
 }
 
 - (void)updateConflictIndices
@@ -167,7 +167,7 @@
 	[conflictCounts addObject:[NSNumber numberWithUnsignedInteger:conflictCount]];
 	while (conflictCount) {
 		// if generation exceeds max generation, end HC and return NO(fail to solve)
-		if (generation > maxGeneration) {
+		if (generation >= maxGeneration) {
 			printf("fail to solve...\n");
 			if ([self conflictCount] > minConflictCount) {
 				// restore minimum conflict color numbers
@@ -246,7 +246,6 @@
 		[conflictCounts addObject:[NSNumber numberWithUnsignedInteger:conflictCount]];
 	}
 	
-	[conflictCounts addObject:[NSNumber numberWithUnsignedInteger:conflictCount]];
 	printf("SUCCEED!\n");
 	return generation;
 }

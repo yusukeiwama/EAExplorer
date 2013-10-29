@@ -9,11 +9,16 @@
 #import <UIKit/UIKit.h>
 #import "UTRadialButtonView.h"
 #import "UTPlotView.h"
+#import "UTGCP.h"
 
 @interface UTGCPViewController : UIViewController <UITextFieldDelegate, UIAlertViewDelegate, UTRadialButtonViewProtocol>
 
+@property (readonly) unsigned seed;
+@property UTGCP *gcp;
 @property BOOL showVertexNumber;
 @property BOOL showTimer;
+@property NSUInteger maxGeneration;
+@property NSUInteger maxIteration;
 
 
 @property (weak, nonatomic) IBOutlet UILabel *titleLabel;

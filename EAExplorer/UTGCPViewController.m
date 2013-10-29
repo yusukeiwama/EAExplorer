@@ -7,7 +7,6 @@
 //
 
 #import "UTGCPViewController.h"
-#import "UTGCP.h"
 #import "UTInfoViewController.h"
 #import "UTStopwatch.h"
 
@@ -18,7 +17,6 @@
 @end
 
 @implementation UTGCPViewController {
-	UTGCP *gcp;
 	NSMutableArray *vertexButtons;
 	BOOL repeatability;
 	UTStopwatch *stopwatch;
@@ -27,8 +25,10 @@
 	UTRadialButtonView *radialButtonView;
 }
 
+@synthesize seed;
+@synthesize gcp;
 @synthesize showVertexNumber;
-
+@synthesize maxGeneration, maxIteration;
 @synthesize titleLabel;
 @synthesize graphView;
 @synthesize edgeImageView, circleImageView;
@@ -58,8 +58,9 @@
 	
 	repeatability = YES;
 
-	if (repeatability) {
-		srand(383); // prime number (for repeatability)
+	if (repeatability) { // EXPERIMENT MODE
+		seed = 101;
+		srand(seed); // prime number (for repeatability)
 		UILabel *testLabel = [[UILabel alloc] initWithFrame:CGRectMake(self.view.frame.size.width - 350, 60, 500, 72)]; // top-right
 		testLabel.transform = CGAffineTransformMakeRotation(M_PI_4);
 		testLabel.backgroundColor = [UIColor colorWithRed:0.9 green:0.9 blue:0.9 alpha:0.8];
@@ -70,14 +71,17 @@
 		testLabel.adjustsFontSizeToFitWidth = YES;
 		[self.view addSubview:testLabel];
 		showVertexNumber = YES;
-	} else {
-		srand((unsigned)time(NULL));
+	} else { // RELEASE MODE
+		seed = (unsigned)time(NULL);
+		srand(seed);
 	}
 
 	NSUInteger numberOfColors	= 3;
-	NSUInteger numberOfVertices = numberOfColors * 3;
-//	NSUInteger numberOfEdges	= 3 * numberOfVertices; // e = c * v (sparse)
-	NSUInteger numberOfEdges	= numberOfVertices * (numberOfVertices - 1) / 4; // e = v * (v - 1) / 4 (dense)
+	NSUInteger numberOfVertices = numberOfColors * 3 * 3 * 3;
+	NSUInteger numberOfEdges	= 3 * numberOfVertices; // e = c * v (sparse)
+//	NSUInteger numberOfEdges	= numberOfVertices * (numberOfVertices - 1) / 4; // e = v * (v - 1) / 4 (dense)
+	maxGeneration	= 100;
+	maxIteration	= 10;
 	
 	numberOfColorsField.text	= [NSString stringWithFormat:@"%lu", (unsigned long)numberOfColors];
 	numberOfVerticesField.text	= [NSString stringWithFormat:@"%lu", (unsigned long)numberOfVertices];
@@ -93,6 +97,8 @@
 														   titles:buttonTitles
 														delegate:self];
 	[self.view addSubview:radialButtonView];
+	
+	plotView.delegate = self;
 	
 	[self generateNewGCP];
 	[self updateGraphView];
@@ -402,8 +408,6 @@
 
 - (void)radialButtonActionWithIndex:(NSUInteger)i sender:(id)sender
 {
-	NSUInteger maxGeneration	= 100;
-	NSUInteger maxIteration		= 10;
 	switch (i) {
 		case 0:
 			[gcp solveInHCWithMaxGeneration:maxGeneration];
