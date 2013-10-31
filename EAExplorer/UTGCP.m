@@ -242,7 +242,7 @@
 		}
 		generation++;
 		printf("\n");
-		printf("conflictCount = %d\n", [[conflictCounts lastObject] unsignedIntegerValue]);
+		printf("conflictCount = %lu\n", (unsigned long)[[conflictCounts lastObject] unsignedIntegerValue]);
 		[conflictCounts addObject:[NSNumber numberWithUnsignedInteger:conflictCount]];
 	}
 	
@@ -310,6 +310,8 @@
 	NSUInteger **children = calloc(numberOfChildren, sizeof(NSUInteger));
 	for (NSUInteger i = 0; i < numberOfChildren; i++) {
 		children[i] = calloc(numberOfVertices, sizeof(NSUInteger)); // children[i] is array of colorNumbers
+	}
+	for (NSUInteger i = 0; i < numberOfChildren; i++) {
 		memcpy(children[i], parents[(int)(numberOfParents * (double)rand() / (RAND_MAX + 1.0))], numberOfVertices * sizeof(NSUInteger)); // select a parent as a child
 		children[i][(int)(numberOfVertices * (double)rand() / (RAND_MAX + 1.0))] = numberOfColors * (double)rand() / (RAND_MAX + 1.0); // mutate random index into random color
 	}

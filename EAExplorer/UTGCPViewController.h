@@ -17,7 +17,7 @@
 @property UTGCP *gcp;
 @property BOOL showVertexNumber;
 @property BOOL showTimer;
-@property NSUInteger maxGeneration;
+@property NSUInteger noImprovementLimit;
 @property NSUInteger maxIteration;
 
 

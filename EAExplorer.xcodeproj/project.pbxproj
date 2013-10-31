@@ -269,6 +269,9 @@
 				LastUpgradeCheck = 0500;
 				ORGANIZATIONNAME = "College of Information Science, University of Tsukuba";
 				TargetAttributes = {
+					43519B39180AB3C70068A070 = {
+						DevelopmentTeam = RM3N4N4RRF;
+					};
 					43519B5D180AB3C80068A070 = {
 						TestTargetID = 43519B39180AB3C70068A070;
 					};
@@ -465,6 +468,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "EAExplorer/EAExplorer-Prefix.pch";
 				INFOPLIST_FILE = "EAExplorer/EAExplorer-Info.plist";
@@ -478,6 +482,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "EAExplorer/EAExplorer-Prefix.pch";
 				INFOPLIST_FILE = "EAExplorer/EAExplorer-Info.plist";

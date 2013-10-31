@@ -28,7 +28,7 @@
 @synthesize seed;
 @synthesize gcp;
 @synthesize showVertexNumber;
-@synthesize maxGeneration, maxIteration;
+@synthesize noImprovementLimit, maxIteration;
 @synthesize titleLabel;
 @synthesize graphView;
 @synthesize edgeImageView, circleImageView;
@@ -80,7 +80,7 @@
 	NSUInteger numberOfVertices = numberOfColors * 3 * 3 * 3;
 	NSUInteger numberOfEdges	= 3 * numberOfVertices; // e = c * v (sparse)
 //	NSUInteger numberOfEdges	= numberOfVertices * (numberOfVertices - 1) / 4; // e = v * (v - 1) / 4 (dense)
-	maxGeneration	= 100;
+	noImprovementLimit	= 100;
 	maxIteration	= 10;
 	
 	numberOfColorsField.text	= [NSString stringWithFormat:@"%lu", (unsigned long)numberOfColors];
@@ -410,10 +410,10 @@
 {
 	switch (i) {
 		case 0:
-			[gcp solveInHCWithMaxGeneration:maxGeneration];
+			[gcp solveInHCWithMaxGeneration:noImprovementLimit];
 			break;
 		case 1:
-			[gcp solveInIHCWithMaxGeneration:maxGeneration maxIteration:maxIteration];
+			[gcp solveInIHCWithMaxGeneration:noImprovementLimit maxIteration:maxIteration];
 			break;
 		default:
 			break;
