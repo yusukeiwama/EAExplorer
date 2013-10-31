@@ -410,10 +410,10 @@
 {
 	switch (i) {
 		case 0:
-			[gcp solveInHCWithMaxGeneration:noImprovementLimit];
+			[gcp solveInHCWithNoImprovementLimit:noImprovementLimit];
 			break;
 		case 1:
-			[gcp solveInIHCWithMaxGeneration:noImprovementLimit maxIteration:maxIteration];
+			[gcp solveInIHCWithNoImprovementLimit:noImprovementLimit maxIteration:maxIteration];
 			break;
 		default:
 			break;

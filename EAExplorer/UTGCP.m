@@ -147,10 +147,11 @@
 	printf("(FLAG)\n");
 }
 
-- (NSUInteger)solveInHCWithMaxGeneration:(NSUInteger)maxGeneration
+- (NSUInteger)solveInHCWithNoImprovementLimit:(NSUInteger)limit
 {
 	[conflictCounts removeAllObjects];
 	
+	NSUInteger noImprovementCount = 0;
 	NSUInteger minConflictCount = [self conflictCount];
 	NSUInteger *minConflictColorNumbers = calloc(numberOfVertices, sizeof(NSUInteger));
 	memcpy(minConflictColorNumbers, colorNumbers, numberOfVertices * sizeof(NSUInteger));
@@ -166,8 +167,8 @@
 	NSUInteger generation = 1;
 	[conflictCounts addObject:[NSNumber numberWithUnsignedInteger:conflictCount]];
 	while (conflictCount) {
-		// if generation exceeds max generation, end HC and return NO(fail to solve)
-		if (generation >= maxGeneration) {
+		// if noImprovementCount exceeds its limit, end HC and return 0(fail to solve)
+		if (noImprovementCount >= limit) {
 			printf("fail to solve...\n");
 			if ([self conflictCount] > minConflictCount) {
 				// restore minimum conflict color numbers
@@ -224,7 +225,9 @@
 		if (minConflictCount == oldConflictCount) {
 			// if there is no improvement, revert color
 			colorNumbers[targetIndex] = oldTargetColorNumber;
+			noImprovementCount++;
 		} else {
+			noImprovementCount = 0;
 			for (int i = 0; i < numberOfColors - 1; i++) {
 				if (minColorNumbers[i] != -1) {
 					minIndexCount++;
@@ -250,7 +253,7 @@
 	return generation;
 }
 
-- (NSUInteger)solveInIHCWithMaxGeneration:(NSUInteger)maxGeneration maxIteration:(NSUInteger)maxIteration
+- (NSUInteger)solveInIHCWithNoImprovementLimit:(NSUInteger)limit maxIteration:(NSUInteger)maxIteration
 {
 	[conflictCounts removeAllObjects];
 	NSMutableArray *tempConflictCounts = [NSMutableArray array];
@@ -261,7 +264,7 @@
 	NSUInteger *minConflictColorNumbers = calloc(numberOfVertices, sizeof(NSUInteger));
 	memcpy(minConflictColorNumbers, colorNumbers, numberOfVertices * sizeof(NSUInteger));
 	for (NSUInteger i = 0; i < maxIteration; i++) {
-		NSUInteger tempGeneration = [self solveInHCWithMaxGeneration:maxGeneration];
+		NSUInteger tempGeneration = [self solveInHCWithNoImprovementLimit:limit];
 		if (tempGeneration) { // non zero tempGeneration means success in solving in HC
 			generation += tempGeneration;
 			free(minConflictColorNumbers);
@@ -279,7 +282,7 @@
 		for (NSUInteger i = 0; i < [conflictCounts count]; i++) { // save conflict counts
 			[tempConflictCounts addObject:conflictCounts[i]];
 		}
-		generation += maxGeneration;
+		generation += limit;
 	}
 	// restore minimum conflict color numbers
 	// CAUTION: If there's no improvement, before-calculation states is restored.

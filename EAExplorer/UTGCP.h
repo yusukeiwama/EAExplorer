@@ -53,10 +53,10 @@ typedef enum UTGCPAlgorithm {
 
 /* Algorithms ====================================================== */
 // solve in Hill Climbing method. returns generation or 0 if fails
-- (NSUInteger)solveInHCWithMaxGeneration:(NSUInteger)maxGeneration;
+- (NSUInteger)solveInHCWithNoImprovementLimit:(NSUInteger)limit;
 
 // solve in Iterated Hill Climbing method. returns generation or 0 if fails
-- (NSUInteger)solveInIHCWithMaxGeneration:(NSUInteger)maxGeneration maxIteration:(NSUInteger)maxIteration;
+- (NSUInteger)solveInIHCWithNoImprovementLimit:(NSUInteger)limit maxIteration:(NSUInteger)maxIteration;
 
 // solve in Evolutionary Computation (a.k.a. EC). returns generation or 0 if fails.
 - (NSUInteger)solveInESIncludeParents:(BOOL)includeParents
