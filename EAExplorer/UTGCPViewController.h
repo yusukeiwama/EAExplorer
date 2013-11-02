@@ -17,9 +17,6 @@
 @property UTGCP *gcp;
 @property BOOL showVertexNumber;
 @property BOOL showTimer;
-@property NSUInteger noImprovementLimit;
-@property NSUInteger maxIteration;
-
 
 @property (weak, nonatomic) IBOutlet UILabel *titleLabel;
 

@@ -28,7 +28,6 @@
 @synthesize seed;
 @synthesize gcp;
 @synthesize showVertexNumber;
-@synthesize noImprovementLimit, maxIteration;
 @synthesize titleLabel;
 @synthesize graphView;
 @synthesize edgeImageView, circleImageView;
@@ -76,20 +75,22 @@
 		srand(seed);
 	}
 
+	// Set parameters.
 	NSUInteger numberOfColors	= 3;
-	NSUInteger numberOfVertices = numberOfColors * 3 * 3 * 3;
-	NSUInteger numberOfEdges	= 3 * numberOfVertices; // e = c * v (sparse)
-//	NSUInteger numberOfEdges	= numberOfVertices * (numberOfVertices - 1) / 4; // e = v * (v - 1) / 4 (dense)
-	noImprovementLimit	= 100;
-	maxIteration	= 10;
-	
+	NSUInteger numberOfVertices	= numberOfColors * 10;
+	NSUInteger numberOfEdges;
+	BOOL sparse = YES;
+	if (sparse) {
+		numberOfEdges	= 3 * numberOfVertices;
+	} else {
+		numberOfEdges	= numberOfVertices * (numberOfVertices - 1) / 4;
+	}
 	numberOfColorsField.text	= [NSString stringWithFormat:@"%lu", (unsigned long)numberOfColors];
 	numberOfVerticesField.text	= [NSString stringWithFormat:@"%lu", (unsigned long)numberOfVertices];
 	numberOfEdgesField.text		= [NSString stringWithFormat:@"%lu", (unsigned long)numberOfEdges];
-
+	
 	CGFloat radialButtonViewRadius = 50;
-//	NSArray *buttonTitles = @[@"HC", @"IHC", @"?", @"?", @"?"];
-	NSArray *buttonTitles = @[@"HC", @"IHC"];
+	NSArray *buttonTitles = @[@"HC", @"IHC", @"ES"];
 	radialButtonView = [[UTRadialButtonView alloc] initWithFrame:CGRectMake(graphView.center.x - radialButtonViewRadius,
 																		   graphView.center.y - radialButtonViewRadius,
 																		   2 * radialButtonViewRadius,
@@ -101,9 +102,6 @@
 	plotView.delegate = self;
 	
 	[self generateNewGCP];
-	[self updateGraphView];
-	[self updateFields];
-	resultLabel.hidden = YES;
 }
 
 - (void)didReceiveMemoryWarning
@@ -114,9 +112,9 @@
 
 - (void)updateFields
 {
+	numberOfColorsField.text	= [NSString stringWithFormat:@"%lu", (unsigned long)gcp.numberOfColors];
 	numberOfVerticesField.text	= [NSString stringWithFormat:@"%lu", (unsigned long)gcp.numberOfVertices];
 	numberOfEdgesField.text		= [NSString stringWithFormat:@"%lu", (unsigned long)gcp.numberOfEdges];
-	numberOfColorsField.text	= [NSString stringWithFormat:@"%lu", (unsigned long)gcp.numberOfColors];
 }
 
 
@@ -408,18 +406,30 @@
 
 - (void)radialButtonActionWithIndex:(NSUInteger)i sender:(id)sender
 {
+	// for HC
+	NSUInteger noImprovementLimit = 100;
+	NSUInteger maxIteration = 5;
+	// for ES
+	BOOL includeParents = NO;
+	NSUInteger numberOfParents = 100;
+	NSUInteger numberOfChildren = numberOfParents * 5;
+	// for plot
+	NSArray *conflictCountHistory;
 	switch (i) {
 		case 0:
-			[gcp solveInHCWithNoImprovementLimit:noImprovementLimit];
+			conflictCountHistory = [gcp solveInHCWithNoImprovementLimit:noImprovementLimit];
 			break;
 		case 1:
-			[gcp solveInIHCWithNoImprovementLimit:noImprovementLimit maxIteration:maxIteration];
+			conflictCountHistory = [gcp solveInIHCWithNoImprovementLimit:noImprovementLimit maxIteration:maxIteration];
 			break;
+		case 2:
+			conflictCountHistory = [gcp solveInESIncludeParents:includeParents numberOfParents:numberOfParents numberOfChildren:numberOfChildren];
 		default:
+			conflictCountHistory = [NSArray array];
 			break;
 	}
 	[self updateVertexColors];
-	[plotView plotWithX:nil Y:gcp.conflictCounts];
+	[plotView plotWithX:nil Y:conflictCountHistory];
 	ConflictCountLabel.text = [NSString stringWithFormat:@"%lu Conflicts", (unsigned long)[gcp conflictCount]];
 }
 

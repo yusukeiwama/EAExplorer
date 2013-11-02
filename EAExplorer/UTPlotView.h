@@ -12,6 +12,6 @@
 
 @property id delegate;
 
-- (void)plotWithX:(NSMutableArray *)X Y:(NSMutableArray *)Y;
+- (void)plotWithX:(NSArray *)X Y:(NSArray *)Y;
 
 @end

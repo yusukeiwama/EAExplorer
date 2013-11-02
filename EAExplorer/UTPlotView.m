@@ -22,7 +22,7 @@
     return self;
 }
 
-- (void)plotWithX:(NSMutableArray *)X Y:(NSMutableArray *)Y
+- (void)plotWithX:(NSArray *)X Y:(NSArray *)Y
 {
 	/*
 	// 課題用出力ここから。ベクトルYを出力

@@ -31,8 +31,6 @@ typedef enum UTGCPAlgorithm {
 
 @property (readonly) BOOL solved;
 
-@property (readonly) NSMutableArray *conflictCounts; // conflict count in each generation
-
 // @property (readonly) NSUInteger numberOfTraials;
 
 
@@ -52,17 +50,16 @@ typedef enum UTGCPAlgorithm {
 - (NSUInteger)conflictCount;
 
 /* Algorithms ====================================================== */
-// solve in Hill Climbing method. returns generation or 0 if fails
-- (NSUInteger)solveInHCWithNoImprovementLimit:(NSUInteger)limit;
+/** Solve in Hill Climbing method. This method returns history of conflict count for each generation. You can check if GCP was solved by seeing lastObject of it. @return History of conflict count for each generation. */
+- (NSArray *)solveInHCWithNoImprovementLimit:(NSUInteger)limit;
 
-// solve in Iterated Hill Climbing method. returns generation or 0 if fails
-- (NSUInteger)solveInIHCWithNoImprovementLimit:(NSUInteger)limit maxIteration:(NSUInteger)maxIteration;
+// solve in Iterated Hill Climbing method.
+- (NSArray *)solveInIHCWithNoImprovementLimit:(NSUInteger)limit maxIteration:(NSUInteger)maxIteration;
 
-// solve in Evolutionary Computation (a.k.a. EC). returns generation or 0 if fails.
-- (NSUInteger)solveInESIncludeParents:(BOOL)includeParents
-					  numberOfParents:(NSUInteger)numberOfParents
-					 numberOfChildren:(NSUInteger)numberOfChildren
-						 mutationRate:(double)mutationRate;
+// solve in Evolutionary Computation (a.k.a. EC). returns YES if succeeds
+- (NSArray *)solveInESIncludeParents:(BOOL)includeParents
+					 numberOfParents:(NSUInteger)numberOfParents
+					numberOfChildren:(NSUInteger)numberOfChildren;
 
 - (BOOL)solving;
 
@@ -70,9 +67,14 @@ typedef enum UTGCPAlgorithm {
 
 @end
 
+/*
+ ToDo
+ ソルバー・アルゴリズムの返り値をconflictCountHistoryにする。generationはポインタ引数渡しによって呼び出し元が取得できるようにする。
+ */
 
 /*
  実装したいことリスト
+ 違反辺のハイライト
  平面性判定
  ゲーム化（スコア
  何色使っているか

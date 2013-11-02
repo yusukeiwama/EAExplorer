@@ -19,8 +19,6 @@
 @synthesize conflictVertexFlags;
 @synthesize solved;
 
-@synthesize conflictCounts;
-
 // @synthesize numberOfTraials;
 
 - (id)initWithNumberOfVertices:(NSUInteger)v numberOfEdges:(NSUInteger)e numberOfColors:(NSUInteger)c
@@ -33,8 +31,6 @@
 		adjacencyMatrix			= calloc(v * v	, sizeof(NSUInteger));
 		colorNumbers			= calloc(v		, sizeof(NSUInteger));
 		conflictVertexFlags		= calloc(v		, sizeof(NSUInteger));
-		
-		conflictCounts = [NSMutableArray array];
 		
 		[self generateNaively];
 		[self printMatrix];
@@ -147,17 +143,17 @@
 	printf("(FLAG)\n");
 }
 
-- (NSUInteger)solveInHCWithNoImprovementLimit:(NSUInteger)limit
+- (NSArray *)solveInHCWithNoImprovementLimit:(NSUInteger)limit
 {
-	[conflictCounts removeAllObjects];
-	
+	NSMutableArray *conflictCountHistory = [NSMutableArray array];
 	NSUInteger noImprovementCount = 0;
+	
+	// Back-up before-state
 	NSUInteger minConflictCount = [self conflictCount];
 	NSUInteger *minConflictColorNumbers = calloc(numberOfVertices, sizeof(NSUInteger));
 	memcpy(minConflictColorNumbers, colorNumbers, numberOfVertices * sizeof(NSUInteger));
 
 	// 1. initialize vertex colors in random
-	printf("initialized random vertex colors\n");
 	for (NSUInteger i = 0; i < numberOfVertices; i++) {
 		colorNumbers[i] = numberOfColors * (double)rand() / (RAND_MAX + 1.0);
 	}
@@ -165,21 +161,17 @@
 	// 2. end judgement
 	NSUInteger conflictCount = [self conflictCount];
 	NSUInteger generation = 1;
-	[conflictCounts addObject:[NSNumber numberWithUnsignedInteger:conflictCount]];
+	[conflictCountHistory addObject:[NSNumber numberWithUnsignedInteger:conflictCount]];
 	while (conflictCount) {
 		// if noImprovementCount exceeds its limit, end HC and return 0(fail to solve)
-		if (noImprovementCount >= limit) {
-			printf("fail to solve...\n");
+		if (noImprovementCount >= limit) { // fail to solve
 			if ([self conflictCount] > minConflictCount) {
-				// restore minimum conflict color numbers
-				// CAUTION: If there's no improvement, before-calculation states is restored.
+				// If there's no improvement, discard changes and restore before-state.
 				memcpy(colorNumbers, minConflictColorNumbers, numberOfVertices * sizeof(NSUInteger));
 				free(minConflictColorNumbers);
 			}
-			return 0;
+			return conflictCountHistory;
 		}
-		printf("generation = %4lu\t", (unsigned long)generation);
-		printf("Conflict Count = %lu\t", (unsigned long)conflictCount);
 		
 		// 3. pick a vertex
 		[self updateConflictIndices];
@@ -187,7 +179,6 @@
 		for (int i = 0; i < numberOfVertices; i++) {
 			conflictVertexCount += conflictVertexFlags[i];
 		}
-		printf("Conflict Vertex Count = %3lu\t", (unsigned long)conflictVertexCount);
 		NSUInteger targetConflictVertexOrder = conflictVertexCount * (double)rand() / (RAND_MAX + 1.0) + 1;
 		NSUInteger targetIndex = 0;
 		NSUInteger conflictVertexOrder = 0;
@@ -198,7 +189,6 @@
 			}
 			targetIndex++;
 		}
-		printf("targetIndex = %3lu\t", (unsigned long)targetIndex);
 		
 		// 4. change vertex color to minimize the conflict count
 		NSUInteger minConflictCount = conflictCount;\
@@ -222,12 +212,11 @@
 			}
 		}
 		NSUInteger minIndexCount = 0;
-		if (minConflictCount == oldConflictCount) {
+		if (minConflictCount == oldConflictCount) { // no improvement...
 			// if there is no improvement, revert color
 			colorNumbers[targetIndex] = oldTargetColorNumber;
 			noImprovementCount++;
-		} else {
-			noImprovementCount = 0;
+		} else { // improved!
 			for (int i = 0; i < numberOfColors - 1; i++) {
 				if (minColorNumbers[i] != -1) {
 					minIndexCount++;
@@ -237,69 +226,50 @@
 			NSUInteger newColorNumber = minColorNumbers[newColorNumberIndex];
 			colorNumbers[targetIndex] = newColorNumber;
 			conflictCount = [self conflictCount];
-			printf("new vertex colors\n");
-			for (int i = 0; i < numberOfVertices; i++) {
-				printf("%lu ", (unsigned long)colorNumbers[i]);
-			}
-			printf("\n");
 		}
 		generation++;
-		printf("\n");
-		printf("conflictCount = %lu\n", (unsigned long)[[conflictCounts lastObject] unsignedIntegerValue]);
-		[conflictCounts addObject:[NSNumber numberWithUnsignedInteger:conflictCount]];
+		[conflictCountHistory addObject:[NSNumber numberWithUnsignedInteger:conflictCount]];
 	}
 	
-	printf("SUCCEED!\n");
-	return generation;
+	return conflictCountHistory;
 }
 
-- (NSUInteger)solveInIHCWithNoImprovementLimit:(NSUInteger)limit maxIteration:(NSUInteger)maxIteration
+- (NSArray *)solveInIHCWithNoImprovementLimit:(NSUInteger)limit
+							maxIteration:(NSUInteger)maxIteration
 {
-	[conflictCounts removeAllObjects];
-	NSMutableArray *tempConflictCounts = [NSMutableArray array];
-	
-	NSUInteger generation	= 0;
+	NSMutableArray *conflictCountHistory = [NSMutableArray array];
 	// select minimum conflict answer
 	NSUInteger minConflictCount = [self conflictCount];
+	// save before-state so that it can revert when there is no improvement
 	NSUInteger *minConflictColorNumbers = calloc(numberOfVertices, sizeof(NSUInteger));
 	memcpy(minConflictColorNumbers, colorNumbers, numberOfVertices * sizeof(NSUInteger));
+	// iterate HC
 	for (NSUInteger i = 0; i < maxIteration; i++) {
-		NSUInteger tempGeneration = [self solveInHCWithNoImprovementLimit:limit];
-		if (tempGeneration) { // non zero tempGeneration means success in solving in HC
-			generation += tempGeneration;
+		NSArray *conflictCountHistoryInHC;
+		conflictCountHistoryInHC = [self solveInHCWithNoImprovementLimit:limit];
+		[conflictCountHistory addObjectsFromArray:conflictCountHistoryInHC];
+		if ([[conflictCountHistory lastObject] unsignedIntegerValue] == 0) { // succeeded in HC
 			free(minConflictColorNumbers);
-			for (NSUInteger i = 0; i < [conflictCounts count]; i++) { // save conflict counts
-				[tempConflictCounts addObject:conflictCounts[i]];
+			return conflictCountHistory;
+		} else { // failed in HC
+			if ([self conflictCount] < minConflictCount) { // update minimum conflict count and colors
+				minConflictCount = [self conflictCount];
+				memcpy(minConflictColorNumbers, colorNumbers, numberOfVertices * sizeof(NSUInteger));
 			}
-			[conflictCounts removeAllObjects];
-			conflictCounts = tempConflictCounts;
-			return generation;
 		}
-		if ([self conflictCount] < minConflictCount) { // update minimum conflict count and colors
-			minConflictCount = [self conflictCount];
-			memcpy(minConflictColorNumbers, colorNumbers, numberOfVertices * sizeof(NSUInteger));
-		}
-		for (NSUInteger i = 0; i < [conflictCounts count]; i++) { // save conflict counts
-			[tempConflictCounts addObject:conflictCounts[i]];
-		}
-		generation += limit;
 	}
 	// restore minimum conflict color numbers
 	// CAUTION: If there's no improvement, before-calculation states is restored.
 	memcpy(colorNumbers, minConflictColorNumbers, numberOfVertices * sizeof(NSUInteger));
 
 	free(minConflictColorNumbers);
-
-	[conflictCounts removeAllObjects];
-	conflictCounts = tempConflictCounts;
 	
-	return 0;
+	return conflictCountHistory;
 }
 
-- (NSUInteger)solveInESIncludeParents:(BOOL)includeParents
-					  numberOfParents:(NSUInteger)numberOfParents
-					 numberOfChildren:(NSUInteger)numberOfChildren
-						 mutationRate:(double)mutationRate
+- (NSArray *)solveInESIncludeParents:(BOOL)includeParents
+				numberOfParents:(NSUInteger)numberOfParents
+			   numberOfChildren:(NSUInteger)numberOfChildren
 {
 	// initialize parents
 	NSUInteger **parents = calloc(numberOfParents, sizeof(NSUInteger));
@@ -318,7 +288,6 @@
 		memcpy(children[i], parents[(int)(numberOfParents * (double)rand() / (RAND_MAX + 1.0))], numberOfVertices * sizeof(NSUInteger)); // select a parent as a child
 		children[i][(int)(numberOfVertices * (double)rand() / (RAND_MAX + 1.0))] = numberOfColors * (double)rand() / (RAND_MAX + 1.0); // mutate random index into random color
 	}
-	
 	
 	return 0;
 }
