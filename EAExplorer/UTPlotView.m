@@ -23,23 +23,7 @@
 }
 
 - (void)plotWithX:(NSArray *)X Y:(NSArray *)Y
-{
-	/*
-	// 課題用出力ここから。ベクトルYを出力
-	NSMutableString *YString = [NSMutableString string];
-	for (NSUInteger i = 0; i < Y.count; i++) {
-		[YString appendFormat:@"%d\n", [Y[i] unsignedIntegerValue]];
-	}
-	NSArray *filePaths = NSSearchPathForDirectoriesInDomains(NSDocumentationDirectory, NSUserDomainMask, YES);
-	NSString *documentDir = [filePaths objectAtIndex:0];
-	UTGCPViewController *vc = delegate;
-	NSString *outputPath = [documentDir stringByAppendingPathComponent:[NSString stringWithFormat:@"G2CC_C%dV%dE%dG%dS%d.txt", vc.gcp.numberOfColors, vc.gcp.numberOfVertices, vc.gcp.numberOfEdges, vc.maxGeneration, vc.seed]]; // HC
-//	NSString *outputPath = [documentDir stringByAppendingPathComponent:[NSString stringWithFormat:@"G2CC_C%dV%dE%dG%dI%dS%d.txt", vc.gcp.numberOfColors, vc.gcp.numberOfVertices, vc.gcp.numberOfEdges, vc.maxGeneration, vc.maxIteration, vc.seed]]; // IHC
-	NSURL *outputURL = [NSURL fileURLWithPath:outputPath]; // Example Path: /Users/yusukeiwama/Library/Application Support/iPhone Simulator/7.0.3/Applications/B90652A7-F520-4AB8-A56D-407C99FFE76D/Library/Documentation/G2CC_C3V9E18G100I10S383
-	[YString writeToURL:outputURL atomically:YES encoding:NSUTF8StringEncoding error:nil];
-	// 課題用出力ここまで
-	 */
-	
+{	
 	UIGraphicsBeginImageContextWithOptions(self.frame.size, NO, 0);
 	CGContextRef context = UIGraphicsGetCurrentContext();
 	CGFloat lineWidth = 1.0;

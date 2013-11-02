@@ -32,8 +32,7 @@
 		colorNumbers			= calloc(v		, sizeof(NSUInteger));
 		conflictVertexFlags		= calloc(v		, sizeof(NSUInteger));
 		
-		[self generateNaively];
-		[self printMatrix];
+		[self generateAdjacencyMatrix];
 	}
 	
 	return self;
@@ -45,7 +44,7 @@
 }
 
 
-- (void)generateNaively
+- (void)generateAdjacencyMatrix
 {
 	// prepare required number of ones
 	NSUInteger numberOfVerticesInColor = numberOfVertices / numberOfColors;
@@ -68,7 +67,7 @@
 		}
 	}
 	
-	// random mapping
+	// random mapping for quiz
 	NSUInteger v = numberOfVertices;
 	NSUInteger *tempMatrix = calloc(v * v, sizeof(NSUInteger));
 	memcpy(tempMatrix, adjacencyMatrix, sizeof(NSUInteger) * v * v);
@@ -117,7 +116,6 @@
 
 - (void)updateConflictIndices
 {
-	printf("conflictIndices: \n");
 	// clear conflict indices to 0
 	for (NSUInteger i = 0; i < numberOfVertices - 1; i++) {
 		for (NSUInteger j = i + 1; j < numberOfVertices; j++) {
@@ -136,11 +134,6 @@
 			}
 		}
 	}
-	// print conflict indices
-	for (NSUInteger i = 0; i < numberOfVertices; i++) {
-		printf("%lu ", (unsigned long)conflictVertexFlags[i]);
-	}
-	printf("(FLAG)\n");
 }
 
 - (NSArray *)solveInHCWithNoImprovementLimit:(NSUInteger)limit

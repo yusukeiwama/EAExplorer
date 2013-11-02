@@ -10,6 +10,7 @@
 #import "UTInfoViewController.h"
 #import "UTStopwatch.h"
 
+#define MAX_NUMBER_OF_COLORS 8
 #define MAX_NUMBER_OF_VERTICES 300
 
 @interface UTGCPViewController ()
@@ -23,6 +24,11 @@
 	NSTimer *timer;
 	NSTimeInterval timerTimeInterval;
 	UTRadialButtonView *radialButtonView;
+	
+	// Graph information
+	NSUInteger numberOfColors;
+	NSUInteger numberOfVertices;
+	NSUInteger numberOfEdges;
 }
 
 @synthesize seed;
@@ -76,18 +82,10 @@
 	}
 
 	// Set parameters.
-	NSUInteger numberOfColors	= 3;
-	NSUInteger numberOfVertices	= numberOfColors * 10;
-	NSUInteger numberOfEdges;
-	BOOL sparse = YES;
-	if (sparse) {
-		numberOfEdges	= 3 * numberOfVertices;
-	} else {
-		numberOfEdges	= numberOfVertices * (numberOfVertices - 1) / 4;
-	}
-	numberOfColorsField.text	= [NSString stringWithFormat:@"%lu", (unsigned long)numberOfColors];
-	numberOfVerticesField.text	= [NSString stringWithFormat:@"%lu", (unsigned long)numberOfVertices];
-	numberOfEdgesField.text		= [NSString stringWithFormat:@"%lu", (unsigned long)numberOfEdges];
+	numberOfColors		= 3;
+	numberOfVertices	= 9;
+	numberOfEdges		= 18;
+	[self updateFields];
 	
 	CGFloat radialButtonViewRadius = 50;
 	NSArray *buttonTitles = @[@"HC", @"IHC", @"ES"];
@@ -102,6 +100,53 @@
 	plotView.delegate = self;
 	
 	[self generateNewGCP];
+	
+	/*
+	// EXPERIMENT PROGRAM STARTS HERE (NOT REQUIRED FOR RELEASE VERSION)
+	// general experiment settings
+	NSUInteger numberOfExperimentsForEachCondition = 10;
+	NSArray *randSeeds = @[@101, @821];
+	// for HC
+	NSUInteger noImprovementLimit = 100;
+	NSUInteger maxIteration = 5;
+	// for ES
+//	BOOL includeParents = NO;
+//	NSUInteger numberOfParents = 100;
+//	NSUInteger numberOfChildren = numberOfParents * 5;
+	
+	for (NSNumber *aRandSeed in randSeeds) {
+		unsigned aSeed = [aRandSeed integerValue];
+		srand(aSeed);
+
+		BOOL sparse = YES;
+	EXPERIMENT: // do spase case and dense case
+		// HC experiment
+		for (numberOfVertices = 30; numberOfVertices <= 150; numberOfVertices += 30) {
+			if (sparse) { // sparse
+				numberOfEdges	= 3 * numberOfVertices;
+			} else { // dense
+				numberOfEdges	= numberOfVertices * (numberOfVertices - 1) / 4;
+			}
+			[self generateNewGCP];
+			for (NSInteger i = 0; i < numberOfExperimentsForEachCondition; i++) {
+				[self saveConflictHistory:[gcp solveInHCWithNoImprovementLimit:noImprovementLimit]
+								 fileName:[NSString stringWithFormat:@"conflictCountHistoryInHC%d_S%dN%dV%dE%d", i, aSeed, noImprovementLimit, numberOfVertices, numberOfEdges]];
+			}
+		}
+		
+		// IHC experiment
+		for (NSUInteger i = 0; i < numberOfExperimentsForEachCondition; i++) {
+			[self saveConflictHistory:[gcp solveInIHCWithNoImprovementLimit:noImprovementLimit maxIteration:maxIteration]
+							 fileName:[NSString stringWithFormat:@"conflictCountHistoryInIHC%d_S%dN%dI%dV%dE%d", i, aSeed, noImprovementLimit, maxIteration, numberOfVertices, numberOfEdges]];
+		}
+		
+		if (sparse) {
+			sparse = NO;
+			goto EXPERIMENT;
+		}
+	}
+	// EXPERIMENT PROGRAM ENDS HERE (NOT REQUIRED FOR RELEASE VERSION)
+	*/
 }
 
 - (void)didReceiveMemoryWarning
@@ -110,20 +155,29 @@
     // Dispose of any resources that can be recreated.
 }
 
-- (void)updateFields
+- (void)saveConflictHistory:(NSArray *)history fileName:(NSString *)name
 {
-	numberOfColorsField.text	= [NSString stringWithFormat:@"%lu", (unsigned long)gcp.numberOfColors];
-	numberOfVerticesField.text	= [NSString stringWithFormat:@"%lu", (unsigned long)gcp.numberOfVertices];
-	numberOfEdgesField.text		= [NSString stringWithFormat:@"%lu", (unsigned long)gcp.numberOfEdges];
+	 NSMutableString *YString = [NSMutableString string];
+	 for (NSUInteger i = 0; i < history.count; i++) {
+	 [YString appendFormat:@"%d\n", [history[i] unsignedIntegerValue]];
+	 }
+	 NSArray *filePaths = NSSearchPathForDirectoriesInDomains(NSDocumentationDirectory, NSUserDomainMask, YES);
+	 NSString *documentDir = [filePaths objectAtIndex:0];
+	 NSString *outputPath = [documentDir stringByAppendingPathComponent:name];
+	 NSURL *outputURL = [NSURL fileURLWithPath:outputPath]; // Example Path: /Users/yusukeiwama/Library/Application Support/iPhone Simulator/7.0.3/Applications/B90652A7-F520-4AB8-A56D-407C99FFE76D/Library/Documentation/G2CC_C3V9E18G100I10S383
+	 [YString writeToURL:outputURL atomically:YES encoding:NSUTF8StringEncoding error:nil];
 }
 
+- (void)updateFields
+{
+	numberOfColorsField.text	= [NSString stringWithFormat:@"%lu", (unsigned long)numberOfColors];
+	numberOfVerticesField.text	= [NSString stringWithFormat:@"%lu", (unsigned long)numberOfVertices];
+	numberOfEdgesField.text		= [NSString stringWithFormat:@"%lu", (unsigned long)numberOfEdges];
+}
 
 - (void)updateGraphView
 {
 	CGFloat lineWidth = 15.0 / gcp.numberOfVertices;
-//	if (lineWidth < 0.5) {
-//		lineWidth = 0.5;
-//	}
 	UIColor *lineColor = [UIColor blackColor];
 	CGFloat R = graphView.frame.size.height * 2.0 / 5.0; // graph visual radius
 	CGFloat r = 2 * M_PI * R / gcp.numberOfVertices / 2.0 / 2.0; // vertex visual radius
@@ -254,12 +308,12 @@
 
 - (void)generateNewGCP
 {
-	gcp = [[UTGCP alloc] initWithNumberOfVertices:[numberOfVerticesField.text integerValue]
-									numberOfEdges:[numberOfEdgesField.text integerValue]
-								   numberOfColors:[numberOfColorsField.text integerValue]];
+	// Generate a new Graph Coloring Problem.
+	gcp = [[UTGCP alloc] initWithNumberOfVertices:numberOfVertices numberOfEdges:numberOfEdges numberOfColors:numberOfColors];
 	[self updateGraphView];
 	ConflictCountLabel.text = [NSString stringWithFormat:@"%lu Conflicts", (unsigned long)[gcp conflictCount]];
 
+	// Set timer for stopwatch.
 	if (timer.isValid) { // invalidate old timer
 		[timer invalidate];
 	}
@@ -365,34 +419,34 @@
 {
 	[textField resignFirstResponder];
 	
-	NSUInteger c = [numberOfColorsField.text integerValue];		// number of colors
-	NSUInteger v = [numberOfVerticesField.text integerValue];	// number of vertices
-	NSUInteger e = [numberOfEdgesField.text integerValue];		// number of edges
+	numberOfColors = [numberOfColorsField.text integerValue];		// number of colors
+	numberOfVertices = [numberOfVerticesField.text integerValue];	// number of vertices
+	numberOfEdges = [numberOfEdgesField.text integerValue];			// number of edges
 	
 	// check c
-	if (c < 2) { // 2 <= c <= 8
-		c = 2;
-		numberOfColorsField.text = [NSString stringWithFormat:@"%lu", (unsigned long)c];
-	} else if (c > 8) {
-		c = 8;
+	if (numberOfColors < 2) { // 2 <= c <= 8
+		numberOfColors = 2;
+		numberOfColorsField.text = [NSString stringWithFormat:@"%lu", (unsigned long)numberOfColors];
+	} else if (numberOfColors > MAX_NUMBER_OF_COLORS) {
+		numberOfColors = MAX_NUMBER_OF_COLORS;
 		
-		numberOfColorsField.text = [NSString stringWithFormat:@"%lu", (unsigned long)c];
+		numberOfColorsField.text = [NSString stringWithFormat:@"%lu", (unsigned long)numberOfColors];
 	}
 
 	// check v
-	if (v < c) {
-		v = c;
+	if (numberOfVertices < numberOfColors) {
+		numberOfVertices = numberOfColors;
 	}
-	if (v > MAX_NUMBER_OF_VERTICES) {
-		v = MAX_NUMBER_OF_VERTICES;
+	if (numberOfVertices > MAX_NUMBER_OF_VERTICES) {
+		numberOfVertices = MAX_NUMBER_OF_VERTICES;
 	}
-	v = v / c * c;
-	numberOfVerticesField.text = [NSString stringWithFormat:@"%lu", (unsigned long)v];
+	numberOfVertices = numberOfVertices / numberOfColors * numberOfColors;
+	numberOfVerticesField.text = [NSString stringWithFormat:@"%lu", (unsigned long)numberOfVertices];
 
 	// check e
-	if (e > (v / c) * (v / c) * c * (c - 1) / 2) {
-		e = (v / c) * (v / c) * c * (c - 1) / 2;
-		numberOfEdgesField.text = [NSString stringWithFormat:@"%lu", (unsigned long)e];
+	if (numberOfEdges > (numberOfVertices / numberOfColors) * (numberOfVertices / numberOfColors) * numberOfColors * (numberOfColors - 1) / 2) {
+		numberOfEdges = (numberOfVertices / numberOfColors) * (numberOfVertices / numberOfColors) * numberOfColors * (numberOfColors - 1) / 2;
+		numberOfEdgesField.text = [NSString stringWithFormat:@"%lu", (unsigned long)numberOfEdges];
 	}
 		
 	return YES;
