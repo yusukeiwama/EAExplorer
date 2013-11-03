@@ -8,6 +8,13 @@
 
 #import "UTGCP.h"
 
+int order;
+
+int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
+{
+	return a[order] - b[order];
+}
+
 @implementation UTGCP
 
 @synthesize numberOfVertices;
@@ -25,6 +32,7 @@
 {
 	if (self = [super init]) {
 		numberOfVertices	= v;
+		order				= v;
 		numberOfEdges		= e;
 		numberOfColors		= c;
 
@@ -288,6 +296,8 @@
 {
 	NSMutableArray *conflictHistory = [NSMutableArray array];
 	NSUInteger minConflictCount = [self conflictCount];
+	NSUInteger maxConflictCount = minConflictCount;
+	NSUInteger aveConflictCount = minConflictCount;
 	
 	// initialize parents with random colors
 	NSUInteger **parents = calloc(numberOfParents, sizeof(NSUInteger));
@@ -296,10 +306,18 @@
 		for (NSUInteger j = 0; j < numberOfVertices; j++) {
 			parents[i][j] = numberOfColors * (double)rand() / (RAND_MAX + 1.0);
 		}
-		parents[i][numberOfVertices] = [self conflictCountWithColorNumbers:parents[i]]; // store conflict count
+		NSUInteger tmpConflictCount = [self conflictCountWithColorNumbers:parents[i]];
+		parents[i][numberOfVertices] = tmpConflictCount;
+		aveConflictCount += tmpConflictCount;
 	}
+	aveConflictCount /= numberOfParents;
 	// sort parents
-	
+	qsort(parents, numberOfParents, sizeof(NSUInteger *), (int(*)(const void*, const void*))conflictCountCompare);
+	NSArray *conflictInfo = @[[NSNumber numberWithInteger:minConflictCount],
+							  [NSNumber numberWithInteger:aveConflictCount],
+							  [NSNumber numberWithInteger:maxConflictCount]];
+	[conflictHistory addObject:conflictInfo];
+	aveConflictCount = 0;
 	
 	// initialize children
 	NSUInteger **children = calloc(numberOfChildren, sizeof(NSUInteger));
@@ -311,21 +329,39 @@
 	while (minConflictCount) {
 		// end judgement
 		if (noImprovementCount > limit) { // failure...
+			memcpy(colorNumbers, children[0], sizeof(NSUInteger) * numberOfVertices);
 			return conflictHistory;
 		}
 		
 		// generate childrens
 		for (NSUInteger i = 0; i < numberOfChildren; i++) {
 			memcpy(children[i], parents[(int)(numberOfParents * (double)rand() / (RAND_MAX + 1.0))], numberOfVertices * sizeof(NSUInteger)); // select a parent as a child
-			children[i][(int)(numberOfVertices * (double)rand() / (RAND_MAX + 1.0))] = numberOfColors * (double)rand() / (RAND_MAX + 1.0); // mutate random index into random color
+			NSInteger targetIndex = numberOfVertices * (double)rand() / (RAND_MAX + 1.0); // mutate rondom index
+			NSUInteger tmpColorNumber = children[i][targetIndex];
+			while (tmpColorNumber == children[i][targetIndex]) { // mutate color at the index into random but different color
+				children[i][targetIndex] = numberOfColors * (double)rand() / (RAND_MAX + 1.0);
+			}
+			NSUInteger tmpConflictCount = [self conflictCountWithColorNumbers:children[i]];
+			children[i][numberOfVertices] = tmpConflictCount;
+			aveConflictCount += tmpConflictCount;
 		}
+		aveConflictCount /= numberOfChildren;
 
 		// sort childrens
-		
-		// select next parents
+		qsort(children, numberOfChildren, sizeof(NSUInteger *), (int(*)(const void*, const void*))conflictCountCompare);
+		if (children[0][numberOfVertices] < minConflictCount) {
+			minConflictCount = children[0][numberOfVertices];
+		} else {
+			noImprovementCount++;
+		}
+		conflictInfo = @[[NSNumber numberWithInteger:children[0][numberOfVertices]],
+						 [NSNumber numberWithInteger:aveConflictCount],
+						 [NSNumber numberWithInteger:children[numberOfChildren - 1][numberOfVertices]]];
+		[conflictHistory addObject:conflictInfo];
+		aveConflictCount = 0;
 	}
 	
-	
+	memcpy(colorNumbers, children[0], sizeof(NSUInteger) * numberOfVertices);
 	return conflictHistory; // success!
 }
 

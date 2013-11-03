@@ -479,7 +479,7 @@
 			break;
 	}
 	[self updateVertexColors];
-	[plotView plotWithX:nil Y:conflictCountHistory];
+//	[plotView plotWithX:nil Y:conflictCountHistory];
 	ConflictCountLabel.text = [NSString stringWithFormat:@"%lu Conflicts", (unsigned long)[gcp conflictCount]];
 }
 
