@@ -473,7 +473,7 @@
 			conflictCountHistory = [gcp solveInIHCWithNoImprovementLimit:noImprovementLimit maxIteration:maxIteration];
 			break;
 		case 2:
-			conflictCountHistory = [gcp solveInESIncludeParents:includeParents numberOfParents:numberOfParents numberOfChildren:numberOfChildren];
+			conflictCountHistory = [gcp solveInESIncludeParents:includeParents numberOfParents:numberOfParents numberOfChildren:numberOfChildren noImprovementLimit:noImprovementLimit];
 		default:
 			conflictCountHistory = [NSArray array];
 			break;

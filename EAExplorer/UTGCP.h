@@ -59,7 +59,8 @@ typedef enum UTGCPAlgorithm {
 // solve in Evolutionary Computation (a.k.a. EC). returns YES if succeeds
 - (NSArray *)solveInESIncludeParents:(BOOL)includeParents
 					 numberOfParents:(NSUInteger)numberOfParents
-					numberOfChildren:(NSUInteger)numberOfChildren;
+					numberOfChildren:(NSUInteger)numberOfChildren
+				  noImprovementLimit:(NSUInteger)limit;
 
 - (BOOL)solving;
 

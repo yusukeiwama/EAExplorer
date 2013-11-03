@@ -113,6 +113,21 @@
 	return conflictCount;
 }
 
+- (NSUInteger)conflictCountWithColorNumbers:(NSUInteger *)numbers
+{
+	NSUInteger conflictCount = 0;
+	for (NSUInteger i = 0; i < numberOfVertices - 1; i++) {
+		for (NSUInteger j = i + 1; j < numberOfVertices; j++) {
+			if (adjacencyMatrix[i * numberOfVertices + j]
+				&& numbers[i] == numbers[j]) {
+				conflictCount++;
+			}
+		}
+	}
+	
+	return conflictCount;
+}
+
 - (void)updateConflictIndices
 {
 	// clear conflict indices to 0
@@ -269,26 +284,49 @@
 - (NSArray *)solveInESIncludeParents:(BOOL)includeParents
 				numberOfParents:(NSUInteger)numberOfParents
 			   numberOfChildren:(NSUInteger)numberOfChildren
+				  noImprovementLimit:(NSUInteger)limit
 {
-	// initialize parents
+	NSMutableArray *conflictHistory = [NSMutableArray array];
+	NSUInteger minConflictCount = [self conflictCount];
+	
+	// initialize parents with random colors
 	NSUInteger **parents = calloc(numberOfParents, sizeof(NSUInteger));
 	for (NSUInteger i = 0; i < numberOfParents; i++) {
-		parents[i] = calloc(numberOfVertices, sizeof(NSUInteger)); // parent[i] is array of colorNumbers
+		parents[i] = calloc(numberOfVertices + 1, sizeof(NSUInteger)); // parents[i] is array of colorNumbers
 		for (NSUInteger j = 0; j < numberOfVertices; j++) {
 			parents[i][j] = numberOfColors * (double)rand() / (RAND_MAX + 1.0);
 		}
+		parents[i][numberOfVertices] = [self conflictCountWithColorNumbers:parents[i]]; // store conflict count
 	}
+	// sort parents
+	
+	
 	// initialize children
 	NSUInteger **children = calloc(numberOfChildren, sizeof(NSUInteger));
 	for (NSUInteger i = 0; i < numberOfChildren; i++) {
-		children[i] = calloc(numberOfVertices, sizeof(NSUInteger)); // children[i] is array of colorNumbers
+		children[i] = calloc(numberOfVertices + 1, sizeof(NSUInteger)); // children[i] is array of colorNumbers
 	}
-	for (NSUInteger i = 0; i < numberOfChildren; i++) {
-		memcpy(children[i], parents[(int)(numberOfParents * (double)rand() / (RAND_MAX + 1.0))], numberOfVertices * sizeof(NSUInteger)); // select a parent as a child
-		children[i][(int)(numberOfVertices * (double)rand() / (RAND_MAX + 1.0))] = numberOfColors * (double)rand() / (RAND_MAX + 1.0); // mutate random index into random color
+
+	NSUInteger noImprovementCount = 0;
+	while (minConflictCount) {
+		// end judgement
+		if (noImprovementCount > limit) { // failure...
+			return conflictHistory;
+		}
+		
+		// generate childrens
+		for (NSUInteger i = 0; i < numberOfChildren; i++) {
+			memcpy(children[i], parents[(int)(numberOfParents * (double)rand() / (RAND_MAX + 1.0))], numberOfVertices * sizeof(NSUInteger)); // select a parent as a child
+			children[i][(int)(numberOfVertices * (double)rand() / (RAND_MAX + 1.0))] = numberOfColors * (double)rand() / (RAND_MAX + 1.0); // mutate random index into random color
+		}
+
+		// sort childrens
+		
+		// select next parents
 	}
 	
-	return 0;
+	
+	return conflictHistory; // success!
 }
 
 - (BOOL)solving
