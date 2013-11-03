@@ -19,7 +19,6 @@
 
 @implementation UTGCPViewController {
 	NSMutableArray *vertexButtons;
-	BOOL repeatability;
 	UTStopwatch *stopwatch;
 	NSTimer *timer;
 	NSTimeInterval timerTimeInterval;
@@ -31,7 +30,6 @@
 	NSUInteger numberOfEdges;
 }
 
-@synthesize seed;
 @synthesize gcp;
 @synthesize showVertexNumber;
 @synthesize titleLabel;
@@ -61,26 +59,8 @@
 	stopwatch = [[UTStopwatch alloc] init];
 	timerTimeInterval = 1.0;
 	
-	repeatability = YES;
-
-	if (repeatability) { // EXPERIMENT MODE
-		seed = 101;
-		srand(seed); // prime number (for repeatability)
-		UILabel *testLabel = [[UILabel alloc] initWithFrame:CGRectMake(self.view.frame.size.width - 350, 60, 500, 72)]; // top-right
-		testLabel.transform = CGAffineTransformMakeRotation(M_PI_4);
-		testLabel.backgroundColor = [UIColor colorWithRed:0.9 green:0.9 blue:0.9 alpha:0.8];
-		testLabel.text = @"BETA";
-		testLabel.font = [UIFont fontWithName:@"Optima-ExtraBlack" size:72];
-		testLabel.textColor = [UIColor redColor];
-		testLabel.textAlignment = NSTextAlignmentCenter;
-		testLabel.adjustsFontSizeToFitWidth = YES;
-		[self.view addSubview:testLabel];
-		showVertexNumber = YES;
-	} else { // RELEASE MODE
-		seed = (unsigned)time(NULL);
-		srand(seed);
-	}
-
+	srand((unsigned)time(NULL));
+	
 	// Set parameters.
 	numberOfColors		= 3;
 	numberOfVertices	= 9;
@@ -99,6 +79,8 @@
 	
 	plotView.delegate = self;
 	
+	showVertexNumber = YES;
+	
 	[self generateNewGCP];
 	
 	/*
@@ -114,6 +96,9 @@
 //	NSUInteger numberOfParents = 100;
 //	NSUInteger numberOfChildren = numberOfParents * 5;
 	
+	NSArray *conflictHistory;
+	NSMutableString *resultCSVString = [NSMutableString string];
+	[resultCSVString appendString:@"seed,noImprovementLimit,maxIteration,numberOfVertices,numberOfEdges,experimentNo,success\n"];
 	for (NSNumber *aRandSeed in randSeeds) {
 		unsigned aSeed = [aRandSeed integerValue];
 		srand(aSeed);
@@ -129,24 +114,33 @@
 			}
 			[self generateNewGCP];
 			for (NSInteger i = 0; i < numberOfExperimentsForEachCondition; i++) {
-				[self saveConflictHistory:[gcp solveInHCWithNoImprovementLimit:noImprovementLimit]
-								 fileName:[NSString stringWithFormat:@"conflictCountHistoryInHC%d_S%dN%dV%dE%d", i, aSeed, noImprovementLimit, numberOfVertices, numberOfEdges]];
+				conflictHistory = [gcp solveInHCWithNoImprovementLimit:noImprovementLimit];
+				[self saveConflictHistory:conflictHistory
+								 fileName:[NSString stringWithFormat:@"conflictHistoryInHCWithSd%dLmt%dV%dE%dNo%d.txt", aSeed, noImprovementLimit, numberOfVertices, numberOfEdges, i]];
+				[resultCSVString appendFormat:@"%d,%d,%d,%d,%d,%d,%d\n", aSeed, noImprovementLimit, 1, numberOfVertices, numberOfEdges, i, ([(NSNumber *)(conflictHistory.lastObject) unsignedIntegerValue] == 0)];
+			}
+			// IHC experiment
+			for (NSUInteger i = 0; i < numberOfExperimentsForEachCondition; i++) {
+				conflictHistory = [gcp solveInIHCWithNoImprovementLimit:noImprovementLimit maxIteration:maxIteration];
+				[self saveConflictHistory:conflictHistory
+								 fileName:[NSString stringWithFormat:@"conflictHistoryInIHCWithSd%dLmt%dIt%dV%dE%dNo%d.txt", aSeed, noImprovementLimit, maxIteration, numberOfVertices, numberOfEdges, i]];
+				[resultCSVString appendFormat:@"%d,%d,%d,%d,%d,%d,%d\n", aSeed, noImprovementLimit, maxIteration, numberOfVertices, numberOfEdges, i, ([(NSNumber *)(conflictHistory.lastObject) unsignedIntegerValue] == 0)];
 			}
 		}
-		
-		// IHC experiment
-		for (NSUInteger i = 0; i < numberOfExperimentsForEachCondition; i++) {
-			[self saveConflictHistory:[gcp solveInIHCWithNoImprovementLimit:noImprovementLimit maxIteration:maxIteration]
-							 fileName:[NSString stringWithFormat:@"conflictCountHistoryInIHC%d_S%dN%dI%dV%dE%d", i, aSeed, noImprovementLimit, maxIteration, numberOfVertices, numberOfEdges]];
-		}
-		
 		if (sparse) {
 			sparse = NO;
 			goto EXPERIMENT;
 		}
 	}
+	NSArray *filePaths = NSSearchPathForDirectoriesInDomains(NSDocumentationDirectory, NSUserDomainMask, YES);
+	NSString *documentDir = [filePaths objectAtIndex:0];
+	NSString *outputPath = [documentDir stringByAppendingPathComponent:@"result.csv"];
+	NSURL *outputURL = [NSURL fileURLWithPath:outputPath];
+	if ([resultCSVString writeToURL:outputURL atomically:YES encoding:NSUTF8StringEncoding error:nil]) {
+		NSLog(@"%@ is saved", outputPath);
+	}
 	// EXPERIMENT PROGRAM ENDS HERE (NOT REQUIRED FOR RELEASE VERSION)
-	*/
+	 */
 }
 
 - (void)didReceiveMemoryWarning
@@ -157,15 +151,17 @@
 
 - (void)saveConflictHistory:(NSArray *)history fileName:(NSString *)name
 {
-	 NSMutableString *YString = [NSMutableString string];
+	 NSMutableString *stringRepresentationOfConflictHistory = [NSMutableString string];
 	 for (NSUInteger i = 0; i < history.count; i++) {
-	 [YString appendFormat:@"%d\n", [history[i] unsignedIntegerValue]];
+		 [stringRepresentationOfConflictHistory appendFormat:@"%lu\n", (unsigned long)[history[i] unsignedIntegerValue]];
 	 }
 	 NSArray *filePaths = NSSearchPathForDirectoriesInDomains(NSDocumentationDirectory, NSUserDomainMask, YES);
 	 NSString *documentDir = [filePaths objectAtIndex:0];
 	 NSString *outputPath = [documentDir stringByAppendingPathComponent:name];
 	 NSURL *outputURL = [NSURL fileURLWithPath:outputPath]; // Example Path: /Users/yusukeiwama/Library/Application Support/iPhone Simulator/7.0.3/Applications/B90652A7-F520-4AB8-A56D-407C99FFE76D/Library/Documentation/G2CC_C3V9E18G100I10S383
-	 [YString writeToURL:outputURL atomically:YES encoding:NSUTF8StringEncoding error:nil];
+	if ([stringRepresentationOfConflictHistory writeToURL:outputURL atomically:YES encoding:NSUTF8StringEncoding error:nil]) {
+		NSLog(@"%@ is saved", outputPath);
+	}
 }
 
 - (void)updateFields

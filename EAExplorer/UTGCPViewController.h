@@ -13,7 +13,6 @@
 
 @interface UTGCPViewController : UIViewController <UITextFieldDelegate, UIAlertViewDelegate, UTRadialButtonViewProtocol>
 
-@property (readonly) unsigned seed;
 @property UTGCP *gcp;
 @property BOOL showVertexNumber;
 @property BOOL showTimer;
