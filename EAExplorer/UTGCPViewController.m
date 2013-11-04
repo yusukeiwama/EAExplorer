@@ -474,12 +474,13 @@
 			break;
 		case 2:
 			conflictCountHistory = [gcp solveInESIncludeParents:includeParents numberOfParents:numberOfParents numberOfChildren:numberOfChildren noImprovementLimit:noImprovementLimit];
+			break;
 		default:
 			conflictCountHistory = [NSArray array];
 			break;
 	}
 	[self updateVertexColors];
-//	[plotView plotWithX:nil Y:conflictCountHistory];
+	[plotView plotWithX:nil Y:conflictCountHistory];
 	ConflictCountLabel.text = [NSString stringWithFormat:@"%lu Conflicts", (unsigned long)[gcp conflictCount]];
 }
 
