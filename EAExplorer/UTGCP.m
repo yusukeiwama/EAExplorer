@@ -12,7 +12,10 @@ int order;
 
 int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 {
-	return a[order] - b[order];
+	NSUInteger *geneA = (NSUInteger *)(*a);
+	NSUInteger *geneB = (NSUInteger *)(*b);
+	
+	return geneA[order] - geneB[order];
 }
 
 @implementation UTGCP
@@ -296,14 +299,13 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 {
 	NSMutableArray *conflictHistory = [NSMutableArray array];
 	NSUInteger minConflictCount = [self conflictCount];
-	NSUInteger maxConflictCount = minConflictCount;
 	NSUInteger aveConflictCount = minConflictCount;
 	
 	// initialize parents with random colors
 	NSUInteger **parents = calloc(numberOfParents, sizeof(NSUInteger));
-	for (NSUInteger i = 0; i < numberOfParents; i++) {
+	for (int i = 0; i < numberOfParents; i++) {
 		parents[i] = calloc(numberOfVertices + 1, sizeof(NSUInteger)); // parents[i] is array of colorNumbers
-		for (NSUInteger j = 0; j < numberOfVertices; j++) {
+		for (int j = 0; j < numberOfVertices; j++) {
 			parents[i][j] = numberOfColors * (double)rand() / (RAND_MAX + 1.0);
 		}
 		NSUInteger tmpConflictCount = [self conflictCountWithColorNumbers:parents[i]];
@@ -311,22 +313,24 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 		aveConflictCount += tmpConflictCount;
 	}
 	aveConflictCount /= numberOfParents;
+
 	// sort parents
-	qsort(parents, numberOfParents, sizeof(NSUInteger *), (int(*)(const void*, const void*))conflictCountCompare);
-	NSArray *conflictInfo = @[[NSNumber numberWithInteger:minConflictCount],
+	qsort(parents, numberOfParents, sizeof(NSUInteger *), (int(*)(const void *, const void *))conflictCountCompare);
+	NSArray *conflictInfo = @[[NSNumber numberWithInteger:parents[0][numberOfVertices]],
 							  [NSNumber numberWithInteger:aveConflictCount],
-							  [NSNumber numberWithInteger:maxConflictCount]];
+							  [NSNumber numberWithInteger:parents[numberOfParents - 1][numberOfVertices]]];
 	[conflictHistory addObject:conflictInfo];
 	aveConflictCount = 0;
 	
 	// initialize children
 	NSUInteger **children = calloc(numberOfChildren, sizeof(NSUInteger));
-	for (NSUInteger i = 0; i < numberOfChildren; i++) {
+	for (int i = 0; i < numberOfChildren; i++) {
 		children[i] = calloc(numberOfVertices + 1, sizeof(NSUInteger)); // children[i] is array of colorNumbers
 	}
 
 	NSUInteger noImprovementCount = 0;
 	while (minConflictCount) {
+		
 		// end judgement
 		if (noImprovementCount > limit) { // failure...
 			memcpy(colorNumbers, children[0], sizeof(NSUInteger) * numberOfVertices);
@@ -334,7 +338,7 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 		}
 		
 		// generate childrens
-		for (NSUInteger i = 0; i < numberOfChildren; i++) {
+		for (int i = 0; i < numberOfChildren; i++) {
 			memcpy(children[i], parents[(int)(numberOfParents * (double)rand() / (RAND_MAX + 1.0))], numberOfVertices * sizeof(NSUInteger)); // select a parent as a child
 			NSInteger targetIndex = numberOfVertices * (double)rand() / (RAND_MAX + 1.0); // mutate rondom index
 			NSUInteger tmpColorNumber = children[i][targetIndex];
@@ -347,8 +351,8 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 		}
 		aveConflictCount /= numberOfChildren;
 
-		// sort childrens
-		qsort(children, numberOfChildren, sizeof(NSUInteger *), (int(*)(const void*, const void*))conflictCountCompare);
+		// sort children
+		qsort(children, numberOfChildren, sizeof(NSUInteger *), (int(*)(const void *, const void *))conflictCountCompare);
 		if (children[0][numberOfVertices] < minConflictCount) {
 			minConflictCount = children[0][numberOfVertices];
 		} else {
@@ -359,6 +363,13 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 						 [NSNumber numberWithInteger:children[numberOfChildren - 1][numberOfVertices]]];
 		[conflictHistory addObject:conflictInfo];
 		aveConflictCount = 0;
+		
+		// select children as parents
+		for (int i = 0; i < numberOfParents; i++) {
+			memcpy(parents[i], children[i], sizeof(NSUInteger) * numberOfVertices);
+			printf("%d ", children[i][numberOfVertices]);
+		}
+		printf("\n\n");
 	}
 	
 	memcpy(colorNumbers, children[0], sizeof(NSUInteger) * numberOfVertices);

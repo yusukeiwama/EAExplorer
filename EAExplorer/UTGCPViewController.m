@@ -462,7 +462,7 @@
 	// for ES
 	BOOL includeParents = NO;
 	NSUInteger numberOfParents = 100;
-	NSUInteger numberOfChildren = numberOfParents * 5;
+	NSUInteger numberOfChildren = numberOfParents * 10;
 	// for plot
 	NSArray *conflictCountHistory;
 	switch (i) {
