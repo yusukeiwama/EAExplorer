@@ -64,8 +64,10 @@
 	
 	// Set parameters.
 	numberOfColors		= 3;
-	numberOfVertices	= 40 * numberOfColors;
-	numberOfEdges		= 3 * numberOfVertices;
+	numberOfVertices	= 20 * numberOfColors;
+	numberOfEdges		= 3 * numberOfVertices; // sparse
+//	numberOfEdges	= numberOfVertices * (numberOfVertices - 1) / 4; // dense
+
 	[self updateFields];
 	
 	CGFloat radialButtonViewRadius = 50;
