@@ -13,5 +13,6 @@
 @property id delegate;
 
 - (void)plotWithX:(NSArray *)X Y:(NSArray *)Y;
+- (void)multiplePlotWithX:(NSArray *)X Y:(NSArray *)Y;
 
 @end

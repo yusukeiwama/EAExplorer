@@ -297,82 +297,108 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 			   numberOfChildren:(NSUInteger)numberOfChildren
 				  noImprovementLimit:(NSUInteger)limit
 {
+	// Back-up before-state
+	NSUInteger beforeConflictCount = [self conflictCount];
+	NSUInteger *beforeConflictColorNumbers = calloc(numberOfVertices, sizeof(NSUInteger));
+	memcpy(beforeConflictColorNumbers, colorNumbers, numberOfVertices * sizeof(NSUInteger));
+	
 	NSMutableArray *conflictHistory = [NSMutableArray array];
-	NSUInteger minConflictCount = [self conflictCount];
-	NSUInteger aveConflictCount = minConflictCount;
+	NSUInteger aveConflictCount = 0;
+	
+	// alloc genes
+	NSUInteger **genes = calloc(numberOfParents + numberOfChildren, sizeof(NSUInteger *));
 	
 	// initialize parents with random colors
-	NSUInteger **parents = calloc(numberOfParents, sizeof(NSUInteger));
 	for (int i = 0; i < numberOfParents; i++) {
-		parents[i] = calloc(numberOfVertices + 1, sizeof(NSUInteger)); // parents[i] is array of colorNumbers
+		genes[i] = calloc(numberOfVertices + 1, sizeof(NSUInteger)); // parents[i] is array of colorNumbers
 		for (int j = 0; j < numberOfVertices; j++) {
-			parents[i][j] = numberOfColors * (double)rand() / (RAND_MAX + 1.0);
+			genes[i][j] = numberOfColors * (double)rand() / (RAND_MAX + 1.0);
 		}
-		NSUInteger tmpConflictCount = [self conflictCountWithColorNumbers:parents[i]];
-		parents[i][numberOfVertices] = tmpConflictCount;
+		NSUInteger tmpConflictCount = [self conflictCountWithColorNumbers:genes[i]];
+		genes[i][numberOfVertices] = tmpConflictCount;
 		aveConflictCount += tmpConflictCount;
 	}
 	aveConflictCount /= numberOfParents;
 
 	// sort parents
-	qsort(parents, numberOfParents, sizeof(NSUInteger *), (int(*)(const void *, const void *))conflictCountCompare);
-	NSArray *conflictInfo = @[[NSNumber numberWithInteger:parents[0][numberOfVertices]],
-							  [NSNumber numberWithInteger:aveConflictCount],
-							  [NSNumber numberWithInteger:parents[numberOfParents - 1][numberOfVertices]]];
+	qsort(genes, numberOfParents, sizeof(NSUInteger *), (int(*)(const void *, const void *))conflictCountCompare);
+	NSUInteger tempMinConflictCount = [self conflictCountWithColorNumbers:genes[0]];
+	NSArray *conflictInfo = @[[NSNumber numberWithUnsignedInteger:genes[0][numberOfVertices]],
+							  [NSNumber numberWithUnsignedInteger:aveConflictCount],
+							  [NSNumber numberWithUnsignedInteger:genes[numberOfParents - 1][numberOfVertices]]];
 	[conflictHistory addObject:conflictInfo];
 	aveConflictCount = 0;
 	
 	// initialize children
-	NSUInteger **children = calloc(numberOfChildren, sizeof(NSUInteger));
-	for (int i = 0; i < numberOfChildren; i++) {
-		children[i] = calloc(numberOfVertices + 1, sizeof(NSUInteger)); // children[i] is array of colorNumbers
+	for (int i = numberOfParents; i < numberOfParents + numberOfChildren; i++) {
+		genes[i] = calloc(numberOfVertices + 1, sizeof(NSUInteger)); // children[i] is array of colorNumbers
 	}
 
 	NSUInteger noImprovementCount = 0;
-	while (minConflictCount) {
-		
+	while (tempMinConflictCount) {
 		// end judgement
-		if (noImprovementCount > limit) { // failure...
-			memcpy(colorNumbers, children[0], sizeof(NSUInteger) * numberOfVertices);
+		// if noImprovementCount exceeds its limit, end ES
+		if (noImprovementCount > limit) { // fail to solve
+			if ([self conflictCountWithColorNumbers:genes[0]] > beforeConflictCount) { // not improved...
+				// If there's no improvement compared with before-state, discard changes and restore before-state.
+				memcpy(colorNumbers, beforeConflictColorNumbers, numberOfVertices * sizeof(NSUInteger));
+			} else { // improved!
+				// copy the best parent to colorNumbers
+				memcpy(colorNumbers, genes[0], numberOfVertices * sizeof(NSUInteger));
+			}
+			free(beforeConflictColorNumbers);
 			return conflictHistory;
 		}
 		
-		// generate childrens
-		for (int i = 0; i < numberOfChildren; i++) {
-			memcpy(children[i], parents[(int)(numberOfParents * (double)rand() / (RAND_MAX + 1.0))], numberOfVertices * sizeof(NSUInteger)); // select a parent as a child
+		// generate children
+		for (int i = numberOfParents; i < numberOfParents + numberOfChildren; i++) {
+			memcpy(genes[i], genes[(int)(numberOfParents * (double)rand() / (RAND_MAX + 1.0))], numberOfVertices * sizeof(NSUInteger)); // select a parent as a child
 			NSInteger targetIndex = numberOfVertices * (double)rand() / (RAND_MAX + 1.0); // mutate rondom index
-			NSUInteger tmpColorNumber = children[i][targetIndex];
-			while (tmpColorNumber == children[i][targetIndex]) { // mutate color at the index into random but different color
-				children[i][targetIndex] = numberOfColors * (double)rand() / (RAND_MAX + 1.0);
+			NSUInteger tmpColorNumber = genes[i][targetIndex];
+			while (tmpColorNumber == genes[i][targetIndex]) { // mutate color at the index into random but different color
+				genes[i][targetIndex] = numberOfColors * (double)rand() / (RAND_MAX + 1.0);
 			}
-			NSUInteger tmpConflictCount = [self conflictCountWithColorNumbers:children[i]];
-			children[i][numberOfVertices] = tmpConflictCount;
-			aveConflictCount += tmpConflictCount;
+			genes[i][numberOfVertices] = [self conflictCountWithColorNumbers:genes[i]];
 		}
-		aveConflictCount /= numberOfChildren;
 
-		// sort children
-		qsort(children, numberOfChildren, sizeof(NSUInteger *), (int(*)(const void *, const void *))conflictCountCompare);
-		if (children[0][numberOfVertices] < minConflictCount) {
-			minConflictCount = children[0][numberOfVertices];
+		if (includeParents) {
+			// sort children and parents
+			qsort(genes, numberOfParents + numberOfChildren, sizeof(NSUInteger *), (int(*)(const void *, const void *))conflictCountCompare);
 		} else {
+			// sort children
+			qsort(genes + numberOfParents, numberOfChildren, sizeof(NSUInteger *), (int(*)(const void *, const void *))conflictCountCompare);
+			
+			// select good children as parents
+			for (int i = 0; i < numberOfParents; i++) {
+				memcpy(genes[i], genes[numberOfParents + i], sizeof(NSUInteger) * numberOfVertices + 1);
+			}
+		}
+		
+		// check if improved
+		if (genes[0][numberOfVertices] < tempMinConflictCount) { // improved
+			tempMinConflictCount = genes[0][numberOfVertices];
+			noImprovementCount = 0;
+		} else { // not improved
 			noImprovementCount++;
 		}
-		conflictInfo = @[[NSNumber numberWithInteger:children[0][numberOfVertices]],
-						 [NSNumber numberWithInteger:aveConflictCount],
-						 [NSNumber numberWithInteger:children[numberOfChildren - 1][numberOfVertices]]];
-		[conflictHistory addObject:conflictInfo];
+
+				
+		// add conflictInfo into conflictHistory
 		aveConflictCount = 0;
-		
-		// select children as parents
 		for (int i = 0; i < numberOfParents; i++) {
-			memcpy(parents[i], children[i], sizeof(NSUInteger) * numberOfVertices);
-			printf("%d ", children[i][numberOfVertices]);
+			aveConflictCount += genes[i][numberOfVertices];
+			printf("%d ", genes[i][numberOfVertices]);
 		}
 		printf("\n\n");
+		aveConflictCount /= numberOfParents;
+		conflictInfo = @[[NSNumber numberWithUnsignedInteger:genes[0][numberOfVertices]],
+						 [NSNumber numberWithUnsignedInteger:aveConflictCount],
+						 [NSNumber numberWithUnsignedInteger:genes[numberOfParents - 1][numberOfVertices]]];
+		[conflictHistory addObject:conflictInfo];
 	}
 	
-	memcpy(colorNumbers, children[0], sizeof(NSUInteger) * numberOfVertices);
+	memcpy(colorNumbers, genes[0], sizeof(NSUInteger) * numberOfVertices);
+	free(beforeConflictColorNumbers);
 	return conflictHistory; // success!
 }
 

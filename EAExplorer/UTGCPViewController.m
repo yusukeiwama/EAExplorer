@@ -59,11 +59,12 @@
 	stopwatch = [[UTStopwatch alloc] init];
 	timerTimeInterval = 1.0;
 	
-	srand((unsigned)time(NULL));
+	srand(821);
+//	srand((unsigned)time(NULL));
 	
 	// Set parameters.
 	numberOfColors		= 3;
-	numberOfVertices	= 30 * numberOfColors;
+	numberOfVertices	= 40 * numberOfColors;
 	numberOfEdges		= 3 * numberOfVertices;
 	[self updateFields];
 	
@@ -463,24 +464,27 @@
 	BOOL includeParents = NO;
 	NSUInteger numberOfParents = 100;
 	NSUInteger numberOfChildren = numberOfParents * 10;
+	noImprovementLimit = 50;
 	// for plot
 	NSArray *conflictCountHistory;
 	switch (i) {
 		case 0:
 			conflictCountHistory = [gcp solveInHCWithNoImprovementLimit:noImprovementLimit];
+			[plotView plotWithX:nil Y:conflictCountHistory];
 			break;
 		case 1:
 			conflictCountHistory = [gcp solveInIHCWithNoImprovementLimit:noImprovementLimit maxIteration:maxIteration];
+			[plotView plotWithX:nil Y:conflictCountHistory];
 			break;
 		case 2:
 			conflictCountHistory = [gcp solveInESIncludeParents:includeParents numberOfParents:numberOfParents numberOfChildren:numberOfChildren noImprovementLimit:noImprovementLimit];
+			[plotView multiplePlotWithX:nil Y:conflictCountHistory];
 			break;
 		default:
 			conflictCountHistory = [NSArray array];
 			break;
 	}
 	[self updateVertexColors];
-	[plotView plotWithX:nil Y:conflictCountHistory];
 	ConflictCountLabel.text = [NSString stringWithFormat:@"%lu Conflicts", (unsigned long)[gcp conflictCount]];
 }
 
