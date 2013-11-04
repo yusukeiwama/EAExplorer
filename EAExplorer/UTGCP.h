@@ -70,7 +70,8 @@ typedef enum UTGCPAlgorithm {
 
 /*
  ToDo
- ソルバー・アルゴリズムの返り値をconflictCountHistoryにする。generationはポインタ引数渡しによって呼び出し元が取得できるようにする。
+ ・ESを親を含める・含めないがすぐに切り替えられるように変更。具体的には親子をひとつのgene配列に格納する
+ ・グラフを早めに実装してアルゴリズムの特性に早く慣れる
  */
 
 /*

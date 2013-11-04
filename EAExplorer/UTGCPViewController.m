@@ -63,8 +63,8 @@
 	
 	// Set parameters.
 	numberOfColors		= 3;
-	numberOfVertices	= 9;
-	numberOfEdges		= 18;
+	numberOfVertices	= 30 * numberOfColors;
+	numberOfEdges		= 3 * numberOfVertices;
 	[self updateFields];
 	
 	CGFloat radialButtonViewRadius = 50;
