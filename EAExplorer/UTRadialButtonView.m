@@ -50,7 +50,8 @@
 			[aButton addTarget:self action:@selector(buttonAction:) forControlEvents:UIControlEventTouchUpInside];
 			[aButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
 			aButton.titleLabel.font = [UIFont fontWithName:@"Futura" size:32.0];
-			aButton.backgroundColor = [UIColor colorWithRed:0.0 green:1.0 blue:0.0 alpha:0.96]; // lime color
+			double theta = 1.0 / [t count] * i;
+			aButton.backgroundColor = [UIColor colorWithHue:theta saturation:1.0 brightness:1.0 alpha:0.9]; //[UIColor colorWithRed:0.0 green:1.0 blue:0.0 alpha:0.96]; // lime color
 			aButton.layer.cornerRadius = w / 2.0;
 			aButton.showsTouchWhenHighlighted = YES;
 			aButton.hidden = YES;
