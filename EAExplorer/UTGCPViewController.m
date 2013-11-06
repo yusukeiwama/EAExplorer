@@ -18,6 +18,8 @@
 @end
 
 @implementation UTGCPViewController {
+	BOOL experimentMode;
+	
 	NSMutableArray *vertexButtons;
 	UTStopwatch *stopwatch;
 	NSTimer *timer;
@@ -56,6 +58,8 @@
     [super viewDidLoad];
 	// Do any additional setup after loading the view.
 	
+	experimentMode = NO;
+	
 	stopwatch = [[UTStopwatch alloc] init];
 	timerTimeInterval = 1.0;
 	
@@ -64,9 +68,9 @@
 	
 	// Set parameters.
 	numberOfColors		= 3;
-	numberOfVertices	= 30 * numberOfColors;
-	numberOfEdges		= 3 * numberOfVertices; // sparse
-//	numberOfEdges	= numberOfVertices * (numberOfVertices - 1) / 4; // dense
+	numberOfVertices	= 3 * numberOfColors;
+//	numberOfEdges		= 3 * numberOfVertices; // sparse
+	numberOfEdges	= numberOfVertices * (numberOfVertices - 1) / 4; // dense
 
 	[self updateFields];
 	
@@ -86,11 +90,11 @@
 	
 	[self generateNewGCP];
 	
-//	/*
+	if (experimentMode) {
 	// EXPERIMENT PROGRAM STARTS HERE (NOT REQUIRED FOR RELEASE VERSION)
 	// general experiment settings
 	NSUInteger numberOfExperimentsForEachCondition = 10;
-	NSArray *randSeeds = @[@101, @821];
+	NSArray *randSeeds = @[@101];
 	// for HC
 //	NSUInteger noImprovementLimit = 100;
 	// for IHC
@@ -115,8 +119,8 @@
 		BOOL sparse = YES;
 	EXPERIMENT: // do spase case and dense case
 		// HC experiment
-		for (numberOfVertices = 30; numberOfVertices <= 150; numberOfVertices += 30) { // 5 patterns
-		numberOfVertices = 30;
+//		for (numberOfVertices = 30; numberOfVertices <= 150; numberOfVertices += 30) { // 5 patterns
+		numberOfVertices = 90;
 			// 2 patterns
 			if (sparse) { // sparse
 				numberOfEdges	= 3 * numberOfVertices;
@@ -142,7 +146,8 @@
 //				[resultCSVString appendFormat:@"%d,%d,%d,%d,%d,%d,%d\n", aSeed, noImprovementLimit, maxIteration, numberOfVertices, numberOfEdges, i, ([(NSNumber *)(conflictHistory.lastObject) unsignedIntegerValue] == 0)];
 //			}
 			
-			for (NSUInteger l = 10; l <= 100; l += 30) { // 4 patterns
+//			for (NSUInteger l = 10; l <= 100; l += 30) { // 4 patterns
+			NSUInteger l = 40;
 				for (NSUInteger p = 40; p <= 200; p += 40) { // 5 patterns
 					for (NSUInteger k = 2; k <= 10; k += 2) { // 5 patterns
 						NSUInteger c = p * k;
@@ -165,8 +170,8 @@
 						}
 					}
 				}
-			}
-		}
+//			}
+//		}
 		if (sparse) {
 			sparse = NO;
 			goto EXPERIMENT;
@@ -190,7 +195,7 @@
 
 
 	// EXPERIMENT PROGRAM ENDS HERE (NOT REQUIRED FOR RELEASE VERSION)
-//	 */
+	}
 }
 
 - (void)didReceiveMemoryWarning
