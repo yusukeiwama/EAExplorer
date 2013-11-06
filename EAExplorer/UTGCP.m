@@ -8,17 +8,19 @@
 
 #import "UTGCP.h"
 
+#define MAX_PARENTS 200
+#define MAX_CHILDREN 2000
+
 int order;
 
 int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 {
-	NSUInteger *geneA = (NSUInteger *)(*a);
-	NSUInteger *geneB = (NSUInteger *)(*b);
-	
-	return geneA[order] - geneB[order];
+	return ((NSUInteger *)(*a))[order] - ((NSUInteger *)(*b))[order];
 }
 
-@implementation UTGCP
+@implementation UTGCP {
+	NSUInteger **genes;
+}
 
 @synthesize numberOfVertices;
 @synthesize numberOfEdges;
@@ -43,6 +45,11 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 		colorNumbers			= calloc(v		, sizeof(NSUInteger));
 		conflictVertexFlags		= calloc(v		, sizeof(NSUInteger));
 		randomIndexMap			= calloc(v		, sizeof(NSUInteger));
+		
+		genes = calloc(MAX_PARENTS + MAX_CHILDREN, sizeof(NSUInteger *));
+		for (int i = 0; i < MAX_PARENTS + MAX_CHILDREN; i++) {
+			genes[i] = calloc(numberOfVertices + 1, sizeof(NSUInteger)); // gene[i] is array of colorNumbers and its last element is conflictCount
+		}
 		
 		[self generateAdjacencyMatrix];
 	}
@@ -297,19 +304,13 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 			   numberOfChildren:(NSUInteger)numberOfChildren
 				  noImprovementLimit:(NSUInteger)limit
 {
-	// Back-up before-state
+//	// Back-up before-state
 	NSUInteger beforeConflictCount = [self conflictCount];
 	NSUInteger *beforeConflictColorNumbers = calloc(numberOfVertices, sizeof(NSUInteger));
 	memcpy(beforeConflictColorNumbers, colorNumbers, numberOfVertices * sizeof(NSUInteger));
 	
 	NSMutableArray *conflictHistory = [NSMutableArray array];
 	NSUInteger aveConflictCount = 0;
-	
-	// alloc genes
-	NSUInteger **genes = calloc(numberOfParents + numberOfChildren, sizeof(NSUInteger *));
-	for (int i = 0; i < numberOfParents + numberOfChildren; i++) {
-		genes[i] = calloc(numberOfVertices + 1, sizeof(NSUInteger)); // gene[i] is array of colorNumbers and its last element is conflictCount
-	}
 	
 	// initialize parents with random colors
 	for (int i = 0; i < numberOfParents; i++) {
@@ -344,10 +345,7 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 				memcpy(colorNumbers, genes[0], numberOfVertices * sizeof(NSUInteger));
 			}
 			free(beforeConflictColorNumbers);
-			for (int i = 0; i < numberOfParents + numberOfChildren; i++) {
-				free(genes[i]);
-			}
-			free(genes);
+
 			return conflictHistory;
 		}
 		
@@ -371,7 +369,7 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 			
 			// select good children as parents
 			for (int i = 0; i < numberOfParents; i++) {
-//				memcpy(genes[i], genes[numberOfParents + i], sizeof(NSUInteger) * numberOfVertices + 1); // I couldn't figure out why on earth this doesn't work!!
+// /*				memcpy(genes[i], genes[numberOfParents + i], sizeof(NSUInteger) * numberOfVertices + 1); // I couldn't figure out why on earth this doesn't work!! */
 				for (int j = 0; j <= numberOfVertices; j++) {
 					genes[i][j] = genes[numberOfParents + i][j];
 				}
@@ -400,10 +398,7 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 	
 	memcpy(colorNumbers, genes[0], sizeof(NSUInteger) * numberOfVertices);
 	free(beforeConflictColorNumbers);
-	for (int i = 0; i < numberOfParents + numberOfChildren; i++) {
-		free(genes[i]);
-	}
-	free(genes);
+
 	return conflictHistory; // success!
 }
 
@@ -440,6 +435,10 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 	free(colorNumbers);
 	free(conflictVertexFlags);
 	free(randomIndexMap);
+	for (int i = 0; i < MAX_PARENTS + MAX_CHILDREN; i++) {
+		free(genes[i]);
+	}
+	free(genes);
 }
 
 @end

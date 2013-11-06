@@ -96,15 +96,17 @@
 	// for IHC
 //	NSUInteger maxIteration = 5;
 	// for ES
-	NSUInteger numberOfParents = 100;
 	
 	NSArray *conflictHistory;
 	
-	NSMutableString *resultCSVString = [NSMutableString string];
+	NSMutableString *resultCSVString = [NSMutableString string]; // HC and IHC
 	[resultCSVString appendString:@"seed,noImprovementLimit,maxIteration,numberOfVertices,numberOfEdges,experimentNo,success\n"];
 
-	NSMutableString *resultCSVStringES = [NSMutableString string];
-	[resultCSVStringES appendString:@"seed,noImprovementLimit,numberOfParents,numberOfChildren,includeParents,numberOfVertices,numberOfEdges,experimentNo,generations,success\n"];
+	NSMutableString *resultCSVStringES = [NSMutableString string]; // ES
+	[resultCSVStringES appendString:@"sd,lmt,prt,chd,in,vtx,edge,no,gen,suc\n"];
+	
+	NSMutableString *resultCSVStringES2 = [NSMutableString string]; // ES+
+	[resultCSVStringES2 appendString:@"sd,lmt,prt,chd,in,vtx,edge,no,gen,suc\n"];
 	
 	for (NSNumber *aRandSeed in randSeeds) {
 		unsigned aSeed = (unsigned)[aRandSeed integerValue];
@@ -114,6 +116,7 @@
 	EXPERIMENT: // do spase case and dense case
 		// HC experiment
 		for (numberOfVertices = 30; numberOfVertices <= 150; numberOfVertices += 30) { // 5 patterns
+		numberOfVertices = 30;
 			// 2 patterns
 			if (sparse) { // sparse
 				numberOfEdges	= 3 * numberOfVertices;
@@ -147,23 +150,22 @@
 						// ES experiment
 						for (NSUInteger i = 0; i < numberOfExperimentsForEachCondition; i++) {
 							conflictHistory = [gcp solveInESIncludeParents:NO numberOfParents:p numberOfChildren:c noImprovementLimit:l];
-							[self saveConflictHistory:conflictHistory
-											 fileName:[NSString stringWithFormat:@"conflictHistoryInESWithSd%dLmt%ldP%ldC%ldIn%dV%ldE%ldNo%ld.txt", aSeed, (unsigned long)l, (unsigned long)p, (unsigned long)c, NO, (unsigned long)numberOfVertices, (unsigned long)numberOfEdges, (unsigned long)i]];
+//							[self saveConflictHistory:conflictHistory
+//											 fileName:[NSString stringWithFormat:@"conflictHistoryInESWithSd%dLmt%ldP%ldC%ldIn%dV%ldE%ldNo%ld.txt", aSeed, (unsigned long)l, (unsigned long)p, (unsigned long)c, NO, (unsigned long)numberOfVertices, (unsigned long)numberOfEdges, (unsigned long)i]];
 							[resultCSVStringES appendFormat:@"%d,%ld,%ld,%ld,%d,%ld,%ld,%ld,%ld,%ld\n", aSeed, (unsigned long)l, (unsigned long)p, (unsigned long)c, NO, (unsigned long)numberOfVertices, (unsigned long)numberOfEdges, (unsigned long)i, (unsigned long)(conflictHistory.count), (unsigned long)([(NSNumber *)((conflictHistory.lastObject)[0]) unsignedIntegerValue] == 0)];
 						}
 						
 						// ES+ experiment
 						for (NSUInteger i = 0; i < numberOfExperimentsForEachCondition; i++) {
 							conflictHistory = [gcp solveInESIncludeParents:YES numberOfParents:p numberOfChildren:c noImprovementLimit:l];
-							[self saveConflictHistory:conflictHistory
-											 fileName:[NSString stringWithFormat:@"conflictHistoryInESWithSd%dLmt%ldP%ldC%ldIn%dV%ldE%ldNo%ld.txt", aSeed, (unsigned long)l, (unsigned long)p, (unsigned long)c, YES, (unsigned long)numberOfVertices, (unsigned long)numberOfEdges, (unsigned long)i]];
-							[resultCSVStringES appendFormat:@"%d,%ld,%ld,%ld,%d,%ld,%ld,%ld,%ld,%ld\n", aSeed, (unsigned long)l, (unsigned long)p, (unsigned long)c, YES, (unsigned long)numberOfVertices, (unsigned long)numberOfEdges, (unsigned long)i, (unsigned long)(conflictHistory.count), (unsigned long)([(NSNumber *)((conflictHistory.lastObject)[0]) unsignedIntegerValue] == 0)];
+//							[self saveConflictHistory:conflictHistory
+//											 fileName:[NSString stringWithFormat:@"conflictHistoryInESWithSd%dLmt%ldP%ldC%ldIn%dV%ldE%ldNo%ld.txt", aSeed, (unsigned long)l, (unsigned long)p, (unsigned long)c, YES, (unsigned long)numberOfVertices, (unsigned long)numberOfEdges, (unsigned long)i]];
+							[resultCSVStringES2 appendFormat:@"%d,%ld,%ld,%ld,%d,%ld,%ld,%ld,%ld,%ld\n", aSeed, (unsigned long)l, (unsigned long)p, (unsigned long)c, YES, (unsigned long)numberOfVertices, (unsigned long)numberOfEdges, (unsigned long)i, (unsigned long)(conflictHistory.count), (unsigned long)([(NSNumber *)((conflictHistory.lastObject)[0]) unsignedIntegerValue] == 0)];
 
 						}
 					}
 				}
 			}
-		
 		}
 		if (sparse) {
 			sparse = NO;
@@ -172,11 +174,21 @@
 	}
 	NSArray *filePaths = NSSearchPathForDirectoriesInDomains(NSDocumentationDirectory, NSUserDomainMask, YES);
 	NSString *documentDir = [filePaths objectAtIndex:0];
-	NSString *outputPath = [documentDir stringByAppendingPathComponent:@"result.csv"];
+	NSString *outputPath = [documentDir stringByAppendingPathComponent:@"resultES.csv"]; // ES
+	NSString *outputPath2 = [documentDir stringByAppendingPathComponent:@"resultES2.csv"]; // ES+
 	NSURL *outputURL = [NSURL fileURLWithPath:outputPath];
-	if ([resultCSVString writeToURL:outputURL atomically:YES encoding:NSUTF8StringEncoding error:nil]) {
+	NSURL *outputURL2 = [NSURL fileURLWithPath:outputPath2];
+//	if ([resultCSVString writeToURL:outputURL atomically:YES encoding:NSUTF8StringEncoding error:nil]) {
+//		NSLog(@"%@ is saved", outputPath);
+//	}
+	if ([resultCSVStringES writeToURL:outputURL atomically:YES encoding:NSUTF8StringEncoding error:nil]) {
 		NSLog(@"%@ is saved", outputPath);
 	}
+	if ([resultCSVStringES2 writeToURL:outputURL2 atomically:YES encoding:NSUTF8StringEncoding error:nil]) {
+		NSLog(@"%@ is saved", outputPath);
+	}
+
+
 	// EXPERIMENT PROGRAM ENDS HERE (NOT REQUIRED FOR RELEASE VERSION)
 //	 */
 }
