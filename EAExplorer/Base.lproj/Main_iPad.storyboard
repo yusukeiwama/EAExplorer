@@ -323,6 +323,13 @@
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <color key="color" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
                             </activityIndicatorView>
+                            <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="120" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="DpW-dp-j2c">
+                                <rect key="frame" x="230" y="884" width="40" height="22"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
                             <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="PfJ-OB-DED" customClass="UTPlotView">
                                 <rect key="frame" x="24" y="765" width="233" height="123"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
@@ -369,6 +376,7 @@
                         <outlet property="circleImageView" destination="9pX-q9-vbe" id="jGF-4s-fni"/>
                         <outlet property="edgeImageView" destination="IAq-F0-6m3" id="N8R-Tu-plZ"/>
                         <outlet property="generateButton" destination="mcT-dQ-4Jc" id="NV2-Qj-YSk"/>
+                        <outlet property="generationLabel" destination="DpW-dp-j2c" id="svn-qK-Wt6"/>
                         <outlet property="graphView" destination="JVW-DF-zqv" id="cYI-3l-AoF"/>
                         <outlet property="indicator" destination="OO4-SD-Czw" id="MZE-8B-e8R"/>
                         <outlet property="numberOfColorsField" destination="lx9-a5-SJV" id="Z1f-b5-9Q0"/>

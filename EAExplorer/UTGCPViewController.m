@@ -48,6 +48,7 @@ typedef enum ExperimentMode {
 @synthesize graphView;
 @synthesize edgeImageView, circleImageView;
 @synthesize plotView;
+@synthesize generationLabel;
 @synthesize numberOfVerticesField, numberOfEdgesField, numberOfColorsField;
 @synthesize resultLabel;
 @synthesize indicator;
@@ -67,7 +68,7 @@ typedef enum ExperimentMode {
 {
     [super viewDidLoad];
 
-	experimentMode = ExperimentModeNone;
+	experimentMode = ExperimentModeES;
 	
 	stopwatch = [[UTStopwatch alloc] init];
 	timerTimeInterval = 1.0;
@@ -85,6 +86,8 @@ typedef enum ExperimentMode {
 //	numberOfEdges	= numberOfVertices * (numberOfVertices - 1) / 4; // dense
 	[self updateFields]; // update fields for number of colors, vertices, edges.
 	
+	generationLabel.text = @"";
+	
 	CGFloat radialButtonViewRadius = 50;
 	NSArray *buttonTitles = @[@"HC", @"IHC", @"ES", @"ES+"];
 	radialButtonView = [[UTRadialButtonView alloc] initWithFrame:CGRectMake(graphView.center.x - radialButtonViewRadius,
@@ -94,6 +97,7 @@ typedef enum ExperimentMode {
 														   titles:buttonTitles
 														delegate:self];
 	[self.view addSubview:radialButtonView];
+	[self.view bringSubviewToFront:resultLabel];
 	
 	plotView.delegate = self;
 	
@@ -119,7 +123,7 @@ typedef enum ExperimentMode {
 				outputPath = [documentDir stringByAppendingPathComponent:@"resultHC.csv"];
 				NSUInteger noImprovementLimit = 100;
 				[resultCSVString appendString:@"seed,noImprovementLimit,maxIteration,numberOfVertices,numberOfEdges,experimentNo,success\n"];
-				for (sparse = NO; sparse == NO; sparse = YES) { // 2 patterns
+				for (sparse = NO; sparse < 2; sparse++) { // 2 patterns
 					for (numberOfVertices = 30; numberOfVertices <= 150; numberOfVertices += 30) { // 5 patterns
 						if (sparse) { // sparse
 							numberOfEdges	= 3 * numberOfVertices;
@@ -142,7 +146,7 @@ typedef enum ExperimentMode {
 				outputPath = [documentDir stringByAppendingPathComponent:@"resultIHC.csv"];
 				NSUInteger noImprovementLimit = 100;
 				NSUInteger maxIteration = 5;
-				for (sparse = NO; sparse == NO; sparse = YES) { // 2 patterns
+				for (sparse = NO; sparse < 2; sparse++) { // 2 patterns
 					for (numberOfVertices = 30; numberOfVertices <= 150; numberOfVertices += 30) { // 5 patterns
 						if (sparse) { // sparse
 							numberOfEdges	= 3 * numberOfVertices;
@@ -163,8 +167,8 @@ typedef enum ExperimentMode {
 			case ExperimentModeES:
 			{
 				outputPath = [documentDir stringByAppendingPathComponent:@"resultES.csv"];
-				[resultCSVString appendString:@"sd,lmt,prt,chd,in,vtx,edge,no,gen,suc\n"];
-				for (sparse = NO; sparse == NO; sparse = YES) { // 2 patterns
+				[resultCSVString appendString:@"sd,gen,prt,chd,in,vtx,edge,no,gen,suc\n"];
+				for (sparse = NO; sparse < 2; sparse++) { // 2 patterns
 					for (numberOfVertices = 30; numberOfVertices <= 150; numberOfVertices += 30) { // 5 patterns
 						if (sparse) { // sparse
 							numberOfEdges	= 3 * numberOfVertices;
@@ -172,17 +176,21 @@ typedef enum ExperimentMode {
 							numberOfEdges	= numberOfVertices * (numberOfVertices - 1) / 4;
 						}
 						[self generateNewGCP];
-						for (NSInteger i = 0; i < numberOfExperimentsForEachCondition; i++) {
-							for (NSUInteger l = 10; l <= 100; l += 30) { // 4 patterns
-								for (NSUInteger p = 40; p <= 200; p += 40) { // 5 patterns
-									for (NSUInteger k = 2; k <= 10; k += 2) { // 5 patterns
-										NSUInteger c = p * k;
-										conflictHistory = [gcp solveInESIncludeParents:NO numberOfParents:p numberOfChildren:c maxNumberOfGenerations:l];
-										[self saveConflictHistory:conflictHistory
-														 fileName:[NSString stringWithFormat:@"conflictHistoryInESWithSd%dLmt%ldP%ldC%ldIn%dV%ldE%ldNo%ld.txt", SEED, (unsigned long)l, (unsigned long)p, (unsigned long)c, NO, (unsigned long)numberOfVertices, (unsigned long)numberOfEdges, (unsigned long)i]];
-										[resultCSVString appendFormat:@"%d,%ld,%ld,%ld,%d,%ld,%ld,%ld,%ld,%ld\n", SEED, (unsigned long)l, (unsigned long)p, (unsigned long)c, NO, (unsigned long)numberOfVertices, (unsigned long)numberOfEdges, (unsigned long)i, (unsigned long)(conflictHistory.count), (unsigned long)([(NSNumber *)((conflictHistory.lastObject)[0]) unsignedIntegerValue] == 0)];
-									}
-								}
+						
+						for (NSUInteger g = 40; g <= 200; g += 40) { // 5 patterns
+							//								for (NSUInteger p = 40; p <= 200; p += 40) { // 5 patterns
+							NSUInteger p = 80;
+							//									for (NSUInteger k = 2; k <= 10; k += 2) { // 5 patterns
+							NSUInteger k = 8;
+							for (NSInteger i = 0; i < numberOfExperimentsForEachCondition; i++) {
+								NSUInteger c = p * k;
+								conflictHistory = [gcp solveInESIncludeParents:NO numberOfParents:p numberOfChildren:c maxNumberOfGenerations:g];
+								[self saveConflictHistory:conflictHistory
+												 fileName:[NSString stringWithFormat:@"conflictHistoryInESWithSd%dGen%ldP%ldC%ldIn%dV%ldE%ldNo%ld.txt", SEED, (unsigned long)g, (unsigned long)p, (unsigned long)c, NO, (unsigned long)numberOfVertices, (unsigned long)numberOfEdges, (unsigned long)i]];
+								[resultCSVString appendFormat:@"%d,%ld,%ld,%ld,%d,%ld,%ld,%ld,%ld,%ld\n", SEED, (unsigned long)g, (unsigned long)p, (unsigned long)c, NO, (unsigned long)numberOfVertices, (unsigned long)numberOfEdges, (unsigned long)i, (unsigned long)(conflictHistory.count), (unsigned long)([(NSNumber *)((conflictHistory.lastObject)[0]) unsignedIntegerValue] == 0)];
+								printf("V%dE%dG%dNo%d\n", numberOfVertices, numberOfEdges, g, i);
+								//									}
+								//								}
 							}
 						}
 					}
@@ -192,8 +200,8 @@ typedef enum ExperimentMode {
 			case ExperimentModeESplus:
 			{
 				outputPath = [documentDir stringByAppendingPathComponent:@"resultESplus.csv"];
-				[resultCSVString appendString:@"sd,lmt,prt,chd,in,vtx,edge,no,gen,suc\n"];
-				for (sparse = NO; sparse == NO; sparse = YES) { // 2 patterns
+				[resultCSVString appendString:@"sd,gen,prt,chd,in,vtx,edge,no,gen,suc\n"];
+				for (sparse = NO; sparse < 2; sparse++) { // 2 patterns
 					for (numberOfVertices = 30; numberOfVertices <= 150; numberOfVertices += 30) { // 5 patterns
 						if (sparse) { // sparse
 							numberOfEdges	= 3 * numberOfVertices;
@@ -201,20 +209,21 @@ typedef enum ExperimentMode {
 							numberOfEdges	= numberOfVertices * (numberOfVertices - 1) / 4;
 						}
 						[self generateNewGCP];
-						for (NSInteger i = 0; i < numberOfExperimentsForEachCondition; i++) {
-							for (NSUInteger l = 10; l <= 100; l += 30) { // 4 patterns
-								for (NSUInteger p = 40; p <= 200; p += 40) { // 5 patterns
-									for (NSUInteger k = 2; k <= 10; k += 2) { // 5 patterns
-										NSUInteger c = p * k;
-										for (NSUInteger i = 0; i < numberOfExperimentsForEachCondition; i++) {
-											conflictHistory = [gcp solveInESIncludeParents:YES numberOfParents:p numberOfChildren:c maxNumberOfGenerations:l];
-											[self saveConflictHistory:conflictHistory
-															 fileName:[NSString stringWithFormat:@"conflictHistoryInESWithSd%dLmt%ldP%ldC%ldIn%dV%ldE%ldNo%ld.txt", SEED, (unsigned long)l, (unsigned long)p, (unsigned long)c, YES, (unsigned long)numberOfVertices, (unsigned long)numberOfEdges, (unsigned long)i]];
-											[resultCSVString appendFormat:@"%d,%ld,%ld,%ld,%d,%ld,%ld,%ld,%ld,%ld\n", SEED, (unsigned long)l, (unsigned long)p, (unsigned long)c, YES, (unsigned long)numberOfVertices, (unsigned long)numberOfEdges, (unsigned long)i, (unsigned long)(conflictHistory.count), (unsigned long)([(NSNumber *)((conflictHistory.lastObject)[0]) unsignedIntegerValue] == 0)];
-										}
-									}
-								}
+						for (NSUInteger g = 40; g <= 200; g += 40) { // 5 patterns
+							//								for (NSUInteger p = 40; p <= 200; p += 40) { // 5 patterns
+							NSUInteger p = 80;
+							//									for (NSUInteger k = 2; k <= 10; k += 2) { // 5 patterns
+							NSUInteger k = 8;
+							NSUInteger c = p * k;
+							for (NSUInteger i = 0; i < numberOfExperimentsForEachCondition; i++) {
+								conflictHistory = [gcp solveInESIncludeParents:YES numberOfParents:p numberOfChildren:c maxNumberOfGenerations:g];
+								[self saveConflictHistory:conflictHistory
+												 fileName:[NSString stringWithFormat:@"conflictHistoryInESplusWithSd%dGen%ldP%ldC%ldIn%dV%ldE%ldNo%ld.txt", SEED, (unsigned long)g, (unsigned long)p, (unsigned long)c, YES, (unsigned long)numberOfVertices, (unsigned long)numberOfEdges, (unsigned long)i]];
+								[resultCSVString appendFormat:@"%d,%ld,%ld,%ld,%d,%ld,%ld,%ld,%ld,%ld\n", SEED, (unsigned long)g, (unsigned long)p, (unsigned long)c, YES, (unsigned long)numberOfVertices, (unsigned long)numberOfEdges, (unsigned long)i, (unsigned long)(conflictHistory.count), (unsigned long)([(NSNumber *)((conflictHistory.lastObject)[0]) unsignedIntegerValue] == 0)];
+								printf("V%dE%dG%dNo%d\n", numberOfVertices, numberOfEdges, g, i);
 							}
+							//									}
+							//								}
 						}
 					}
 				}
@@ -443,7 +452,6 @@ typedef enum ExperimentMode {
 	} else {
 		resultLabel.text = @"Wrong...";
 		resultLabel.textColor = [UIColor redColor];
-		printf("%lu Contlicts\n", (unsigned long)[gcp conflictCount]);
 	}
 	resultLabel.hidden = NO;
 	[UIView animateWithDuration:0.2
@@ -557,8 +565,8 @@ typedef enum ExperimentMode {
 	NSUInteger noImprovementLimit = 100;
 	NSUInteger maxIteration = 5;
 	// for ES
-	NSUInteger numberOfParents = 100;
-	NSUInteger numberOfChildren = numberOfParents * 10;
+	NSUInteger numberOfParents = 80;
+	NSUInteger numberOfChildren = numberOfParents * 8;
 	NSUInteger maxNumberOfGenerations = 200;
 	// for plot
 	NSArray *conflictCountHistory;
@@ -583,6 +591,7 @@ typedef enum ExperimentMode {
 			conflictCountHistory = [NSArray array];
 			break;
 	}
+	generationLabel.text = [NSString stringWithFormat:@"%lu", (unsigned long)conflictCountHistory.count];
 	[self updateVertexColors];
 	ConflictCountLabel.text = [NSString stringWithFormat:@"%lu Conflicts", (unsigned long)[gcp conflictCount]];
 }

@@ -8,7 +8,7 @@
 
 #import "UTGCP.h"
 
-#define MAX_PARENTS 200
+#define MAX_PARENTS 200 // used to pre-allocation
 #define MAX_CHILDREN 2000
 
 int order;
@@ -88,15 +88,15 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 	free(canditates);
 	
 	// random mapping for quiz
-	NSUInteger v = numberOfVertices;
-	for (NSUInteger i = 0; i < v; i++) { // ordered uint array to numberOfVertices - 1
+	NSUInteger nv = numberOfVertices;
+	for (NSUInteger i = 0; i < nv; i++) { // ordered uint array to numberOfVertices - 1
 		randomIndexMap[i] = i;
 	}
-	for (NSUInteger i = 1; i < v; i++) {
-		NSUInteger r = (v - i) * (double)rand() / (RAND_MAX + 1.0); // 0 <= r < numberOfVerticles - i
+	for (NSUInteger i = 1; i < nv; i++) {
+		NSUInteger r = (nv - i) * (double)rand() / (RAND_MAX + 1.0); // 0 <= r < numberOfVerticles - i
 		NSUInteger temp = randomIndexMap[r];
-		randomIndexMap[r] = randomIndexMap[v - i];
-		randomIndexMap[v - i] = temp;
+		randomIndexMap[r] = randomIndexMap[nv - i];
+		randomIndexMap[nv - i] = temp;
 	}
 }
 

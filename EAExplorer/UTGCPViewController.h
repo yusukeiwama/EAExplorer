@@ -29,6 +29,7 @@
 
 @property (weak, nonatomic) IBOutlet UTPlotView *plotView;
 
+@property (weak, nonatomic) IBOutlet UILabel *generationLabel;
 
 
 @property (weak, nonatomic) IBOutlet UITextField *numberOfColorsField;
