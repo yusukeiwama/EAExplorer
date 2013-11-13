@@ -80,9 +80,9 @@ typedef enum ExperimentMode {
 	
 	// Set parameters.
 	numberOfColors		= 3;
-	numberOfVertices	= 3 * numberOfColors;
-//	numberOfEdges		= 3 * numberOfVertices; // sparse
-	numberOfEdges	= numberOfVertices * (numberOfVertices - 1) / 4; // dense
+	numberOfVertices	= 30 * numberOfColors;
+	numberOfEdges		= 3 * numberOfVertices; // sparse
+//	numberOfEdges	= numberOfVertices * (numberOfVertices - 1) / 4; // dense
 	[self updateFields]; // update fields for number of colors, vertices, edges.
 	
 	CGFloat radialButtonViewRadius = 50;
@@ -177,7 +177,7 @@ typedef enum ExperimentMode {
 								for (NSUInteger p = 40; p <= 200; p += 40) { // 5 patterns
 									for (NSUInteger k = 2; k <= 10; k += 2) { // 5 patterns
 										NSUInteger c = p * k;
-										conflictHistory = [gcp solveInESIncludeParents:NO numberOfParents:p numberOfChildren:c noImprovementLimit:l];
+										conflictHistory = [gcp solveInESIncludeParents:NO numberOfParents:p numberOfChildren:c maxNumberOfGenerations:l];
 										[self saveConflictHistory:conflictHistory
 														 fileName:[NSString stringWithFormat:@"conflictHistoryInESWithSd%dLmt%ldP%ldC%ldIn%dV%ldE%ldNo%ld.txt", SEED, (unsigned long)l, (unsigned long)p, (unsigned long)c, NO, (unsigned long)numberOfVertices, (unsigned long)numberOfEdges, (unsigned long)i]];
 										[resultCSVString appendFormat:@"%d,%ld,%ld,%ld,%d,%ld,%ld,%ld,%ld,%ld\n", SEED, (unsigned long)l, (unsigned long)p, (unsigned long)c, NO, (unsigned long)numberOfVertices, (unsigned long)numberOfEdges, (unsigned long)i, (unsigned long)(conflictHistory.count), (unsigned long)([(NSNumber *)((conflictHistory.lastObject)[0]) unsignedIntegerValue] == 0)];
@@ -207,7 +207,7 @@ typedef enum ExperimentMode {
 									for (NSUInteger k = 2; k <= 10; k += 2) { // 5 patterns
 										NSUInteger c = p * k;
 										for (NSUInteger i = 0; i < numberOfExperimentsForEachCondition; i++) {
-											conflictHistory = [gcp solveInESIncludeParents:YES numberOfParents:p numberOfChildren:c noImprovementLimit:l];
+											conflictHistory = [gcp solveInESIncludeParents:YES numberOfParents:p numberOfChildren:c maxNumberOfGenerations:l];
 											[self saveConflictHistory:conflictHistory
 															 fileName:[NSString stringWithFormat:@"conflictHistoryInESWithSd%dLmt%ldP%ldC%ldIn%dV%ldE%ldNo%ld.txt", SEED, (unsigned long)l, (unsigned long)p, (unsigned long)c, YES, (unsigned long)numberOfVertices, (unsigned long)numberOfEdges, (unsigned long)i]];
 											[resultCSVString appendFormat:@"%d,%ld,%ld,%ld,%d,%ld,%ld,%ld,%ld,%ld\n", SEED, (unsigned long)l, (unsigned long)p, (unsigned long)c, YES, (unsigned long)numberOfVertices, (unsigned long)numberOfEdges, (unsigned long)i, (unsigned long)(conflictHistory.count), (unsigned long)([(NSNumber *)((conflictHistory.lastObject)[0]) unsignedIntegerValue] == 0)];
@@ -559,8 +559,7 @@ typedef enum ExperimentMode {
 	// for ES
 	NSUInteger numberOfParents = 100;
 	NSUInteger numberOfChildren = numberOfParents * 10;
-	NSUInteger noImprovementLimitES = 50;
-	NSUInteger noImprovementLimitESplus = 10;
+	NSUInteger maxNumberOfGenerations = 200;
 	// for plot
 	NSArray *conflictCountHistory;
 	switch (i) {
@@ -573,11 +572,11 @@ typedef enum ExperimentMode {
 			[plotView plotWithX:nil Y:conflictCountHistory];
 			break;
 		case 2: // ES
-			conflictCountHistory = [gcp solveInESIncludeParents:NO numberOfParents:numberOfParents numberOfChildren:numberOfChildren noImprovementLimit:noImprovementLimitES];
+			conflictCountHistory = [gcp solveInESIncludeParents:NO numberOfParents:numberOfParents numberOfChildren:numberOfChildren maxNumberOfGenerations:maxNumberOfGenerations];
 			[plotView multiplePlotWithX:nil Y:conflictCountHistory];
 			break;
 		case 3: // ES+
-			conflictCountHistory = [gcp solveInESIncludeParents:YES numberOfParents:numberOfParents numberOfChildren:numberOfChildren noImprovementLimit:noImprovementLimitESplus];
+			conflictCountHistory = [gcp solveInESIncludeParents:YES numberOfParents:numberOfParents numberOfChildren:numberOfChildren maxNumberOfGenerations:maxNumberOfGenerations];
 			[plotView multiplePlotWithX:nil Y:conflictCountHistory];
 			break;
 		default:

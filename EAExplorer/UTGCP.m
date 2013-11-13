@@ -302,7 +302,7 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 - (NSArray *)solveInESIncludeParents:(BOOL)includeParents
 				numberOfParents:(NSUInteger)numberOfParents
 			   numberOfChildren:(NSUInteger)numberOfChildren
-				  noImprovementLimit:(NSUInteger)limit
+				  maxNumberOfGenerations:(NSUInteger)maxNumberOfGenerations
 {
 //	// Back-up before-state
 	NSUInteger beforeConflictCount = [self conflictCount];
@@ -332,11 +332,11 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 	aveConflictCount = 0;
 
 	// evolution start
-	NSUInteger noImprovementCount = 0;
+	NSUInteger numberOfGenerations = 0;
 	while (tempMinConflictCount) {
 		// end judgement
 		// if noImprovementCount exceeds its limit, end ES
-		if (noImprovementCount > limit) { // fail to solve
+		if (numberOfGenerations > maxNumberOfGenerations) { // fail to solve
 			if (tempMinConflictCount > beforeConflictCount) { // not improved...
 				// If there's no improvement compared with before-state, restore before-state.
 				memcpy(colorNumbers, beforeConflictColorNumbers, numberOfVertices * sizeof(NSUInteger));
@@ -379,9 +379,6 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 		// check if improved
 		if (genes[0][numberOfVertices] < tempMinConflictCount) { // improved
 			tempMinConflictCount = genes[0][numberOfVertices];
-			noImprovementCount = 0;
-		} else { // not improved
-			noImprovementCount++;
 		}
 		
 		// add conflictInfo into conflictHistory
@@ -394,6 +391,8 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 						 [NSNumber numberWithUnsignedInteger:aveConflictCount],
 						 [NSNumber numberWithUnsignedInteger:genes[numberOfParents - 1][numberOfVertices]]];
 		[conflictHistory addObject:conflictInfo];
+		
+		numberOfGenerations++;
 	}
 	
 	memcpy(colorNumbers, genes[0], sizeof(NSUInteger) * numberOfVertices);

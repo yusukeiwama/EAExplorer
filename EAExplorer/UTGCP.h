@@ -60,7 +60,7 @@ typedef enum UTGCPAlgorithm {
 - (NSArray *)solveInESIncludeParents:(BOOL)includeParents
 					 numberOfParents:(NSUInteger)numberOfParents
 					numberOfChildren:(NSUInteger)numberOfChildren
-				  noImprovementLimit:(NSUInteger)limit;
+				  maxNumberOfGenerations:(NSUInteger)maxNumberOfGenerations;
 
 - (BOOL)solving;
 
