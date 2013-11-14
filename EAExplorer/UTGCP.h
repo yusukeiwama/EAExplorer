@@ -15,6 +15,13 @@ typedef enum UTGCPAlgorithm {
 	UTGCPAlgorithmIHC = UTGCPAlgorithmIteratedHillClimbing
 } UTGCPAlgorithm;
 
+typedef enum UTGAScaling {
+	UTGAScalingNone = 0,
+	UTGAScalingLinear,
+	UTGAScalingSigma,
+	UTGAScalingPower
+} UTGAScaling;
+
 /**
  Graph Coloring Problem generator
  */
@@ -60,6 +67,22 @@ typedef enum UTGCPAlgorithm {
 - (NSArray *)solveInESIncludeParents:(BOOL)includeParents
 					 numberOfParents:(NSUInteger)numberOfParents
 					numberOfChildren:(NSUInteger)numberOfChildren
+				  maxNumberOfGenerations:(NSUInteger)maxNumberOfGenerations;
+
+/**
+ Solve in Genetic Algorithm.
+ @param populationSize Population size.
+ @param numberOfCrossovers Number of crossover. If it is set to 0, uniform crossover technique will be used.
+ @param mutationRate Mutation rate.
+ @param scaling Scaling technique to be used.
+ @param numberOfElites Number of elite to be selected as next generation. If it is greater than the number of gene loci - 1, number of gene loci - 1 will be used.
+ @param maxNumberOfGenerations Max number of generations.
+ */
+- (NSArray *)solveInGAWithPopulationSize:(NSUInteger)populationSize
+					  numberOfCrossovers:(NSUInteger)numberOfCrossovers // 0 ... uniform
+							mutationRate:(double)mutationRate
+								 scaling:(UTGAScaling)scaling
+						  numberOfElites:(NSUInteger)numberOfElites
 				  maxNumberOfGenerations:(NSUInteger)maxNumberOfGenerations;
 
 - (BOOL)solving;

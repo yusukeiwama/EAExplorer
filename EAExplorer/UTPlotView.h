@@ -8,11 +8,17 @@
 
 #import <UIKit/UIKit.h>
 
+typedef enum UTYType
+{
+	UTYTypeUnsingedInteger = 0,
+	UTYTypeDouble
+} UTYType;
+
 @interface UTPlotView : UIImageView
 
 @property id delegate;
 
 - (void)plotWithX:(NSArray *)X Y:(NSArray *)Y;
-- (void)multiplePlotWithX:(NSArray *)X Y:(NSArray *)Y;
+- (void)multiplePlotWithX:(NSArray *)X Y:(NSArray *)Y type:(UTYType)type;
 
 @end

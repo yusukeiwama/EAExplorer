@@ -73,7 +73,7 @@
 	UIGraphicsEndImageContext();
 }
 
-- (void)multiplePlotWithX:(NSArray *)X Y:(NSArray *)Y
+- (void)multiplePlotWithX:(NSArray *)X Y:(NSArray *)Y type:(UTYType)type
 {
 	UIGraphicsBeginImageContextWithOptions(self.frame.size, NO, 0);
 	CGContextRef context = UIGraphicsGetCurrentContext();
@@ -88,41 +88,80 @@
 	CGContextMoveToPoint(context, lineWidth / 2.0, self.frame.size.height - margin);
 	CGContextAddLineToPoint(context, self.frame.size.width, self.frame.size.height - margin);
 	CGContextMoveToPoint(context, lineWidth / 2.0, self.frame.size.height - margin);
-	CGContextAddLineToPoint(context, lineWidth / 2.0, 0.0);
+	CGContextAddLineToPoint(context, lineWidth / 2.0, margin);
 	CGContextStrokePath(context);
 	CGContextSetStrokeColorWithColor(context, [[UIColor lightGrayColor] CGColor]);
 	
 	// draw lines
 	NSUInteger numberOfLines = ((NSArray *)(Y[0])).count;
-	NSUInteger maxY = 0;
+	CGFloat maxY = 0.0;
 	for (NSUInteger j = 0; j < numberOfLines; j++) {
 		for (NSUInteger i = 0; i < Y.count; i++) {
-			if (maxY < [Y[i][j] unsignedIntegerValue]) {
-				maxY = [Y[i][j] unsignedIntegerValue];
+			switch (type) {
+				case UTYTypeUnsingedInteger:
+					if (maxY < [Y[i][j] unsignedIntegerValue]) {
+						maxY = [Y[i][j] unsignedIntegerValue];
+					}
+					break;
+				case UTYTypeDouble:
+					maxY = 1.0;
+					break;
+				default:
+					break;
 			}
 		}
 	}
 	for (NSUInteger j = 0; j < numberOfLines; j++) {
 		// plot
 		CGFloat pitch = (self.frame.size.width - margin) / Y.count;
-		CGContextMoveToPoint(context, 0, lineWidth);
+		CGContextMoveToPoint(context, 0, lineWidth + margin);
 		CGFloat x, y;
-		for (NSUInteger i = 1; i < [Y count]; i++) {
-			x = pitch * i;
-			y = (1 - (double)[Y[i][j] unsignedIntegerValue] / maxY) * (self.frame.size.height - lineWidth - margin) + lineWidth;
-			CGContextAddLineToPoint(context, x, y);
+		switch (type) {
+			case UTYTypeUnsingedInteger:
+				for (NSUInteger i = 1; i < [Y count]; i++) {
+					x = pitch * i;
+					y = (1 - (double)[Y[i][j] unsignedIntegerValue] / maxY) * (self.frame.size.height - lineWidth - 2 * margin) + lineWidth + margin;
+					CGContextAddLineToPoint(context, x, y);
+				}
+				break;
+			case UTYTypeDouble:
+				for (NSUInteger i = 0; i < [Y count]; i++) {
+					x = pitch * i;
+					y = (1 - (double)[Y[i][j] doubleValue] / maxY) * (self.frame.size.height - lineWidth - 2 * margin) + lineWidth + margin;
+					CGContextAddLineToPoint(context, x, y);
+				}
+				break;
+			default:
+				break;
 		}
+
 		CGContextSetStrokeColorWithColor(context, [[UIColor colorWithHue:1.0 / numberOfLines * j saturation:1.0 brightness:1.0 alpha:1.0] CGColor]);
 		CGContextStrokePath(context);
 		
 		// plot red point if success
-		if ([Y[Y.count - 1][j] unsignedIntegerValue] == 0) {
-			CGFloat r = 4.0;
-			CGContextSetFillColorWithColor(context, [[UIColor colorWithRed:1.0 green:0.0 blue:122.0/255.0 alpha:1.0] CGColor]);
-			CGContextFillEllipseInRect(context, CGRectMake(pitch * (Y.count - 1) - r,
-														   self.frame.size.height - lineWidth - r - margin,
-														   2.0 * r,
-														   2.0 * r));
+		switch (type) {
+			case UTYTypeUnsingedInteger:
+				if ([Y[Y.count - 1][j] unsignedIntegerValue] == 0) {
+					CGFloat r = 4.0;
+					CGContextSetFillColorWithColor(context, [[UIColor colorWithRed:1.0 green:0.0 blue:122.0/255.0 alpha:1.0] CGColor]);
+					CGContextFillEllipseInRect(context, CGRectMake(pitch * (Y.count - 1) - r,
+																   self.frame.size.height - lineWidth - r - margin,
+																   2.0 * r,
+																   2.0 * r));
+				}
+				break;
+			case UTYTypeDouble:
+				if ([Y[Y.count - 1][j] doubleValue] == 1.0) {
+					CGFloat r = 4.0;
+					CGContextSetFillColorWithColor(context, [[UIColor colorWithRed:1.0 green:0.0 blue:122.0/255.0 alpha:1.0] CGColor]);
+					CGContextFillEllipseInRect(context, CGRectMake(pitch * (Y.count - 1) - r,
+																   margin - r,
+																   2.0 * r,
+																   2.0 * r));
+				}
+				break;
+			default:
+				break;
 		}
 	}
 	
