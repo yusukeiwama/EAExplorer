@@ -327,11 +327,11 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 	aveConflictCount = 0;
 
 	// evolution start
-	NSUInteger numberOfGenerations = 0;
+	NSUInteger numberOfGenerations = 1;
 	while (tempMinConflictCount) {
 		// end judgement
 		// if noImprovementCount exceeds its limit, end ES
-		if (numberOfGenerations > maxNumberOfGenerations) { // fail to solve
+		if (numberOfGenerations >= maxNumberOfGenerations) { // fail to solve
 			if (tempMinConflictCount > beforeConflictCount) { // not improved...
 				// If there's no improvement compared with before-state, restore before-state.
 				memcpy(colorNumbers, beforeConflictColorNumbers, numberOfVertices * sizeof(NSUInteger));
@@ -407,13 +407,12 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 						  numberOfElites:(NSUInteger)numberOfElites
 				  maxNumberOfGenerations:(NSUInteger)maxNumberOfGenerations
 {
-	// colorNumbersに触らなければバックアップを取る必要はない。失敗時にcolorNumbersのconflictCountと比較して採用する方を決めれば良い。
 	if (numberOfElites > populationSize) {
 		return nil;
 	}
 	NSMutableArray *fitnessHistory = [NSMutableArray array]; // data to return
 	NSArray *fitnessInfo;
-	NSUInteger numberOfGeneration	= 0;
+	NSUInteger numberOfGeneration = 1;
 	
 	double *fitnesses		= calloc(populationSize, sizeof(double));
 	NSUInteger **parents	= calloc(populationSize, sizeof(NSUInteger *));
@@ -474,7 +473,16 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 				totalFitness = 0.0;
 				for (NSUInteger i = 0; i < populationSize; i++) {
 					fitnesses[i] = a + b * fitnesses[i];
-					printf("%f ", fitnesses[i]);
+					totalFitness += fitnesses[i];
+				}
+				break;
+			}
+			case UTGAScalingPower:
+			{
+				double power = 10.0;
+				totalFitness = 0.0;
+				for (NSUInteger i = 0; i < populationSize; i++) {
+					fitnesses[i] = pow(power, fitnesses[i]);
 					totalFitness += fitnesses[i];
 				}
 				break;
@@ -482,8 +490,6 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 			default:
 				break;
 		}
-//		printf("total fitness = %2.2f\n", totalFitness);
-//		NSLog(@"%@", [fitnessHistory.lastObject description]);
 		
 		// 3-b. End Judgement (SUCCESS)
 		if (children[0][numberOfVertices] == 0) { // no conflict, success
@@ -493,6 +499,7 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 		
 		// 3-b. End Judgement (FAILURE)
 		// check if elite did change
+		// エリートが変わらないのですぐ終わってしまう
 //		eliteDidChange = NO;
 //		for (NSUInteger i = 0; i < numberOfVertices; i++) {
 //			if (elites[0][i] != children[0][i]) {

@@ -173,7 +173,7 @@ typedef enum ExperimentMode {
 			case ExperimentModeES:
 			{
 				outputPath = [documentDir stringByAppendingPathComponent:@"resultES.csv"];
-				[resultCSVString appendString:@"sd,gen,prt,chd,in,vtx,edge,no,gen,suc\n"];
+				[resultCSVString appendString:@"sd,maxgen,prt,chd,in,vtx,edge,no,gen,suc\n"];
 			ES:
 				for (numberOfVertices = 30; numberOfVertices <= 150; numberOfVertices += 30) { // 5 patterns
 					if (sparse) { // sparse
@@ -209,7 +209,7 @@ typedef enum ExperimentMode {
 			case ExperimentModeESplus:
 			{
 				outputPath = [documentDir stringByAppendingPathComponent:@"resultESplus.csv"];
-				[resultCSVString appendString:@"sd,gen,prt,chd,in,vtx,edge,no,gen,suc\n"];
+				[resultCSVString appendString:@"sd,maxgen,prt,chd,in,vtx,edge,no,gen,suc\n"];
 			ESplus:
 				for (numberOfVertices = 30; numberOfVertices <= 150; numberOfVertices += 30) { // 5 patterns
 					if (sparse) { // sparse
@@ -580,13 +580,15 @@ typedef enum ExperimentMode {
 	// for ES
 	NSUInteger numberOfParents = 80;
 	NSUInteger numberOfChildren = numberOfParents * 8;
-	NSUInteger maxNumberOfGenerationsES = 200;
+	NSUInteger maxNumberOfGenerationsES = 160;
+	NSUInteger maxNumberOfGenerationsESplus = 120;
 	
 	// for GA
 	NSUInteger populationSize = 100;
 	NSUInteger numberOfCrossovers = 0;
 	double mutationRate = 1.0 / gcp.numberOfVertices;
 	UTGAScaling scaling = UTGAScalingLinear;
+//	UTGAScaling scaling = UTGAScalingPower;
 	NSUInteger numberOfElites = 5;
 	NSUInteger maxNumberOfGenerationsGA = 200;
 	
@@ -595,27 +597,27 @@ typedef enum ExperimentMode {
 	
 	// switch algorithms
 	switch (i) {
-		case 0: // HC
+		case 0: // HC ... good at dense, fast
 			plotData = [gcp solveInHCWithNoImprovementLimit:noImprovementLimit];
 			[plotView plotWithX:nil Y:plotData];
 			break;
-		case 1: // IHC
+		case 1: // IHC ... good at dense, fast
 			plotData = [gcp solveInIHCWithNoImprovementLimit:noImprovementLimit
 												maxIteration:maxIteration];
 			[plotView plotWithX:nil Y:plotData];
 			break;
-		case 2: // ES
+		case 2: // ES ... good at sparse, slow
 			plotData = [gcp solveInESIncludeParents:NO
 									numberOfParents:numberOfParents
 								   numberOfChildren:numberOfChildren
 							 maxNumberOfGenerations:maxNumberOfGenerationsES];
 			[plotView multiplePlotWithX:nil Y:plotData type:UTYTypeUnsingedInteger];
 			break;
-		case 3: // ES+
+		case 3: // ES+ ... good at dense, slow
 			plotData = [gcp solveInESIncludeParents:YES
 									numberOfParents:numberOfParents
 								   numberOfChildren:numberOfChildren
-							 maxNumberOfGenerations:maxNumberOfGenerationsES];
+							 maxNumberOfGenerations:maxNumberOfGenerationsESplus];
 			[plotView multiplePlotWithX:nil Y:plotData type:UTYTypeUnsingedInteger];
 			break;
 		case 4: // GA
