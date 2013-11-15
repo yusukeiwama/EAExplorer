@@ -584,9 +584,9 @@ typedef enum ExperimentMode {
 	NSUInteger maxNumberOfGenerationsESplus = 120;
 	
 	// for GA
-	NSUInteger populationSize = 100;
+	NSUInteger populationSize = 50;
 	NSUInteger numberOfCrossovers = 0;
-	double mutationRate = 1.0 / gcp.numberOfVertices;
+	double mutationRate = 3.0 / gcp.numberOfVertices;
 	UTGAScaling scaling = UTGAScalingLinear;
 //	UTGAScaling scaling = UTGAScalingPower;
 	NSUInteger numberOfElites = 5;

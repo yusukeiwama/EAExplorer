@@ -414,90 +414,34 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 	NSArray *fitnessInfo;
 	NSUInteger numberOfGeneration = 1;
 	
-	double *fitnesses		= calloc(populationSize, sizeof(double));
+	double *parentFitnesses	= calloc(populationSize, sizeof(double));
 	NSUInteger **parents	= calloc(populationSize, sizeof(NSUInteger *));
-	NSUInteger **children	= calloc(populationSize, sizeof(NSUInteger *));
+	NSUInteger **children	= calloc(populationSize + numberOfElites, sizeof(NSUInteger *));
 	for (NSUInteger i = 0; i < populationSize; i++) {
 		parents[i]	= calloc(numberOfVertices + 1, sizeof(NSUInteger)); // last element is conflictCount
-		children[i]	= calloc(numberOfVertices + 1, sizeof(NSUInteger)); // last element is conflictCount
 	}
-	NSUInteger **elites		= calloc(numberOfElites, sizeof(NSUInteger *));
-	for (NSUInteger i = 0; i < numberOfElites; i++) { // initialize elites with worst case
-		elites[i]	= calloc(numberOfVertices + 1, sizeof(NSUInteger)); // last element is conflictCount
-		for (NSUInteger j = 0; j < numberOfVertices; j++) {
-			elites[i][j] = -1;
-		}
-		elites[i][numberOfVertices] = numberOfEdges;
+	for (NSUInteger i = 0; i < populationSize + numberOfElites; i++) {
+		children[i]	= calloc(numberOfVertices + 1, sizeof(NSUInteger)); // last element is conflictCount
 	}
 	BOOL eliteDidChange = YES;
 	
-	// 1. Initialize children with random colors
+	// 1. Initialize parents with random colors
 	for (NSUInteger i = 0; i < populationSize; i++) {
 		for (NSUInteger j = 0; j < numberOfVertices; j++) {
-			children[i][j] = numberOfColors * (double)rand() / (RAND_MAX + 1.0);
+			parents[i][j] = numberOfColors * (double)rand() / (RAND_MAX + 1.0);
 		}
-		children[i][numberOfVertices] = [self conflictCountWithColorNumbers:children[i]]; // put conflictCount into the last element
+		parents[i][numberOfVertices] = [self conflictCountWithColorNumbers:parents[i]]; // put conflictCount into the last element
 	}
-//	// print color number
-//	for (NSUInteger i = 0; i < numberOfVertices; i++) {
-//		printf("%d ", children[0][i]);
-//	}
-//	printf("\n");
+	// sort parents by conflictCounts in ascending order.
+	qsort(parents, populationSize, sizeof(NSUInteger *), (int(*)(const void *, const void *))conflictCountCompare);
 	
 	while (1) {
-		// 2. Evaluate children
-		// calculate conflict count
-		for (NSUInteger i = 0; i < populationSize; i++) {
-			children[i][numberOfVertices] = [self conflictCountWithColorNumbers:children[i]];
-		}
-		// sort children by conflictCounts in ascending order.
-		qsort(children, populationSize, sizeof(NSUInteger *), (int(*)(const void *, const void *))conflictCountCompare);
-		
-		// calculate fitnesses
-		double totalFitness = 0.0;
-		for (NSUInteger i = 0; i < populationSize; i++) {
-			fitnesses[i] = 1.0 - ((double)(children[i][numberOfVertices]) / numberOfEdges);
-			totalFitness += fitnesses[i];
-		}
-		fitnessInfo = @[[NSNumber numberWithDouble:fitnesses[0]],
-						[NSNumber numberWithDouble:totalFitness / populationSize],
-						[NSNumber numberWithDouble:fitnesses[populationSize - 1]]];
-		[fitnessHistory addObject:fitnessInfo];
-
-		
-		switch (scaling) {
-			case UTGAScalingLinear:
-			{
-				double a = -fitnesses[populationSize - 1] / (fitnesses[0] - fitnesses[populationSize - 1]);
-				double b = 1.0 / (fitnesses[0] - fitnesses[populationSize - 1]);
-				totalFitness = 0.0;
-				for (NSUInteger i = 0; i < populationSize; i++) {
-					fitnesses[i] = a + b * fitnesses[i];
-					totalFitness += fitnesses[i];
-				}
-				break;
-			}
-			case UTGAScalingPower:
-			{
-				double power = 10.0;
-				totalFitness = 0.0;
-				for (NSUInteger i = 0; i < populationSize; i++) {
-					fitnesses[i] = pow(power, fitnesses[i]);
-					totalFitness += fitnesses[i];
-				}
-				break;
-			}
-			default:
-				break;
-		}
-		
-		// 3-b. End Judgement (SUCCESS)
-		if (children[0][numberOfVertices] == 0) { // no conflict, success
-			memcpy(colorNumbers, children[0], numberOfVertices * sizeof(NSUInteger));
+		// 2-a. End Judgement (SUCCESS)
+		if (parents[0][numberOfVertices] == 0) { // no conflict, success
+			memcpy(colorNumbers, parents[0], numberOfVertices * sizeof(NSUInteger));
 			break;
 		}
-		
-		// 3-b. End Judgement (FAILURE)
+		// 2-b. End Judgement (FAILURE)
 		// check if elite did change
 		// エリートが変わらないのですぐ終わってしまう
 //		eliteDidChange = NO;
@@ -507,7 +451,7 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 //				break;
 //			}
 //		}
-		if (numberOfGeneration >= maxNumberOfGenerations
+		if (numberOfGeneration > maxNumberOfGenerations
 			|| eliteDidChange == NO) {
 			// compare old color number and new color number
 			if ([self conflictCountWithColorNumbers:parents[0]] < [self conflictCount]) { // improved
@@ -516,15 +460,43 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 			break;
 		}
 		
-		// save elites
-		for (NSUInteger i = 0; i < numberOfElites; i++) {
-			memcpy(elites[i], children[i], (numberOfVertices + 1) * sizeof(NSUInteger));
-		}
-		
-		// change generation
-		numberOfGeneration++;
+		// 3. Evaluate parents
+		// calculate parentFitnesses
+		double totalParentFitness = 0.0;
 		for (NSUInteger i = 0; i < populationSize; i++) {
-			memcpy(parents[i], children[i], (numberOfVertices + 1) * sizeof(NSUInteger));
+			parentFitnesses[i] = 1.0 - ((double)(parents[i][numberOfVertices]) / numberOfEdges);
+			totalParentFitness += parentFitnesses[i];
+		}
+		fitnessInfo = @[[NSNumber numberWithDouble:parentFitnesses[0]],
+						[NSNumber numberWithDouble:totalParentFitness / populationSize],
+						[NSNumber numberWithDouble:parentFitnesses[populationSize - 1]]];
+		[fitnessHistory addObject:fitnessInfo];
+		
+		// scale fitnesses
+		switch (scaling) {
+			case UTGAScalingLinear:
+			{
+				double a = -parentFitnesses[populationSize - 1] / (parentFitnesses[0] - parentFitnesses[populationSize - 1]);
+				double b = 1.0 / (parentFitnesses[0] - parentFitnesses[populationSize - 1]);
+				totalParentFitness = 0.0;
+				for (NSUInteger i = 0; i < populationSize; i++) {
+					parentFitnesses[i] = a + b * parentFitnesses[i];
+					totalParentFitness += parentFitnesses[i];
+				}
+				break;
+			}
+			case UTGAScalingPower:
+			{
+				double power = 10.0;
+				totalParentFitness = 0.0;
+				for (NSUInteger i = 0; i < populationSize; i++) {
+					parentFitnesses[i] = pow(power, parentFitnesses[i]);
+					totalParentFitness += parentFitnesses[i];
+				}
+				break;
+			}
+			default:
+				break;
 		}
 		
 		// 4. Selection
@@ -535,10 +507,10 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 			// if rouletteValue get greater than winvalue, the index at that time will be target index.
 			double rouletteValue = 0.0;
 			while (winIndex1 == winIndex2) {
-				winValue1 = totalFitness * (double)rand() / (RAND_MAX + 1.0);
-				winValue2 = totalFitness * (double)rand() / (RAND_MAX + 1.0);
+				winValue1 = totalParentFitness * (double)rand() / (RAND_MAX + 1.0);
+				winValue2 = totalParentFitness * (double)rand() / (RAND_MAX + 1.0);
 				for (NSUInteger j = 0; j < populationSize; j++) {
-					rouletteValue += fitnesses[j];
+					rouletteValue += parentFitnesses[j];
 					if (rouletteValue > winValue1) {
 						winIndex1 = j;
 						break;
@@ -546,12 +518,13 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 				}
 				rouletteValue = 0.0;
 				for (NSUInteger j = 0; j < populationSize; j++) {
-					rouletteValue += fitnesses[j];
+					rouletteValue += parentFitnesses[j];
 					if (rouletteValue > winValue2) {
 						winIndex2 = j;
 						break;
 					}
 				}
+//				printf("%3.2f,%3.2f,%3.2f\n", totalParentFitness, winValue1, winValue2);
 			}
 
 			// 5. Crossover
@@ -581,7 +554,7 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 			}
 		}
 		
-		// 6. Mutation
+		// 6. Mutation (bug: can't handle 0)
 		for (NSUInteger i = 0; i < populationSize; i++) {
 			for (NSUInteger j = 0; j < numberOfVertices; j++) {
 				if (((double)rand() / (RAND_MAX + 1.0)) < mutationRate) {
@@ -597,21 +570,23 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 		}
 		
 		// 7. Swap with elite
-		// calculate conflict count
-		for (NSUInteger i = 0; i < populationSize; i++) {
+		// insert elites
+		for (NSUInteger i = 0; i < numberOfElites; i++) {
+			memcpy(children[populationSize + i], parents[i], (numberOfVertices + 1) * sizeof(NSUInteger));
+		}
+		
+		// sort children by conflictCounts in ascending order.
+		for (NSUInteger i = 0; i < populationSize + numberOfElites; i++) {
 			children[i][numberOfVertices] = [self conflictCountWithColorNumbers:children[i]];
 		}
-		// sort children by conflictCounts in ascending order.
-		qsort(children, populationSize, sizeof(NSUInteger *), (int(*)(const void *, const void *))conflictCountCompare);
-		// swap bad children with elite
-		NSUInteger swappedIndex = populationSize - 1;
-		for (NSInteger i = numberOfElites - 1; i >= 0; i--) { // elite index
-			if (elites[i][numberOfVertices] < children[swappedIndex][numberOfVertices]) {
-				memcpy(children[swappedIndex], elites[i], (numberOfVertices + 1) * sizeof(NSUInteger));
-				swappedIndex--;
-			}
+		qsort(children, populationSize + numberOfElites, sizeof(NSUInteger *), (int(*)(const void *, const void *))conflictCountCompare);
+		
+		// change generation
+		for (NSUInteger i = 0; i < populationSize; i++) {
+			memcpy(parents[i], children[i], (numberOfVertices + 1) * sizeof(NSUInteger));
 		}
-
+		
+		numberOfGeneration++;
 	}
 	
 	// free memory
@@ -619,13 +594,9 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 		free(parents[i]);
 		free(children[i]);
 	}
-	free(fitnesses);
+	free(parentFitnesses);
 	free(parents);
 	free(children);
-	for (NSUInteger i = 0; i < numberOfElites; i++) {
-		free(elites[i]);
-	}
-	free(elites);
 	
 	return fitnessHistory;
 }
