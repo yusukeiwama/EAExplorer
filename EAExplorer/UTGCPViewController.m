@@ -76,7 +76,8 @@ typedef enum ExperimentMode {
 	if (experimentMode) {
 		srand(SEED); // reproducible when experimentMode is on
 	} else {
-		srand((unsigned)time(NULL)); // irreproducible when experimentMode is off
+		srand(SEED); // reproducible when experimentMode is on
+//		srand((unsigned)time(NULL)); // irreproducible when experimentMode is off
 	}
 	
 	// Set parameters.
@@ -586,7 +587,7 @@ typedef enum ExperimentMode {
 	// for GA
 	NSUInteger populationSize = 50;
 	NSUInteger numberOfCrossovers = 0;
-	double mutationRate = 3.0 / gcp.numberOfVertices;
+	double mutationRate = 0.1 / gcp.numberOfVertices;
 	UTGAScaling scaling = UTGAScalingLinear;
 //	UTGAScaling scaling = UTGAScalingPower;
 	NSUInteger numberOfElites = 5;

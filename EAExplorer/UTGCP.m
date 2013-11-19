@@ -443,7 +443,6 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 		}
 		// 2-b. End Judgement (FAILURE)
 		// check if elite did change
-		// エリートが変わらないのですぐ終わってしまう
 //		eliteDidChange = NO;
 //		for (NSUInteger i = 0; i < numberOfVertices; i++) {
 //			if (elites[0][i] != children[0][i]) {
@@ -466,6 +465,11 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 		for (NSUInteger i = 0; i < populationSize; i++) {
 			parentFitnesses[i] = 1.0 - ((double)(parents[i][numberOfVertices]) / numberOfEdges);
 			totalParentFitness += parentFitnesses[i];
+			if (numberOfGeneration == 43 && i == populationSize - 1) {
+				for (NSUInteger j = 0; j < populationSize; j++) {
+					printf("cc=%d, pf=%3.2f\t", parents[j][numberOfVertices], parentFitnesses[j]);
+				}
+			}
 		}
 		fitnessInfo = @[[NSNumber numberWithDouble:parentFitnesses[0]],
 						[NSNumber numberWithDouble:totalParentFitness / populationSize],
@@ -476,12 +480,28 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 		switch (scaling) {
 			case UTGAScalingLinear:
 			{
-				double a = -parentFitnesses[populationSize - 1] / (parentFitnesses[0] - parentFitnesses[populationSize - 1]);
-				double b = 1.0 / (parentFitnesses[0] - parentFitnesses[populationSize - 1]);
-				totalParentFitness = 0.0;
-				for (NSUInteger i = 0; i < populationSize; i++) {
-					parentFitnesses[i] = a + b * parentFitnesses[i];
-					totalParentFitness += parentFitnesses[i];
+				/*
+				 In linear scaling method, you must keep in mind a few things below.
+				 - if the best and worst fitness are the same, 0-division arithmetic error will occur.
+				 - if all the fitness are the same except one, totalFitness will be 1.0. and corresponding parent will always be selected in selecting section.
+				 */
+				if (parentFitnesses[0] != parentFitnesses[populationSize - 1]
+					&& parentFitnesses[1] != parentFitnesses[populationSize - 1]) { // prevent inf when best == worst
+					double a = -parentFitnesses[populationSize - 1] / (parentFitnesses[0] - parentFitnesses[populationSize - 1]);
+					double b = 1.0 / (parentFitnesses[0] - parentFitnesses[populationSize - 1]);
+					printf("scaling factors: a = %3.2f, b = %3.2f\n", a, b);
+					totalParentFitness = 0.0;
+					for (NSUInteger i = 0; i < populationSize; i++) {
+						parentFitnesses[i] = a + b * parentFitnesses[i];
+						totalParentFitness += parentFitnesses[i];
+						if (numberOfGeneration == 43) {
+							printf("pf[i] = %3.2f\t", parentFitnesses[i]);
+						}
+					}
+					printf("\ntotalParentFitness = %3.2f\n", totalParentFitness);
+					if (numberOfGeneration == 43) {
+						return nil;
+					}
 				}
 				break;
 			}
@@ -524,12 +544,12 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 						break;
 					}
 				}
-//				printf("%3.2f,%3.2f,%3.2f\n", totalParentFitness, winValue1, winValue2);
+				printf("%lu, %3.2f, %3.2f, %3.2f\n", (unsigned long)numberOfGeneration, totalParentFitness, winValue1, winValue2);
 			}
 
 			// 5. Crossover
 			switch (numberOfCrossovers) {
-				case 0: // uniform crossover
+				case 0: // uniform crossover (CAUTION!!!! BITMAST SHOULD BE THE SAME IN A GENERATION!!!)
 					for (NSUInteger j = 0; j < numberOfVertices; j++) {
 						if (i+1 >= populationSize) {
 							if (((double)rand() / (RAND_MAX + 1.0)) < 0.5) {
@@ -554,7 +574,7 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 			}
 		}
 		
-		// 6. Mutation (bug: can't handle 0)
+		// 6. Mutation
 		for (NSUInteger i = 0; i < populationSize; i++) {
 			for (NSUInteger j = 0; j < numberOfVertices; j++) {
 				if (((double)rand() / (RAND_MAX + 1.0)) < mutationRate) {
@@ -575,10 +595,11 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 			memcpy(children[populationSize + i], parents[i], (numberOfVertices + 1) * sizeof(NSUInteger));
 		}
 		
-		// sort children by conflictCounts in ascending order.
+		// calculate conflict counts of children
 		for (NSUInteger i = 0; i < populationSize + numberOfElites; i++) {
 			children[i][numberOfVertices] = [self conflictCountWithColorNumbers:children[i]];
 		}
+		// sort children by conflictCounts in ascending order.
 		qsort(children, populationSize + numberOfElites, sizeof(NSUInteger *), (int(*)(const void *, const void *))conflictCountCompare);
 		
 		// change generation
