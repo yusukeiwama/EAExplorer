@@ -465,11 +465,6 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 		for (NSUInteger i = 0; i < populationSize; i++) {
 			parentFitnesses[i] = 1.0 - ((double)(parents[i][numberOfVertices]) / numberOfEdges);
 			totalParentFitness += parentFitnesses[i];
-			if (numberOfGeneration == 43 && i == populationSize - 1) {
-				for (NSUInteger j = 0; j < populationSize; j++) {
-					printf("cc=%d, pf=%3.2f\t", parents[j][numberOfVertices], parentFitnesses[j]);
-				}
-			}
 		}
 		fitnessInfo = @[[NSNumber numberWithDouble:parentFitnesses[0]],
 						[NSNumber numberWithDouble:totalParentFitness / populationSize],
@@ -489,18 +484,10 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 					&& parentFitnesses[1] != parentFitnesses[populationSize - 1]) { // prevent inf when best == worst
 					double a = -parentFitnesses[populationSize - 1] / (parentFitnesses[0] - parentFitnesses[populationSize - 1]);
 					double b = 1.0 / (parentFitnesses[0] - parentFitnesses[populationSize - 1]);
-					printf("scaling factors: a = %3.2f, b = %3.2f\n", a, b);
 					totalParentFitness = 0.0;
 					for (NSUInteger i = 0; i < populationSize; i++) {
 						parentFitnesses[i] = a + b * parentFitnesses[i];
 						totalParentFitness += parentFitnesses[i];
-						if (numberOfGeneration == 43) {
-							printf("pf[i] = %3.2f\t", parentFitnesses[i]);
-						}
-					}
-					printf("\ntotalParentFitness = %3.2f\n", totalParentFitness);
-					if (numberOfGeneration == 43) {
-						return nil;
 					}
 				}
 				break;
@@ -544,7 +531,6 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 						break;
 					}
 				}
-				printf("%lu, %3.2f, %3.2f, %3.2f\n", (unsigned long)numberOfGeneration, totalParentFitness, winValue1, winValue2);
 			}
 
 			// 5. Crossover
