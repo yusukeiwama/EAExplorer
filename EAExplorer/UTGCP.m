@@ -506,6 +506,44 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 				break;
 		}
 		
+		// 5-a. Generate crossover mask
+		NSUInteger crossoverMask[numberOfVertices];
+		for (NSUInteger i = 0; i < numberOfVertices; i++) { // initialize
+			crossoverMask[i] = 0;
+		}
+		switch (numberOfCrossovers) {
+			case 0: // uniform crossover
+				for (NSUInteger i = 0; i < numberOfVertices; i++) {
+					crossoverMask[i] = 2.0 * (double)rand() / (RAND_MAX + 1.0); // 0 or 1
+				}
+				break;
+			default: // n-time crossover
+			{
+				NSUInteger crossover = 0;
+				while (crossover != numberOfCrossovers) {
+					NSUInteger crossoverIndex = (int)((numberOfVertices - 1) * (double)rand() / (RAND_MAX + 1.0) + 1); // prevent 0
+					if (crossoverMask[crossoverIndex] == 0) {
+						crossoverMask[crossoverIndex] = 1;
+						crossover++;
+					};
+				}
+				NSUInteger currentMask = crossoverMask[0];
+				for (NSUInteger i = 1; i < numberOfVertices; i++) {
+					if (crossoverMask[i] == 1) { // change mask at this point
+						if (crossoverMask[i-1] == 0) {
+							currentMask = 1;
+						} else {
+							crossoverMask[i] = 0;
+							currentMask = 0;
+						}
+					} else {
+						crossoverMask[i] = currentMask;
+					}
+				}
+				break;
+			}
+		}
+		
 		// 4. Selection
 		for (NSUInteger i = 0; i < populationSize; i += 2) {
 			double winValue1, winValue2;
@@ -532,31 +570,24 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 					}
 				}
 			}
-
-			// 5. Crossover
-			switch (numberOfCrossovers) {
-				case 0: // uniform crossover (CAUTION!!!! BITMAST SHOULD BE THE SAME IN A GENERATION!!!)
-					for (NSUInteger j = 0; j < numberOfVertices; j++) {
-						if (i+1 >= populationSize) {
-							if (((double)rand() / (RAND_MAX + 1.0)) < 0.5) {
-								children[i][j] = parents[winIndex1][j];
-							} else {
-								children[i][j] = parents[winIndex2][j];
-							}
-						} else {
-							if (((double)rand() / (RAND_MAX + 1.0)) < 0.5) {
-								children[i	][j]	= parents[winIndex1][j];
-								children[i+1][j]	= parents[winIndex2][j];
-							} else {
-								children[i	][j]	= parents[winIndex2][j];
-								children[i+1][j]	= parents[winIndex1][j];
-							}
-						}
+			
+			// 5-b. Crossover
+			for (NSUInteger j = 0; j < numberOfVertices; j++) {
+				if (i+1 >= populationSize) {
+					if (crossoverMask[i] == 0) {
+						children[i][j] = parents[winIndex1][j];
+					} else {
+						children[i][j] = parents[winIndex2][j];
 					}
-					break;
-				default: // n-time crossover
-					// UNDER CONSTRUCTION...
-					break;
+				} else {
+					if (crossoverMask[i] == 0) {
+						children[i	][j]	= parents[winIndex1][j];
+						children[i+1][j]	= parents[winIndex2][j];
+					} else {
+						children[i	][j]	= parents[winIndex2][j];
+						children[i+1][j]	= parents[winIndex1][j];
+					}
+				}
 			}
 		}
 		

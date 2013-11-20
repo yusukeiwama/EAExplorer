@@ -87,6 +87,13 @@ typedef enum ExperimentMode {
 //	numberOfEdges	= numberOfVertices * (numberOfVertices - 1) / 4; // dense
 	[self updateFields]; // update fields for number of colors, vertices, edges.
 	
+	/*
+	 制約密度d = m/n ... 2-2.5が一番むずかしい
+	 d-fグラフを作る！
+	 制約密度dによって最適なアルゴリズムが違う。現実問題がどのような制約密度を持つかによってアルゴリズムを見積もることができる。
+	 nが10^30までは厳密解法を適用すべき
+	 */
+	
 	generationLabel.text = @"";
 	
 	CGFloat radialButtonViewRadius = 50;
@@ -586,7 +593,7 @@ typedef enum ExperimentMode {
 	
 	// for GA
 	NSUInteger populationSize = 50;
-	NSUInteger numberOfCrossovers = 0;
+	NSUInteger numberOfCrossovers = 0; // if 0, uniform crossover will be used.
 	double mutationRate = 1.0 / gcp.numberOfVertices;
 	UTGAScaling scaling = UTGAScalingLinear;
 //	UTGAScaling scaling = UTGAScalingPower;
