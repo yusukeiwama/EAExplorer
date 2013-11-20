@@ -436,6 +436,18 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 	qsort(parents, populationSize, sizeof(NSUInteger *), (int(*)(const void *, const void *))conflictCountCompare);
 	
 	while (1) {
+		// 3-a. Evaluate parents (Evaluate before end judgement so that it can save fitnessHistory for each generation)
+		// calculate parentFitnesses
+		double totalParentFitness = 0.0;
+		for (NSUInteger i = 0; i < populationSize; i++) {
+			parentFitnesses[i] = 1.0 - ((double)(parents[i][numberOfVertices]) / numberOfEdges);
+			totalParentFitness += parentFitnesses[i];
+		}
+		fitnessInfo = @[[NSNumber numberWithDouble:parentFitnesses[0]],
+						[NSNumber numberWithDouble:totalParentFitness / populationSize],
+						[NSNumber numberWithDouble:parentFitnesses[populationSize - 1]]];
+		[fitnessHistory addObject:fitnessInfo];
+		
 		// 2-a. End Judgement (SUCCESS)
 		if (parents[0][numberOfVertices] == 0) { // no conflict, success
 			memcpy(colorNumbers, parents[0], numberOfVertices * sizeof(NSUInteger));
@@ -450,7 +462,7 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 //				break;
 //			}
 //		}
-		if (numberOfGeneration > maxNumberOfGenerations
+		if (numberOfGeneration >= maxNumberOfGenerations
 			|| eliteDidChange == NO) {
 			// compare old color number and new color number
 			if ([self conflictCountWithColorNumbers:parents[0]] < [self conflictCount]) { // improved
@@ -459,19 +471,7 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 			break;
 		}
 		
-		// 3. Evaluate parents
-		// calculate parentFitnesses
-		double totalParentFitness = 0.0;
-		for (NSUInteger i = 0; i < populationSize; i++) {
-			parentFitnesses[i] = 1.0 - ((double)(parents[i][numberOfVertices]) / numberOfEdges);
-			totalParentFitness += parentFitnesses[i];
-		}
-		fitnessInfo = @[[NSNumber numberWithDouble:parentFitnesses[0]],
-						[NSNumber numberWithDouble:totalParentFitness / populationSize],
-						[NSNumber numberWithDouble:parentFitnesses[populationSize - 1]]];
-		[fitnessHistory addObject:fitnessInfo];
-		
-		// scale fitnesses
+		// 3-b. Scale Fitnesses
 		switch (scaling) {
 			case UTGAScalingLinear:
 			{

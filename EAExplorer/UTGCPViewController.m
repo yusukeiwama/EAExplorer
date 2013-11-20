@@ -587,10 +587,11 @@ typedef enum ExperimentMode {
 	// for GA
 	NSUInteger populationSize = 50;
 	NSUInteger numberOfCrossovers = 0;
-	double mutationRate = 0.1 / gcp.numberOfVertices;
+	double mutationRate = 1.0 / gcp.numberOfVertices;
 	UTGAScaling scaling = UTGAScalingLinear;
 //	UTGAScaling scaling = UTGAScalingPower;
-	NSUInteger numberOfElites = 5;
+	double eliteRate = 0.1;
+	NSUInteger numberOfElites = populationSize * eliteRate;
 	NSUInteger maxNumberOfGenerationsGA = 200;
 	
 	// for plot
