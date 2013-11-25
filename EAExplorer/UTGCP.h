@@ -85,6 +85,13 @@ typedef enum UTGAScaling {
 						  numberOfElites:(NSUInteger)numberOfElites
 				  maxNumberOfGenerations:(NSUInteger)maxNumberOfGenerations;
 
+- (NSArray *)solveInHGAWithPopulationSize:(NSUInteger)populationSize
+					   numberOfCrossovers:(NSUInteger)numberOfCrossovers
+							 mutationRate:(double)mutationRate
+								  scaling:(UTGAScaling)scaling
+						   numberOfElites:(NSUInteger)numberOfElites
+				   maxNumberOfGenerations:(NSUInteger)maxNumberOfGenerations;
+
 - (BOOL)solving;
 
 - (void)printMatrix;
@@ -97,6 +104,12 @@ typedef enum UTGAScaling {
  平面性判定
  ゲーム化（スコア
  何色使っているか
+ */
+
+/*
+ 実験したいこと
+ 制約密度による各アルゴリズムの特性を比較プロット
+ 
  */
 
 
