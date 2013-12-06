@@ -8,6 +8,9 @@
 
 #import <Foundation/Foundation.h>
 
+#define HC_NO_IMPROVEMENT_LIMIT 100
+#define IHC_ITERATION
+
 typedef enum UTGCPAlgorithm {
 	UTGCPAlgorithmHillClimbing = 1,
 	UTGCPAlgorithmHC = UTGCPAlgorithmHillClimbing,
@@ -57,13 +60,21 @@ typedef enum UTGAScaling {
 - (NSUInteger)conflictCount;
 
 /* Algorithms ====================================================== */
-/** Solve in Hill Climbing method. This method returns history of conflict count for each generation. You can check if GCP was solved by seeing lastObject of it. @return History of conflict count for each generation. */
+/** 
+ Solve in Hill Climbing method. This method returns history of conflict count for each generation. You can check if GCP was solved by seeing lastObject of it.
+ @param noImprovementLimit Number of no-improvement generation to abort.
+ @return History of conflict count for each generation. 
+ */
 - (NSArray *)solveInHCWithNoImprovementLimit:(NSUInteger)limit;
 
-// solve in Iterated Hill Climbing method.
+/** 
+ solve in Iterated Hill Climbing method. 
+ */
 - (NSArray *)solveInIHCWithNoImprovementLimit:(NSUInteger)limit maxIteration:(NSUInteger)maxIteration;
 
-// solve in Evolutionary Computation (a.k.a. EC). returns YES if succeeds
+/** 
+ solve in Evolutionary Computation (a.k.a. EC). returns YES if succeeds 
+ */
 - (NSArray *)solveInESIncludeParents:(BOOL)includeParents
 					 numberOfParents:(NSUInteger)numberOfParents
 					numberOfChildren:(NSUInteger)numberOfChildren
@@ -85,11 +96,22 @@ typedef enum UTGAScaling {
 						  numberOfElites:(NSUInteger)numberOfElites
 				  maxNumberOfGenerations:(NSUInteger)maxNumberOfGenerations;
 
+/**
+ Solve in Hill Climbing & Genetic Hibrid Algorithm.
+ @param populationSize Population size.
+ @param numberOfCrossovers Number of crossover. If it is set to 0, uniform crossover technique will be used.
+ @param mutationRate Mutation rate.
+ @param scaling Scaling technique to be used.
+ @param numberOfElites Number of elite to be selected as next generation. If it is greater than the number of gene loci - 1, number of gene loci - 1 will be used.
+ @param noImprovementLimit Number of no-improvement generation to abort.
+ @param maxNumberOfGenerations Max number of generations.
+ */
 - (NSArray *)solveInHGAWithPopulationSize:(NSUInteger)populationSize
 					   numberOfCrossovers:(NSUInteger)numberOfCrossovers
 							 mutationRate:(double)mutationRate
 								  scaling:(UTGAScaling)scaling
 						   numberOfElites:(NSUInteger)numberOfElites
+					   noImprovementLimit:(NSUInteger)limit
 				   maxNumberOfGenerations:(NSUInteger)maxNumberOfGenerations;
 
 - (BOOL)solving;

@@ -623,25 +623,27 @@ typedef enum ExperimentMode {
 - (void)radialButtonActionWithIndex:(NSUInteger)i sender:(id)sender
 {
 	// for HC
-	NSUInteger noImprovementLimit = 100;
-	NSUInteger maxIteration = 5;
+	NSUInteger noImprovementLimit = 100;	// OPTIMIZED
+	
+	// for IHC
+	NSUInteger maxIteration = 5;	// OPTIMIZED
 	
 	// for ES
-	NSUInteger numberOfParents = 80;
-	NSUInteger numberOfChildren = numberOfParents * 8;
-	NSUInteger maxNumberOfGenerationsES = 160;
-	NSUInteger maxNumberOfGenerationsESplus = 120;
+	NSUInteger numberOfParents = 80;	// OPTIMIZED
+	NSUInteger numberOfChildren = numberOfParents * 8;	// OPTIMIZED
+	NSUInteger maxNumberOfGenerationsES = 160;	// OPTIMIZED
+	NSUInteger maxNumberOfGenerationsESplus = 120;	// OPTIMIZED
 	
 	// for GA
-	NSUInteger populationSize = 100;
-	NSUInteger numberOfCrossovers = 0; // if 0, uniform crossover will be used.
-	double mutationRate = 0.01;
-	UTGAScaling scaling = UTGAScalingLinear;
+	NSUInteger populationSize = 100;	// OPTIMIZED
+	NSUInteger numberOfCrossovers = 0; // if 0, uniform crossover will be used.	// OPTIMIZED
+	double mutationRate = 0.01;	// OPTIMIZED
+	UTGAScaling scaling = UTGAScalingLinear;	// OPTIMIZED
 //	UTGAScaling scaling = UTGAScalingPower;
-	double eliteRate = 0.1;
+	double eliteRate = 0.1;	// OPTIMIZED
 	NSUInteger numberOfElites = populationSize * eliteRate;
-	NSUInteger maxNumberOfGenerationsGA = 300;
-	NSUInteger maxNumberOfGenerationsHGA = 200;
+	NSUInteger maxNumberOfGenerationsGA = 300;	// OPTIMIZED
+	NSUInteger maxNumberOfGenerationsHGA = 200;	// OPTIMIZED
 	
 	// for plot
 	NSArray *plotData;

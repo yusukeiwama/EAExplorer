@@ -163,10 +163,12 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 	NSMutableArray *conflictHistory = [NSMutableArray array];
 	NSUInteger noImprovementCount = 0;
 	
+//	NSUInteger *tempColorNumbers = calloc(numberOfVertices, sizeof(NSUInteger));
+	
 	// Back-up before-state
 	NSUInteger beforeConflictCount = [self conflictCount];
-	NSUInteger *beforeConflictColorNumbers = calloc(numberOfVertices, sizeof(NSUInteger));
-	memcpy(beforeConflictColorNumbers, colorNumbers, numberOfVertices * sizeof(NSUInteger));
+	NSUInteger *beforeColorNumbers = calloc(numberOfVertices, sizeof(NSUInteger));
+	memcpy(beforeColorNumbers, colorNumbers, numberOfVertices * sizeof(NSUInteger));
 
 	// 1. initialize vertex colors in random
 	for (NSUInteger i = 0; i < numberOfVertices; i++) {
@@ -182,9 +184,9 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 		if (noImprovementCount > limit) { // fail to solve
 			if ([self conflictCount] > beforeConflictCount) {
 				// If there's no improvement compared with before-state, discard changes and restore before-state.
-				memcpy(colorNumbers, beforeConflictColorNumbers, numberOfVertices * sizeof(NSUInteger));
+				memcpy(colorNumbers, beforeColorNumbers, numberOfVertices * sizeof(NSUInteger));
 			}
-			free(beforeConflictColorNumbers);
+			free(beforeColorNumbers);
 			return conflictHistory;
 		}
 		
@@ -253,7 +255,7 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 		[conflictHistory addObject:[NSNumber numberWithUnsignedInteger:conflictCount]];
 	}
 	
-	free(beforeConflictColorNumbers);
+	free(beforeColorNumbers);
 	return conflictHistory;
 }
 
@@ -644,6 +646,7 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 							 mutationRate:(double)mutationRate
 								  scaling:(UTGAScaling)scaling
 						   numberOfElites:(NSUInteger)numberOfElites
+					   noImprovementLimit:(NSUInteger)limit
 				   maxNumberOfGenerations:(NSUInteger)maxNumberOfGenerations
 {
 	if (numberOfElites > populationSize) {
@@ -859,6 +862,31 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 		qsort(children, populationSize + numberOfElites, sizeof(NSUInteger *), (int(*)(const void *, const void *))conflictCountCompare);
 		
 		// 8. Apply Hill Climb method for elites
+//		NSMutableArray *conflictCountHistory = [NSMutableArray array];
+//		// select minimum conflict answer
+//		NSUInteger minConflictCount = [self conflictCount];
+//		// save before-state so that it can revert when there is no improvement
+//		NSUInteger *minConflictColorNumbers = calloc(numberOfVertices, sizeof(NSUInteger));
+//		memcpy(minConflictColorNumbers, colorNumbers, numberOfVertices * sizeof(NSUInteger));
+//		// iterate HC
+//		for (NSUInteger i = 0; i < maxIteration; i++) {
+//			NSArray *conflictCountHistoryInHC;
+//			conflictCountHistoryInHC = [self solveInHCWithNoImprovementLimit:limit];
+//			[conflictCountHistory addObjectsFromArray:conflictCountHistoryInHC];
+//			if ([[conflictCountHistory lastObject] unsignedIntegerValue] == 0) { // succeeded in HC
+//				free(minConflictColorNumbers);
+//				return conflictCountHistory;
+//			} else { // failed in HC
+//				if ([self conflictCount] < minConflictCount) { // update minimum conflict count and colors
+//					minConflictCount = [self conflictCount];
+//					memcpy(minConflictColorNumbers, colorNumbers, numberOfVertices * sizeof(NSUInteger));
+//				}
+//			}
+//		}
+//		// restore minimum conflict color numbers
+//		// CAUTION: If there's no improvement, before-calculation states is restored.
+//		memcpy(colorNumbers, minConflictColorNumbers, numberOfVertices * sizeof(NSUInteger));
+//		free(minConflictColorNumbers);
 		
 		// change generation
 		for (NSUInteger i = 0; i < populationSize; i++) {
