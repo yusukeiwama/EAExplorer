@@ -41,6 +41,9 @@ typedef enum UTGAScaling {
 
 @property (readonly) BOOL solved;
 
+/// number of calculation of the number of conflict. it is used in assessment of algorithms.
+@property NSUInteger numberOfCalculations;
+
 // @property (readonly) NSUInteger numberOfTraials;
 
 

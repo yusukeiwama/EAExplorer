@@ -695,6 +695,7 @@ typedef enum ExperimentMode {
 			plotData = [NSArray array];
 			break;
 	}
+//	printf("number of calculations = %d\n", gcp.numberOfCalculations);
 	generationLabel.text = [NSString stringWithFormat:@"%lu", (unsigned long)plotData.count];
 	[self updateVertexColors];
 	ConflictCountLabel.text = [NSString stringWithFormat:@"%lu Conflicts", (unsigned long)[gcp conflictCount]];
