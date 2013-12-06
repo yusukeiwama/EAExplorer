@@ -689,6 +689,7 @@ typedef enum ExperimentMode {
 											mutationRate:mutationRate
 												 scaling:scaling
 										  numberOfElites:numberOfElites
+									  noImprovementLimit:noImprovementLimit
 								  maxNumberOfGenerations:maxNumberOfGenerationsHGA];
 		default:
 			plotData = [NSArray array];
