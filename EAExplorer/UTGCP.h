@@ -100,7 +100,7 @@ typedef enum UTGAScaling {
 				  maxNumberOfGenerations:(NSUInteger)maxNumberOfGenerations;
 
 /**
- Solve in Hill Climbing & Genetic Hibrid Algorithm.
+ Solve in Hill Climbing & Genetic Hibrid Algorithm. Fast convergence.
  @param populationSize Population size.
  @param numberOfCrossovers Number of crossover. If it is set to 0, uniform crossover technique will be used.
  @param mutationRate Mutation rate.

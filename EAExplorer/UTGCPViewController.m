@@ -636,14 +636,27 @@ typedef enum ExperimentMode {
 	
 	// for GA
 	NSUInteger populationSize = 100;	// OPTIMIZED
+//	populationSize = 50;
 	NSUInteger numberOfCrossovers = 0; // if 0, uniform crossover will be used.	// OPTIMIZED
 	double mutationRate = 0.01;	// OPTIMIZED
+//	mutationRate = 0.014;
 	UTGAScaling scaling = UTGAScalingLinear;	// OPTIMIZED
+//	scaling = UTGAScalingNone;
 //	UTGAScaling scaling = UTGAScalingPower;
 	double eliteRate = 0.1;	// OPTIMIZED
+//	eliteRate = 0.0;
 	NSUInteger numberOfElites = populationSize * eliteRate;
 	NSUInteger maxNumberOfGenerationsGA = 300;	// OPTIMIZED
-	NSUInteger maxNumberOfGenerationsHGA = 200;	// OPTIMIZED
+//	maxNumberOfGenerationsGA = 20000;
+	
+	// for HGA
+	NSUInteger populationSizeHGA = 50;
+	double mutationRateHGA = 0.014;
+	UTGAScaling scalingHGA = UTGAScalingLinear;
+	double eliteRateHGA = 0.1;
+	NSUInteger numberOfElitesHGA = populationSizeHGA * eliteRateHGA;
+	NSUInteger noImprovementLimitHGA = 50;
+	NSUInteger maxNumberOfGenerationsHGA = 30;	// OPTIMIZED
 	
 	// for plot
 	NSArray *plotData;
@@ -684,18 +697,20 @@ typedef enum ExperimentMode {
 //			NSLog(@"%@\n%@", [fitnessHistory[0] description], [fitnessHistory[1] description]);
 			break;
 		case 5: // HGA
-			plotData = [gcp solveInHGAWithPopulationSize:populationSize
+			plotData = [gcp solveInHGAWithPopulationSize:populationSizeHGA
 									  numberOfCrossovers:numberOfCrossovers
-											mutationRate:mutationRate
-												 scaling:scaling
-										  numberOfElites:numberOfElites
-									  noImprovementLimit:noImprovementLimit
+											mutationRate:mutationRateHGA
+												 scaling:scalingHGA
+										  numberOfElites:numberOfElitesHGA
+									  noImprovementLimit:noImprovementLimitHGA
 								  maxNumberOfGenerations:maxNumberOfGenerationsHGA];
+			[plotView multiplePlotWithX:nil Y:plotData type:UTYTypeDouble];
+			break;
 		default:
 			plotData = [NSArray array];
 			break;
 	}
-//	printf("number of calculations = %d\n", gcp.numberOfCalculations);
+	printf("number of calculations = %d\n", gcp.numberOfCalculations);
 	generationLabel.text = [NSString stringWithFormat:@"%lu", (unsigned long)plotData.count];
 	[self updateVertexColors];
 	ConflictCountLabel.text = [NSString stringWithFormat:@"%lu Conflicts", (unsigned long)[gcp conflictCount]];
