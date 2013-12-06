@@ -232,6 +232,7 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 		NSUInteger minColorNumberIndex = 0;
 		NSUInteger conflictCountByChangingColor;
 		NSUInteger canditateColorNumber = tempColorNumbers[targetIndex];
+		// find canditate colors
 		for (int i = 0; i < numberOfColors - 1; i++) {
 			canditateColorNumber = (canditateColorNumber + 1) % numberOfColors; // next canditateColorNumber
 			tempColorNumbers[targetIndex] = canditateColorNumber; // set new color to targetIndex
@@ -249,20 +250,24 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 			}
 		}
 		NSUInteger numberOfCanditateColors = 0;
-		if (minConflictCount >= conflictCountWithUnchangedColor) { // no improvement...
+		for (int i = 0; i < numberOfColors - 1; i++) {
+			if (canditateColorNumbers[i] != -1) { // count the number of canditate colors
+				numberOfCanditateColors++;
+			}
+		}
+		printf("%d %d %d\n", unchangedColor, canditateColorNumbers[0], canditateColorNumbers[1]);
+		printf("number of canditate colors = %d\n", numberOfCanditateColors);
+		// update target vertex color
+		if (numberOfCanditateColors == 0) { // no improvement...
 			noImprovementCount++;
 			tempColorNumbers[targetIndex] = unchangedColor; // restore unchanged color into targetIndex
 		} else { // did improve
 			noImprovementCount = 0; // reset noImprovementCount
-			for (int i = 0; i < numberOfColors - 1; i++) {
-				if (canditateColorNumbers[i] != -1) { // count the number of canditate colors
-					numberOfCanditateColors++;
-				}
-			}
 			NSUInteger newColorNumberIndex = numberOfCanditateColors * (double)rand() / (RAND_MAX + 1.0);
 			NSUInteger newColorNumber = canditateColorNumbers[newColorNumberIndex];
 			tempColorNumbers[targetIndex] = newColorNumber;
 		}
+		tempConflictCount = minConflictCount;
 		generation++;
 		[conflictHistory addObject:[NSNumber numberWithUnsignedInteger:minConflictCount]];
 	}
