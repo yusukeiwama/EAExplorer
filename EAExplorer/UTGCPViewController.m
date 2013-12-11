@@ -17,6 +17,7 @@
 
 typedef enum ExperimentMode {
 	ExperimentModeNone = 0,
+	ExperimentModeSeed,		// constant seed
 	ExperimentModeHC,
 	ExperimentModeIHC,
 	ExperimentModeES,
@@ -69,7 +70,7 @@ typedef enum ExperimentMode {
 {
     [super viewDidLoad];
 
-	experimentMode = ExperimentModeNone;
+	experimentMode = ExperimentModeSeed;
 	
 	stopwatch = [[UTStopwatch alloc] init];
 	timerTimeInterval = 1.0;
@@ -77,8 +78,7 @@ typedef enum ExperimentMode {
 	if (experimentMode) {
 		srand(SEED); // reproducible when experimentMode is on
 	} else {
-		srand(SEED); // reproducible when experimentMode is on
-//		srand((unsigned)time(NULL)); // irreproducible when experimentMode is off
+		srand((unsigned)time(NULL)); // irreproducible when experimentMode is off
 	}
 	
 	// Set parameters.
@@ -287,11 +287,12 @@ typedef enum ExperimentMode {
 			}
 		}
 		// save csv file
-		NSURL *outputURL = [NSURL fileURLWithPath:outputPath];
-		if ([resultCSVString writeToURL:outputURL atomically:YES encoding:NSUTF8StringEncoding error:nil]) {
-			NSLog(@"%@ is saved", outputPath);
+		if (experimentMode != ExperimentModeSeed) {
+			NSURL *outputURL = [NSURL fileURLWithPath:outputPath];
+			if ([resultCSVString writeToURL:outputURL atomically:YES encoding:NSUTF8StringEncoding error:nil]) {
+				NSLog(@"%@ is saved", outputPath);
+			}
 		}
-
 	}
 }
 
@@ -636,10 +637,10 @@ typedef enum ExperimentMode {
 	
 	// for GA
 	NSUInteger populationSize = 100;	// OPTIMIZED
-//	populationSize = 50;
+	populationSize = 50;
 	NSUInteger numberOfCrossovers = 0; // if 0, uniform crossover will be used.	// OPTIMIZED
 	double mutationRate = 0.01;	// OPTIMIZED
-//	mutationRate = 0.014;
+	mutationRate = 0.014;
 	UTGAScaling scaling = UTGAScalingLinear;	// OPTIMIZED
 //	scaling = UTGAScalingNone;
 //	UTGAScaling scaling = UTGAScalingPower;
@@ -647,7 +648,7 @@ typedef enum ExperimentMode {
 //	eliteRate = 0.0;
 	NSUInteger numberOfElites = populationSize * eliteRate;
 	NSUInteger maxNumberOfGenerationsGA = 300;	// OPTIMIZED
-//	maxNumberOfGenerationsGA = 20000;
+//	maxNumberOfGenerationsGA = 2000;
 	
 	// for HGA
 	NSUInteger populationSizeHGA = 50;
@@ -655,8 +656,8 @@ typedef enum ExperimentMode {
 	UTGAScaling scalingHGA = UTGAScalingLinear;
 	double eliteRateHGA = 0.1;
 	NSUInteger numberOfElitesHGA = populationSizeHGA * eliteRateHGA;
-	NSUInteger noImprovementLimitHGA = 50;
-	NSUInteger maxNumberOfGenerationsHGA = 30;	// OPTIMIZED
+	NSUInteger noImprovementLimitHGA = 10;
+	NSUInteger maxNumberOfGenerationsHGA = 6000;	// OPTIMIZED
 	
 	// for plot
 	NSArray *plotData;

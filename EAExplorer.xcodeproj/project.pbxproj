@@ -270,7 +270,7 @@
 				ORGANIZATIONNAME = "College of Information Science, University of Tsukuba";
 				TargetAttributes = {
 					43519B39180AB3C70068A070 = {
-						DevelopmentTeam = EQQ8XPFULC;
+						DevelopmentTeam = RM3N4N4RRF;
 					};
 					43519B5D180AB3C80068A070 = {
 						TestTargetID = 43519B39180AB3C70068A070;

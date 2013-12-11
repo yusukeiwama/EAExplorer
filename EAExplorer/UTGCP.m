@@ -183,7 +183,7 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 
 - (NSArray *)solveInHCWithNoImprovementLimit:(NSUInteger)limit
 {
-	NSUInteger newColorNumbers[numberOfVertices]; // last element is the conflict count of newColorNumbers
+	NSUInteger newColorNumbers[numberOfVertices];
 	NSUInteger newConflictCount;
 	NSUInteger beforeConflictCount = [self conflictCount]; // conflict count in before state.
 	NSMutableArray *conflictHistory = [NSMutableArray array];
@@ -882,6 +882,22 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 		// iterate HC
 		for (NSUInteger i = 0; i < numberOfElites; i++) {
 			[self applyHCWithNoImprovementLimit:limit colorNumbers:children[i]];
+			if (children[i][numberOfVertices] == 0) {
+				fitnessInfo = @[[NSNumber numberWithDouble:1.0],
+								[NSNumber numberWithDouble:[fitnessInfo[1] doubleValue]],
+								[NSNumber numberWithDouble:[fitnessInfo[2] doubleValue]]];
+				[fitnessHistory addObject:fitnessInfo];
+				
+				for (NSUInteger i = 0; i < populationSize; i++) {
+					free(parents[i]);
+					free(children[i]);
+				}
+				free(parentFitnesses);
+				free(parents);
+				free(children);
+				
+				return fitnessHistory;
+			}
 		}
 		
 		// change generation
@@ -904,23 +920,27 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 	return fitnessHistory;
 }
 
-- (void)applyHCWithNoImprovementLimit:(NSUInteger)limit
+- (NSArray *)applyHCWithNoImprovementLimit:(NSUInteger)limit
 						 colorNumbers:(NSUInteger *)numbers
 
 {
-	NSUInteger *newColorNumbers = numbers;
-	NSUInteger newConflictCount;
-	NSMutableArray *conflictHistory = [NSMutableArray array];
+	NSUInteger newColorNumbers[numberOfVertices + 1]; // the last element is new number of conflicts.
+//	NSMutableArray *conflictHistory = [NSMutableArray array];
 	NSUInteger noImprovementCount = 0;
 	NSUInteger generation = 1;
+	
+	// 1. initialize newColorNumbers with numbers
+	for (int i = 0; i < numberOfVertices + 1; i++) {
+		newColorNumbers[i] = numbers[i];
+	}
 		
 	// 2. end judgement
-	newConflictCount = [self conflictCountWithColorNumbers:newColorNumbers];
-	[conflictHistory addObject:[NSNumber numberWithUnsignedInteger:newConflictCount]];
-	while (newConflictCount) {
+//	[conflictHistory addObject:[NSNumber numberWithUnsignedInteger:newColorNumbers[numberOfVertices]]];
+	while (newColorNumbers[numberOfVertices]) {
 		// if noImprovementCount exceeds its limit, end HC.
 		if (noImprovementCount > limit) { // fail to solve
-			break;
+//			return conflictHistory; // discard color changes
+			return nil;
 		}
 		
 		// 3. pick a conflict vertex
@@ -941,8 +961,8 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 		}
 		
 		// 4. change a vertex color to minimize the conflict count
-		NSUInteger minConflictCount = newConflictCount;
-		NSUInteger unchangedColorConflictCount = newConflictCount;
+		NSUInteger minConflictCount = newColorNumbers[numberOfVertices];
+		NSUInteger unchangedColorConflictCount = newColorNumbers[numberOfVertices];
 		NSUInteger unchangedTargetColorNumber = newColorNumbers[targetConflictVertexIndex];
 		NSUInteger canditateColorNumbers[numberOfColors - 1];
 		for (int i = 0; i < numberOfColors - 1; i++) {
@@ -950,7 +970,7 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 		}
 		NSUInteger canditateColorNumberIndex = 0;
 		NSUInteger tempConflictCount;
-		NSUInteger canditateColorNumber = colorNumbers[targetConflictVertexIndex]; // initialize canditate color number with current color number
+		NSUInteger canditateColorNumber = newColorNumbers[targetConflictVertexIndex]; // initialize canditate color number with current color number
 		for (int i = 0; i < numberOfColors - 1; i++) {
 			canditateColorNumber = (canditateColorNumber + 1) % numberOfColors; // next canditate color number
 			newColorNumbers[targetConflictVertexIndex] = canditateColorNumber;
@@ -982,13 +1002,19 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 			NSUInteger newColorNumberIndex = numberOfCanditateColorNumbers * (double)rand() / (RAND_MAX + 1.0);
 			NSUInteger newColorNumber = canditateColorNumbers[newColorNumberIndex];
 			newColorNumbers[targetConflictVertexIndex] = newColorNumber;
-			newConflictCount = minConflictCount;
+			newColorNumbers[numberOfVertices] = minConflictCount;
 		}
 		generation++;
-		[conflictHistory addObject:[NSNumber numberWithUnsignedInteger:newConflictCount]];
+//		[conflictHistory addObject:[NSNumber numberWithUnsignedInteger:newColorNumbers[numberOfVertices]]];
 	}
 	
-	numbers[numberOfVertices] = newConflictCount;
+	// if succeeded, update colorNumbers
+	for (int i = 0; i < numberOfVertices + 1; i++) {
+		numbers[i] = newColorNumbers[i];
+	}
+	
+//	return conflictHistory;
+	return nil;
 }
 
 - (BOOL)solving
