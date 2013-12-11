@@ -435,14 +435,13 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 	
 	double *parentFitnesses	= calloc(populationSize, sizeof(double));
 	NSUInteger **parents	= calloc(populationSize, sizeof(NSUInteger *));
-	NSUInteger **children	= calloc(populationSize + numberOfElites, sizeof(NSUInteger *));
+	NSUInteger **children	= calloc(populationSize, sizeof(NSUInteger *));
 	for (NSUInteger i = 0; i < populationSize; i++) {
 		parents[i]	= calloc(numberOfVertices + 1, sizeof(NSUInteger)); // last element is conflictCount
 	}
-	for (NSUInteger i = 0; i < populationSize + numberOfElites; i++) {
+	for (NSUInteger i = 0; i < populationSize; i++) {
 		children[i]	= calloc(numberOfVertices + 1, sizeof(NSUInteger)); // last element is conflictCount
 	}
-	BOOL eliteDidChange = YES;
 	
 	// 1. Initialize parents with random colors
 	for (NSUInteger i = 0; i < populationSize; i++) {
@@ -473,16 +472,7 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 			break;
 		}
 		// 2-b. End Judgement (FAILURE)
-		// check if elite did change
-//		eliteDidChange = NO;
-//		for (NSUInteger i = 0; i < numberOfVertices; i++) {
-//			if (elites[0][i] != children[0][i]) {
-//				eliteDidChange = YES;
-//				break;
-//			}
-//		}
-		if (numberOfGeneration >= maxNumberOfGenerations
-			|| eliteDidChange == NO) {
+		if (numberOfGeneration >= maxNumberOfGenerations) {
 			// compare old color number and new color number
 			if ([self conflictCountWithColorNumbers:parents[0]] < [self conflictCount]) { // improved
 				memcpy(colorNumbers, children[0], numberOfVertices * sizeof(NSUInteger));
@@ -564,7 +554,7 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 		}
 		
 		// 4. Selection
-		for (NSUInteger i = 0; i < populationSize; i += 2) {
+		for (NSUInteger i = numberOfElites - 1; i < populationSize; i += 2) {
 			double winValue1, winValue2;
 			NSUInteger winIndex1 = 0;
 			NSUInteger winIndex2 = 0;
@@ -611,32 +601,28 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 		}
 		
 		// 6. Mutation
-		for (NSUInteger i = 0; i < populationSize; i++) {
+		for (NSUInteger i = numberOfElites - 1; i < populationSize; i++) {
 			for (NSUInteger j = 0; j < numberOfVertices; j++) {
 				if (((double)rand() / (RAND_MAX + 1.0)) < mutationRate) {
 					// mutate
-					NSUInteger newColorNumber = (numberOfColors - 1) * (double)rand() / (RAND_MAX + 1.0);
-					if (newColorNumber == children[i][j]) {
-						children[i][j] = numberOfColors - 1;
-					} else {
-						children[i][j] = newColorNumber;
-					}
+					NSUInteger colorIncrement = (numberOfColors - 1) * (double)rand() / (RAND_MAX + 1.0);
+					children[i][j] = (children[i][j] + colorIncrement) % numberOfColors; // change to different color
 				}
 			}
 		}
 		
-		// 7. Swap with elite
-		// insert elites
+		// 7. Insert elites
 		for (NSUInteger i = 0; i < numberOfElites; i++) {
-			memcpy(children[populationSize + i], parents[i], (numberOfVertices + 1) * sizeof(NSUInteger));
+			memcpy(children[i], parents[i], (numberOfVertices + 1) * sizeof(NSUInteger));
 		}
 		
 		// calculate conflict counts of children
-		for (NSUInteger i = 0; i < populationSize + numberOfElites; i++) {
+		for (NSUInteger i = numberOfElites; i < populationSize; i++) {
 			children[i][numberOfVertices] = [self conflictCountWithColorNumbers:children[i]];
 		}
+		
 		// sort children by conflictCounts in ascending order.
-		qsort(children, populationSize + numberOfElites, sizeof(NSUInteger *), (int(*)(const void *, const void *))conflictCountCompare);
+		qsort(children, populationSize, sizeof(NSUInteger *), (int(*)(const void *, const void *))conflictCountCompare);
 		
 		// change generation
 		for (NSUInteger i = 0; i < populationSize; i++) {
@@ -675,11 +661,11 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 	
 	double *parentFitnesses	= calloc(populationSize, sizeof(double));
 	NSUInteger **parents	= calloc(populationSize, sizeof(NSUInteger *));
-	NSUInteger **children	= calloc(populationSize + numberOfElites, sizeof(NSUInteger *));
+	NSUInteger **children	= calloc(populationSize, sizeof(NSUInteger *));
 	for (NSUInteger i = 0; i < populationSize; i++) {
 		parents[i]	= calloc(numberOfVertices + 1, sizeof(NSUInteger)); // last element is conflictCount
 	}
-	for (NSUInteger i = 0; i < populationSize + numberOfElites; i++) {
+	for (NSUInteger i = 0; i < populationSize; i++) {
 		children[i]	= calloc(numberOfVertices + 1, sizeof(NSUInteger)); // last element is conflictCount
 	}
 	BOOL eliteDidChange = YES;
@@ -712,15 +698,7 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 			memcpy(colorNumbers, parents[0], numberOfVertices * sizeof(NSUInteger));
 			break;
 		}
-		// 2-b. End Judgement (FAILURE)
-		// check if elite did change
-		//		eliteDidChange = NO;
-		//		for (NSUInteger i = 0; i < numberOfVertices; i++) {
-		//			if (elites[0][i] != children[0][i]) {
-		//				eliteDidChange = YES;
-		//				break;
-		//			}
-		//		}
+
 		if (numberOfGeneration >= maxNumberOfGenerations
 			|| eliteDidChange == NO) {
 			// compare old color number and new color number
@@ -804,7 +782,7 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 		}
 		
 		// 4. Selection
-		for (NSUInteger i = 0; i < populationSize; i += 2) {
+		for (NSUInteger i = numberOfElites - 1; i < populationSize; i += 2) {
 			double winValue1, winValue2;
 			NSUInteger winIndex1 = 0;
 			NSUInteger winIndex2 = 0;
@@ -851,32 +829,27 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 		}
 		
 		// 6. Mutation
-		for (NSUInteger i = 0; i < populationSize; i++) {
+		for (NSUInteger i = numberOfElites - 1; i < populationSize; i++) {
 			for (NSUInteger j = 0; j < numberOfVertices; j++) {
 				if (((double)rand() / (RAND_MAX + 1.0)) < mutationRate) {
 					// mutate
-					NSUInteger newColorNumber = (numberOfColors - 1) * (double)rand() / (RAND_MAX + 1.0);
-					if (newColorNumber == children[i][j]) {
-						children[i][j] = numberOfColors - 1;
-					} else {
-						children[i][j] = newColorNumber;
-					}
+					NSUInteger colorIncrement = (numberOfColors - 1) * (double)rand() / (RAND_MAX + 1.0);
+					children[i][j] = (children[i][j] + colorIncrement) % numberOfColors; // change to different color
 				}
 			}
 		}
 		
-		// 7. Swap with elite
-		// insert elites
+		// 7. Insert elites
 		for (NSUInteger i = 0; i < numberOfElites; i++) {
-			memcpy(children[populationSize + i], parents[i], (numberOfVertices + 1) * sizeof(NSUInteger));
+			memcpy(children[i], parents[i], (numberOfVertices + 1) * sizeof(NSUInteger));
 		}
 		
 		// calculate conflict counts of children
-		for (NSUInteger i = 0; i < populationSize + numberOfElites; i++) {
+		for (NSUInteger i = numberOfElites; i < populationSize; i++) {
 			children[i][numberOfVertices] = [self conflictCountWithColorNumbers:children[i]];
 		}
 		// sort children by conflictCounts in ascending order.
-		qsort(children, populationSize + numberOfElites, sizeof(NSUInteger *), (int(*)(const void *, const void *))conflictCountCompare);
+		qsort(children, populationSize, sizeof(NSUInteger *), (int(*)(const void *, const void *))conflictCountCompare);
 		
 		// 8. Apply Hill Climb method for elites
 		// iterate HC

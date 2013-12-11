@@ -637,28 +637,16 @@ typedef enum ExperimentMode {
 	
 	// for GA
 	NSUInteger populationSize = 100;	// OPTIMIZED
-	populationSize = 50;
+//	populationSize = 2000;
 	NSUInteger numberOfCrossovers = 0; // if 0, uniform crossover will be used.	// OPTIMIZED
 	double mutationRate = 0.01;	// OPTIMIZED
-	mutationRate = 0.014;
 	UTGAScaling scaling = UTGAScalingLinear;	// OPTIMIZED
-//	scaling = UTGAScalingNone;
-//	UTGAScaling scaling = UTGAScalingPower;
-	double eliteRate = 0.1;	// OPTIMIZED
-//	eliteRate = 0.0;
-	NSUInteger numberOfElites = populationSize * eliteRate;
+	double eliteRate = 0.10;	// OPTIMIZED
+	NSUInteger numberOfElites = 1; // REQUIRED in this experiment.
+	numberOfElites = populationSize * eliteRate;
 	NSUInteger maxNumberOfGenerationsGA = 300;	// OPTIMIZED
-//	maxNumberOfGenerationsGA = 2000;
-	
-	// for HGA
-	NSUInteger populationSizeHGA = 50;
-	double mutationRateHGA = 0.014;
-	UTGAScaling scalingHGA = UTGAScalingLinear;
-	double eliteRateHGA = 0.1;
-	NSUInteger numberOfElitesHGA = populationSizeHGA * eliteRateHGA;
-	NSUInteger noImprovementLimitHGA = 10;
-	NSUInteger maxNumberOfGenerationsHGA = 6000;	// OPTIMIZED
-	
+	NSUInteger noImprovementLimitHGA = 300;
+		
 	// for plot
 	NSArray *plotData;
 	
@@ -698,13 +686,13 @@ typedef enum ExperimentMode {
 //			NSLog(@"%@\n%@", [fitnessHistory[0] description], [fitnessHistory[1] description]);
 			break;
 		case 5: // HGA
-			plotData = [gcp solveInHGAWithPopulationSize:populationSizeHGA
+			plotData = [gcp solveInHGAWithPopulationSize:populationSize
 									  numberOfCrossovers:numberOfCrossovers
-											mutationRate:mutationRateHGA
-												 scaling:scalingHGA
-										  numberOfElites:numberOfElitesHGA
+											mutationRate:mutationRate
+												 scaling:scaling
+										  numberOfElites:numberOfElites
 									  noImprovementLimit:noImprovementLimitHGA
-								  maxNumberOfGenerations:maxNumberOfGenerationsHGA];
+								  maxNumberOfGenerations:maxNumberOfGenerationsGA];
 			[plotView multiplePlotWithX:nil Y:plotData type:UTYTypeDouble];
 			break;
 		default:
