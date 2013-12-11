@@ -83,7 +83,7 @@ typedef enum ExperimentMode {
 	
 	// Set parameters.
 	numberOfColors		= 3;
-	numberOfVertices	= 30 * numberOfColors;
+	numberOfVertices	= 20 * numberOfColors;
 	numberOfEdges		= 3 * numberOfVertices; // sparse
 //	numberOfEdges	= numberOfVertices * (numberOfVertices - 1) / 4; // dense
 	[self updateFields]; // update fields for number of colors, vertices, edges.
@@ -637,7 +637,6 @@ typedef enum ExperimentMode {
 	
 	// for GA
 	NSUInteger populationSize = 100;	// OPTIMIZED
-//	populationSize = 2000;
 	NSUInteger numberOfCrossovers = 0; // if 0, uniform crossover will be used.	// OPTIMIZED
 	double mutationRate = 0.01;	// OPTIMIZED
 	UTGAScaling scaling = UTGAScalingLinear;	// OPTIMIZED
@@ -645,7 +644,15 @@ typedef enum ExperimentMode {
 	NSUInteger numberOfElites = 1; // REQUIRED in this experiment.
 	numberOfElites = populationSize * eliteRate;
 	NSUInteger maxNumberOfGenerationsGA = 300;	// OPTIMIZED
-	NSUInteger noImprovementLimitHGA = 300;
+	
+	// for HGA
+	NSUInteger populationSizeHGA = 10000;
+	NSUInteger noImprovementLimitHGA = 5;
+	double mutationRateHGA = 0.01;
+	double eliteRateHGA = 0.10;
+	NSUInteger numberOfElitesHGA = populationSizeHGA * eliteRateHGA;
+////	numberOfElitesHGA = 1;
+	NSUInteger maxNumberOfGenerationsHGA = 30;
 		
 	// for plot
 	NSArray *plotData;
@@ -686,13 +693,13 @@ typedef enum ExperimentMode {
 //			NSLog(@"%@\n%@", [fitnessHistory[0] description], [fitnessHistory[1] description]);
 			break;
 		case 5: // HGA
-			plotData = [gcp solveInHGAWithPopulationSize:populationSize
+			plotData = [gcp solveInHGAWithPopulationSize:populationSizeHGA
 									  numberOfCrossovers:numberOfCrossovers
-											mutationRate:mutationRate
+											mutationRate:mutationRateHGA
 												 scaling:scaling
-										  numberOfElites:numberOfElites
+										  numberOfElites:numberOfElitesHGA
 									  noImprovementLimit:noImprovementLimitHGA
-								  maxNumberOfGenerations:maxNumberOfGenerationsGA];
+								  maxNumberOfGenerations:maxNumberOfGenerationsHGA];
 			[plotView multiplePlotWithX:nil Y:plotData type:UTYTypeDouble];
 			break;
 		default:

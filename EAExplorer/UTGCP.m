@@ -15,7 +15,9 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 	return ((NSUInteger *)(*a))[order] - ((NSUInteger *)(*b))[order];
 }
 
-@implementation UTGCP
+@implementation UTGCP {
+	NSUInteger *crossoverMask;
+}
 
 @synthesize numberOfVertices;
 @synthesize numberOfEdges;
@@ -37,10 +39,11 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 		numberOfEdges		= e;
 		numberOfColors		= c;
 
-		adjacencyMatrix			= calloc(v * v	, sizeof(NSUInteger));
-		colorNumbers			= calloc(v		, sizeof(NSUInteger));
-		conflictVertexFlags		= calloc(v		, sizeof(NSUInteger));
-		randomIndexMap			= calloc(v		, sizeof(NSUInteger));
+		adjacencyMatrix			= calloc(v * v, sizeof(NSUInteger));
+		colorNumbers			= calloc(v, sizeof(NSUInteger));
+		conflictVertexFlags		= calloc(v, sizeof(NSUInteger));
+		randomIndexMap			= calloc(v, sizeof(NSUInteger));
+		crossoverMask			= calloc(v, sizeof(NSUInteger));
 		
 		[self generateAdjacencyMatrix];
 	}
@@ -516,7 +519,6 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 		}
 		
 		// 5-a. Generate crossover mask
-		NSUInteger crossoverMask[numberOfVertices];
 		for (NSUInteger i = 0; i < numberOfVertices; i++) { // initialize
 			crossoverMask[i] = 0;
 		}
@@ -744,7 +746,6 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 		}
 		
 		// 5-a. Generate crossover mask
-		NSUInteger crossoverMask[numberOfVertices];
 		for (NSUInteger i = 0; i < numberOfVertices; i++) { // initialize
 			crossoverMask[i] = 0;
 		}
@@ -856,6 +857,8 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 		for (NSUInteger i = 0; i < numberOfElites; i++) {
 			[self applyHCWithNoImprovementLimit:limit colorNumbers:children[i]];
 			if (children[i][numberOfVertices] == 0) {
+				memcpy(colorNumbers, children[i], numberOfVertices * sizeof(NSUInteger));
+				
 				fitnessInfo = @[[NSNumber numberWithDouble:1.0],
 								[NSNumber numberWithDouble:[fitnessInfo[1] doubleValue]],
 								[NSNumber numberWithDouble:[fitnessInfo[2] doubleValue]]];
@@ -985,6 +988,7 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 	for (int i = 0; i < numberOfVertices + 1; i++) {
 		numbers[i] = newColorNumbers[i];
 	}
+//	printf("HC gen = %d\n", generation);
 	
 //	return conflictHistory;
 	return nil;
@@ -1023,6 +1027,7 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 	free(colorNumbers);
 	free(conflictVertexFlags);
 	free(randomIndexMap);
+	free(crossoverMask);
 }
 
 @end
