@@ -556,7 +556,7 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 		}
 		
 		// 4. Selection
-		for (NSUInteger i = numberOfElites - 1; i < populationSize; i += 2) {
+		for (NSUInteger i = numberOfElites; i < populationSize; i += 2) {
 			double winValue1, winValue2;
 			NSUInteger winIndex1 = 0;
 			NSUInteger winIndex2 = 0;
@@ -603,7 +603,7 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 		}
 		
 		// 6. Mutation
-		for (NSUInteger i = numberOfElites - 1; i < populationSize; i++) {
+		for (NSUInteger i = numberOfElites; i < populationSize; i++) {
 			for (NSUInteger j = 0; j < numberOfVertices; j++) {
 				if (((double)rand() / (RAND_MAX + 1.0)) < mutationRate) {
 					// mutate
@@ -651,6 +651,7 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 							 mutationRate:(double)mutationRate
 								  scaling:(UTGAScaling)scaling
 						   numberOfElites:(NSUInteger)numberOfElites
+					numberOfChildrenForHC:(NSUInteger)numberOfChildrenForHC
 					   noImprovementLimit:(NSUInteger)limit
 				   maxNumberOfGenerations:(NSUInteger)maxNumberOfGenerations
 {
@@ -783,7 +784,7 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 		}
 		
 		// 4. Selection
-		for (NSUInteger i = numberOfElites - 1; i < populationSize; i += 2) {
+		for (NSUInteger i = numberOfElites; i < populationSize; i += 2) {
 			double winValue1, winValue2;
 			NSUInteger winIndex1 = 0;
 			NSUInteger winIndex2 = 0;
@@ -830,7 +831,7 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 		}
 		
 		// 6. Mutation
-		for (NSUInteger i = numberOfElites - 1; i < populationSize; i++) {
+		for (NSUInteger i = numberOfElites; i < populationSize; i++) {
 			for (NSUInteger j = 0; j < numberOfVertices; j++) {
 				if (((double)rand() / (RAND_MAX + 1.0)) < mutationRate) {
 					// mutate
@@ -852,9 +853,8 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 		// sort children by conflictCounts in ascending order.
 		qsort(children, populationSize, sizeof(NSUInteger *), (int(*)(const void *, const void *))conflictCountCompare);
 		
-		// 8. Apply Hill Climb method for elites
-		// iterate HC
-		for (NSUInteger i = 0; i < numberOfElites; i++) {
+		// 8. Apply Hill Climb method
+		for (NSUInteger i = 0; i < numberOfChildrenForHC; i++) {
 			[self applyHCWithNoImprovementLimit:limit colorNumbers:children[i]];
 			if (children[i][numberOfVertices] == 0) {
 				memcpy(colorNumbers, children[i], numberOfVertices * sizeof(NSUInteger));

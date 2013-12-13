@@ -83,7 +83,7 @@ typedef enum ExperimentMode {
 	
 	// Set parameters.
 	numberOfColors		= 3;
-	numberOfVertices	= 20 * numberOfColors;
+	numberOfVertices	= 30 * numberOfColors;
 	numberOfEdges		= 3 * numberOfVertices; // sparse
 //	numberOfEdges	= numberOfVertices * (numberOfVertices - 1) / 4; // dense
 	[self updateFields]; // update fields for number of colors, vertices, edges.
@@ -624,10 +624,10 @@ typedef enum ExperimentMode {
 - (void)radialButtonActionWithIndex:(NSUInteger)i sender:(id)sender
 {
 	// for HC
-	NSUInteger noImprovementLimit = 100;	// OPTIMIZED
+	NSUInteger noImprovementLimit = 200;	// OPTIMIZED
 	
 	// for IHC
-	NSUInteger maxIteration = 5;	// OPTIMIZED
+	NSUInteger maxIteration = 200;	// OPTIMIZED
 	
 	// for ES
 	NSUInteger numberOfParents = 80;	// OPTIMIZED
@@ -637,22 +637,27 @@ typedef enum ExperimentMode {
 	
 	// for GA
 	NSUInteger populationSize = 100;	// OPTIMIZED
+	populationSize = 50;
 	NSUInteger numberOfCrossovers = 0; // if 0, uniform crossover will be used.	// OPTIMIZED
 	double mutationRate = 0.01;	// OPTIMIZED
+	mutationRate = 0.014;
 	UTGAScaling scaling = UTGAScalingLinear;	// OPTIMIZED
 	double eliteRate = 0.10;	// OPTIMIZED
 	NSUInteger numberOfElites = 1; // REQUIRED in this experiment.
-	numberOfElites = populationSize * eliteRate;
-	NSUInteger maxNumberOfGenerationsGA = 300;	// OPTIMIZED
+	numberOfElites = 0;
+//	numberOfElites = populationSize * eliteRate;
+	NSUInteger maxNumberOfGenerationsGA = 20000;	// OPTIMIZED
 	
 	// for HGA
-	NSUInteger populationSizeHGA = 10000;
-	NSUInteger noImprovementLimitHGA = 5;
+	NSUInteger populationSizeHGA = 100;
+	NSUInteger noImprovementLimitHGA = 10;
 	double mutationRateHGA = 0.01;
-	double eliteRateHGA = 0.10;
-	NSUInteger numberOfElitesHGA = populationSizeHGA * eliteRateHGA;
-////	numberOfElitesHGA = 1;
-	NSUInteger maxNumberOfGenerationsHGA = 30;
+//	double eliteRateHGA = 0.02;
+//	NSUInteger numberOfElitesHGA = populationSizeHGA * eliteRateHGA;
+	NSUInteger numberOfElitesHGA = 1;
+	double HCRate = 0.05;
+	NSUInteger numberOfChildrenForHC = populationSizeHGA * HCRate;
+	NSUInteger maxNumberOfGenerationsHGA = 300;
 		
 	// for plot
 	NSArray *plotData;
@@ -698,6 +703,7 @@ typedef enum ExperimentMode {
 											mutationRate:mutationRateHGA
 												 scaling:scaling
 										  numberOfElites:numberOfElitesHGA
+								   numberOfChildrenForHC:numberOfChildrenForHC
 									  noImprovementLimit:noImprovementLimitHGA
 								  maxNumberOfGenerations:maxNumberOfGenerationsHGA];
 			[plotView multiplePlotWithX:nil Y:plotData type:UTYTypeDouble];

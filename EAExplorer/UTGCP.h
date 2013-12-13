@@ -114,6 +114,7 @@ typedef enum UTGAScaling {
 							 mutationRate:(double)mutationRate
 								  scaling:(UTGAScaling)scaling
 						   numberOfElites:(NSUInteger)numberOfElites
+					numberOfChildrenForHC:(NSUInteger)numberOfChildrenForHC
 					   noImprovementLimit:(NSUInteger)limit
 				   maxNumberOfGenerations:(NSUInteger)maxNumberOfGenerations;
 
