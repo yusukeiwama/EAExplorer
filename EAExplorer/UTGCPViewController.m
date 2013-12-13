@@ -83,7 +83,7 @@ typedef enum ExperimentMode {
 	
 	// Set parameters.
 	numberOfColors		= 3;
-	numberOfVertices	= 30 * numberOfColors;
+	numberOfVertices	= 10 * numberOfColors;
 	numberOfEdges		= 3 * numberOfVertices; // sparse
 //	numberOfEdges	= numberOfVertices * (numberOfVertices - 1) / 4; // dense
 	[self updateFields]; // update fields for number of colors, vertices, edges.
@@ -624,10 +624,10 @@ typedef enum ExperimentMode {
 - (void)radialButtonActionWithIndex:(NSUInteger)i sender:(id)sender
 {
 	// for HC
-	NSUInteger noImprovementLimit = 200;	// OPTIMIZED
+	NSUInteger noImprovementLimit = 100;	// OPTIMIZED
 	
 	// for IHC
-	NSUInteger maxIteration = 200;	// OPTIMIZED
+	NSUInteger maxIteration = 100;	// OPTIMIZED
 	
 	// for ES
 	NSUInteger numberOfParents = 80;	// OPTIMIZED

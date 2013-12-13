@@ -237,7 +237,7 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 		}
 		NSUInteger canditateColorNumberIndex = 0;
 		NSUInteger tempConflictCount;
-		NSUInteger canditateColorNumber = colorNumbers[targetConflictVertexIndex]; // initialize canditate color number with current color number
+		NSUInteger canditateColorNumber = newColorNumbers[targetConflictVertexIndex]; // initialize canditate color number with current color number
 		for (int i = 0; i < numberOfColors - 1; i++) {
 			canditateColorNumber = (canditateColorNumber + 1) % numberOfColors; // next canditate color number
 			newColorNumbers[targetConflictVertexIndex] = canditateColorNumber;
@@ -283,30 +283,15 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 							maxIteration:(NSUInteger)maxIteration
 {
 	NSMutableArray *conflictCountHistory = [NSMutableArray array];
-	// select minimum conflict answer
-	NSUInteger minConflictCount = [self conflictCount];
-	// save before-state so that it can revert when there is no improvement
-	NSUInteger *minConflictColorNumbers = calloc(numberOfVertices, sizeof(NSUInteger));
-	memcpy(minConflictColorNumbers, colorNumbers, numberOfVertices * sizeof(NSUInteger));
-	// iterate HC
+
 	for (NSUInteger i = 0; i < maxIteration; i++) {
 		NSArray *conflictCountHistoryInHC;
 		conflictCountHistoryInHC = [self solveInHCWithNoImprovementLimit:limit];
 		[conflictCountHistory addObjectsFromArray:conflictCountHistoryInHC];
 		if ([[conflictCountHistory lastObject] unsignedIntegerValue] == 0) { // succeeded in HC
-			free(minConflictColorNumbers);
 			return conflictCountHistory;
-		} else { // failed in HC
-			if ([self conflictCount] < minConflictCount) { // update minimum conflict count and colors
-				minConflictCount = [self conflictCount];
-				memcpy(minConflictColorNumbers, colorNumbers, numberOfVertices * sizeof(NSUInteger));
-			}
 		}
 	}
-	// restore minimum conflict color numbers
-	// CAUTION: If there's no improvement, before-calculation states is restored.
-	memcpy(colorNumbers, minConflictColorNumbers, numberOfVertices * sizeof(NSUInteger));
-	free(minConflictColorNumbers);
 	
 	return conflictCountHistory;
 }
