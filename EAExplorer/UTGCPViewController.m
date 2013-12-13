@@ -83,7 +83,7 @@ typedef enum ExperimentMode {
 	
 	// Set parameters.
 	numberOfColors		= 3;
-	numberOfVertices	= 10 * numberOfColors;
+	numberOfVertices	= 20 * numberOfColors;
 	numberOfEdges		= 3 * numberOfVertices; // sparse
 //	numberOfEdges	= numberOfVertices * (numberOfVertices - 1) / 4; // dense
 	[self updateFields]; // update fields for number of colors, vertices, edges.
@@ -624,10 +624,10 @@ typedef enum ExperimentMode {
 - (void)radialButtonActionWithIndex:(NSUInteger)i sender:(id)sender
 {
 	// for HC
-	NSUInteger noImprovementLimit = 100;	// OPTIMIZED
+	NSUInteger noImprovementLimit = 1000;	// OPTIMIZED
 	
 	// for IHC
-	NSUInteger maxIteration = 100;	// OPTIMIZED
+	NSUInteger maxIteration = 10;	// OPTIMIZED
 	
 	// for ES
 	NSUInteger numberOfParents = 80;	// OPTIMIZED
@@ -637,23 +637,24 @@ typedef enum ExperimentMode {
 	
 	// for GA
 	NSUInteger populationSize = 100;	// OPTIMIZED
-	populationSize = 50;
+//	populationSize = 50;
 	NSUInteger numberOfCrossovers = 0; // if 0, uniform crossover will be used.	// OPTIMIZED
 	double mutationRate = 0.01;	// OPTIMIZED
-	mutationRate = 0.014;
+//	mutationRate = 0.014;
 	UTGAScaling scaling = UTGAScalingLinear;	// OPTIMIZED
-	double eliteRate = 0.10;	// OPTIMIZED
+//	double eliteRate = 0.10;	// OPTIMIZED
 	NSUInteger numberOfElites = 1; // REQUIRED in this experiment.
-	numberOfElites = 0;
+//	numberOfElites = 0;
 //	numberOfElites = populationSize * eliteRate;
-	NSUInteger maxNumberOfGenerationsGA = 20000;	// OPTIMIZED
+	NSUInteger maxNumberOfGenerationsGA = 1000;	// OPTIMIZED
 	
 	// for HGA
 	NSUInteger populationSizeHGA = 100;
-	NSUInteger noImprovementLimitHGA = 10;
+	NSUInteger noImprovementLimitHGA = 100;
 	double mutationRateHGA = 0.01;
 //	double eliteRateHGA = 0.02;
 //	NSUInteger numberOfElitesHGA = populationSizeHGA * eliteRateHGA;
+	UTGAScaling scalingHGA = UTGAScalingNone;
 	NSUInteger numberOfElitesHGA = 1;
 	double HCRate = 0.05;
 	NSUInteger numberOfChildrenForHC = populationSizeHGA * HCRate;
@@ -701,7 +702,7 @@ typedef enum ExperimentMode {
 			plotData = [gcp solveInHGAWithPopulationSize:populationSizeHGA
 									  numberOfCrossovers:numberOfCrossovers
 											mutationRate:mutationRateHGA
-												 scaling:scaling
+												 scaling:scalingHGA
 										  numberOfElites:numberOfElitesHGA
 								   numberOfChildrenForHC:numberOfChildrenForHC
 									  noImprovementLimit:noImprovementLimitHGA
