@@ -8,21 +8,31 @@
 
 #import "UTGCP.h"
 
-int order;
+static int order;
 
-int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
+int conflictCountCompare(const int *a, const int *b)
 {
-	return ((NSUInteger *)(*a))[order] - ((NSUInteger *)(*b))[order];
+	return ((int *)(*a))[order] - ((int *)(*b))[order];
 }
 
 @implementation UTGCP {
-	NSUInteger *crossoverMask;
+	int *crossoverMask;
 }
 
-@synthesize numberOfVertices;
-@synthesize numberOfEdges;
-@synthesize numberOfColors;
-@synthesize adjacencyMatrix;
+/*
+ CAUTION:
+ n, m, ...
+ provides direct access to the instance variables. It's not safe for future reuse
+ in which KVC is required. But now, to keep convenience for maintainance, 
+ direct access is being used.
+ */
+// Fundamental Information for a GCP.
+@synthesize numberOfVertices = n; // The size of a problem.
+@synthesize numberOfEdges    = m; // The number of constraints in a problem.
+@synthesize numberOfColors   = c; // The number of possible values that variables can be.
+
+// Generated Information for a GCP.
+@synthesize adjacencyMatrix  = A;
 @synthesize randomIndexMap;
 @synthesize colorNumbers;
 @synthesize conflictVertexFlags;
@@ -31,78 +41,110 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 
 // @synthesize numberOfTraials;
 
-- (id)initWithNumberOfVertices:(NSUInteger)v numberOfEdges:(NSUInteger)e numberOfColors:(NSUInteger)c
+- (id)initWithNumberOfVertices:(int)numberOfVertices
+                 numberOfEdges:(int)numberOfEdges
+                numberOfColors:(int)numberOfColors
 {
 	if (self = [super init]) {
-		numberOfVertices	= v;
-		order				= v;
-		numberOfEdges		= e;
-		numberOfColors		= c;
+		n = numberOfVertices;
+        m = numberOfEdges;
+		c = numberOfColors;
 
-		adjacencyMatrix			= calloc(v * v, sizeof(NSUInteger));
-		colorNumbers			= calloc(v, sizeof(NSUInteger));
-		conflictVertexFlags		= calloc(v, sizeof(NSUInteger));
-		randomIndexMap			= calloc(v, sizeof(NSUInteger));
-		crossoverMask			= calloc(v, sizeof(NSUInteger));
+		order = numberOfVertices;
+
+		A = calloc(n * n, sizeof(int));
+		colorNumbers			= calloc(n,     sizeof(int));
+		conflictVertexFlags		= calloc(n,     sizeof(int));
+		randomIndexMap			= calloc(n,     sizeof(int));
+		crossoverMask			= calloc(n,     sizeof(int));
 		
 		[self generateAdjacencyMatrix];
+        [self generateRandomIndexMap];
 	}
 	
 	return self;
 }
 
-+ (id)GCPWithNumberOfVertices:(NSUInteger)v numberOfEdges:(NSUInteger)e numberOfColors:(NSUInteger)c
++ (id)GCPWithNumberOfVertices:(int)numberOfVertices
+                numberOfEdges:(int)numberOfEdges
+               numberOfColors:(int)numberOfColors
 {
-	return [[UTGCP alloc] initWithNumberOfVertices:v numberOfEdges:e numberOfColors:c];
+	return [[UTGCP alloc] initWithNumberOfVertices:numberOfVertices
+                                     numberOfEdges:numberOfEdges
+                                    numberOfColors:numberOfColors];
 }
 
 
 - (void)generateAdjacencyMatrix
 {
-	// prepare required number of ones
-	NSUInteger numberOfVerticesInColor = numberOfVertices / numberOfColors;
-	NSUInteger numberOfCombinationOfDifferentColors = numberOfColors * (numberOfColors - 1) / 2;
-	NSUInteger numberOfCanditates = numberOfVerticesInColor * numberOfVerticesInColor * numberOfCombinationOfDifferentColors;
-	NSUInteger *canditates = calloc(numberOfCanditates, sizeof(NSUInteger));
-	NSUInteger k; // index of the array of the canditates
-	for (k = 0; k < numberOfEdges; k++) {
-		canditates[k] = 1;
+    /*
+     Compute the number of elements that can possibly be 1.
+     The number of 1s corresponds to m(a.k.a. the number of edges) because 1 in
+     adjacency matrix means that there is an edge there.
+     To get solvable GCP, fill only elements in the cell in which elements are
+     different color combinations.
+
+     Adjacency matrix example for a solvable GCP:
+       R G B
+     R| |1|1|
+     G| | |1|
+     B| | | |
+     */
+	int verticesPerColor = n / c;
+	int numDifferentColorCombinations = c * (c - 1) / 2;
+	int numCandidates = verticesPerColor * verticesPerColor * numDifferentColorCombinations;
+
+    /*
+     Prepare m 1s. And therefore, (numberOfCandidates - m) of zeros.
+
+     candidates = {1, ... ,     1, 0, ... ,                      0}
+     (index:       0, ... , m - 1, m, ... , numberOfCandidates - 1}
+     */
+    int candidates[numCandidates];
+    bzero(candidates, numCandidates * sizeof(int));
+	int k;
+	for (k = 0; k < m; k++) {
+		candidates[k] = 1;
 	}
 
-	// store 0 or 1 into canditate elements
+	// Fill zero or one in candidate elements in A(a.k.a. adjacency matrix.)
 	k = 0;
-	for (NSUInteger i = 0; i < numberOfVertices; i++) {
-		for (NSUInteger j = (i / numberOfVerticesInColor + 1) * numberOfVerticesInColor; j < numberOfVertices; j++) { // never connects the same color
-			NSUInteger r = (numberOfCanditates - k) * (double)rand() / (RAND_MAX + 1.0);
-			adjacencyMatrix[i * numberOfVertices + j] = canditates[r];
+	for (int i = 0; i < n; i++) {
+		for (int j = (i / verticesPerColor + 1) * verticesPerColor; j < n; j++) { // never connects the same colors
+            // Get a value in the candidates in index range from 0 to ((numberOfCandidates - 1) - k).
+			int r = (numCandidates - k) * (double)rand() / (RAND_MAX + 1.0);
+			A[i * n + j] = candidates[r];
 			k++;
-			canditates[r] = canditates[numberOfCanditates - k];
+            // Overwrite used value in the range with the unused value out of the range.
+			candidates[r] = candidates[numCandidates - k];
 		}
-	}
-	free(canditates);
-	
-	// random mapping for quiz
-	NSUInteger nv = numberOfVertices;
-	for (NSUInteger i = 0; i < nv; i++) { // ordered uint array to numberOfVertices - 1
-		randomIndexMap[i] = i;
-	}
-	for (NSUInteger i = 1; i < nv; i++) {
-		NSUInteger r = (nv - i) * (double)rand() / (RAND_MAX + 1.0); // 0 <= r < numberOfVerticles - i
-		NSUInteger temp = randomIndexMap[r];
-		randomIndexMap[r] = randomIndexMap[nv - i];
-		randomIndexMap[nv - i] = temp;
 	}
 }
 
+- (void)generateRandomIndexMap
+{
+    // Prepare ordered index map.
+    int orderedIndexMap[n];
+	for (int i = 0; i < n; i++) {
+        orderedIndexMap[i] = i;
+    }
+    
+    // Generate random index map by choosing a value from ordered index map randomly.
+    for (int i = 0; i < n; i++) {
+        int r = (n - i) * (double)rand() / (RAND_MAX + 1.0);
+        randomIndexMap[i] = orderedIndexMap[r];
+        // Overwrite used value in the range with the unused value out of the range.
+        orderedIndexMap[r] = orderedIndexMap[(n -1) - i];
+    }
+}
+
 - (BOOL)verify
-{ // break when the first conflict is found (little bit faster than -conflictCount method)
-	for (NSUInteger i = 0; i < numberOfVertices - 1; i++) {
-		NSUInteger colorNumber = colorNumbers[i];
-		for (NSUInteger j = i + 1; j < numberOfVertices; j++) {
-			if (adjacencyMatrix[i * numberOfVertices + j]) { // if edge exists between vi and vj
-				if (colorNumbers[j] == colorNumber) { // if violate constraint
-					return NO;
-				}
+{
+	for (int i = 0; i < n - 1; i++) {
+		int colorNumber = colorNumbers[i];
+		for (int j = i + 1; j < n; j++) {
+			if (A[i * n + j] && colorNumbers[j] == colorNumber) {
+                return NO;
 			}
 		}
 	}
@@ -110,116 +152,81 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 	return YES;
 }
 
-- (NSUInteger)conflictCount
+- (int)numberOfConflicts
 {
-	NSUInteger conflictCount = 0;
-	for (NSUInteger i = 0; i < numberOfVertices - 1; i++) {
-		for (NSUInteger j = i + 1; j < numberOfVertices; j++) {
-			if (adjacencyMatrix[i * numberOfVertices + j]
-				&& colorNumbers[i] == colorNumbers[j]) {
-				conflictCount++;
-			}
-		}
-	}
-	
-	numberOfCalculations++;
-	return conflictCount;
+	return [self numberOfConflictsWithColorNumbers:colorNumbers];
 }
 
-- (NSUInteger)conflictCountWithColorNumbers:(NSUInteger *)numbers
+- (int)numberOfConflictsWithColorNumbers:(int *)numbers
 {
-	NSUInteger conflictCount = 0;
-	for (NSUInteger i = 0; i < numberOfVertices - 1; i++) {
-		for (NSUInteger j = i + 1; j < numberOfVertices; j++) {
-			if (adjacencyMatrix[i * numberOfVertices + j]
-				&& numbers[i] == numbers[j]) {
-				conflictCount++;
+	int numConflicts = 0;
+    
+	for (int i = 0; i < n - 1; i++) {
+		for (int j = i + 1; j < n; j++) {
+			if (A[i * n + j] && numbers[i] == numbers[j]) {
+				numConflicts++;
 			}
 		}
 	}
 	
 	numberOfCalculations++;
-	return conflictCount;
+	return numConflicts;
 }
 
 - (void)updateConflictIndices
 {
-	// clear conflict indices to 0
-	for (NSUInteger i = 0; i < numberOfVertices - 1; i++) {
-		for (NSUInteger j = i + 1; j < numberOfVertices; j++) {
-				conflictVertexFlags[i] = 0;
-		}
-	}
-	
-	// set conflict indices
-	for (NSUInteger i = 0; i < numberOfVertices - 1; i++) {
-		for (NSUInteger j = i + 1; j < numberOfVertices; j++) {
-			if (adjacencyMatrix[i * numberOfVertices + j]
-				&& colorNumbers[i] == colorNumbers[j]) {
-				// conflict occurs between i and j
-				conflictVertexFlags[i] = 1;
-				conflictVertexFlags[j] = 1;
-			}
+    [self updateConflictVertexFlagsWithColorNumbers:colorNumbers];
+}
+
+- (void)updateConflictVertexFlagsWithColorNumbers:(int *)numbers
+{
+	for (int i = 0; i < n - 1; i++) {
+		for (int j = i + 1; j < n; j++) {
+			if (A[i * n + j] && numbers[i] == numbers[j]) {
+				conflictVertexFlags[i] = conflictVertexFlags[j] = 1;
+			} else {
+                conflictVertexFlags[i] = conflictVertexFlags[j] = 0;
+            }
 		}
 	}
 }
 
-- (void)updateConflictVertexFlagsWithColorNumbers:(NSUInteger *)numbers
+- (NSArray *)solveInHCWithNoImprovementLimit:(int)limit
 {
-	// clear conflict indices to 0
-	for (NSUInteger i = 0; i < numberOfVertices - 1; i++) {
-		conflictVertexFlags[i] = 0;
-	}
-	
-	// set conflict indices
-	for (NSUInteger i = 0; i < numberOfVertices - 1; i++) {
-		for (NSUInteger j = i + 1; j < numberOfVertices; j++) {
-			if (adjacencyMatrix[i * numberOfVertices + j]	// if vertex i and j are adjacent
-				&& numbers[i] == numbers[j]) {	// and their colors are the same
-				// conflict occurs between i and j
-				conflictVertexFlags[i] = 1;
-				conflictVertexFlags[j] = 1;
-			}
-		}
-	}
-}
-
-- (NSArray *)solveInHCWithNoImprovementLimit:(NSUInteger)limit
-{
-	NSUInteger newColorNumbers[numberOfVertices];
-	NSUInteger newConflictCount;
-	NSUInteger beforeConflictCount = [self conflictCount]; // conflict count in before state.
+	int newColorNumbers[n];
+	int newConflictCount;
+	int beforeConflictCount = [self numberOfConflicts]; // conflict count in before state.
 	NSMutableArray *conflictHistory = [NSMutableArray array];
-	NSUInteger noImprovementCount = 0;
-	NSUInteger generation = 1;
+	int noImprovementCount = 0;
+	int generation = 1;
 	
 	// 1. initialize vertex colors in random
-	for (NSUInteger i = 0; i < numberOfVertices; i++) {
-		newColorNumbers[i] = numberOfColors * (double)rand() / (RAND_MAX + 1.0);
+	for (int i = 0; i < n; i++) {
+		newColorNumbers[i] = c * (double)rand() / (RAND_MAX + 1.0);
 	}
 	
 	// 2. end judgement
-	newConflictCount = [self conflictCountWithColorNumbers:newColorNumbers];
-	[conflictHistory addObject:[NSNumber numberWithUnsignedInteger:newConflictCount]];
+	newConflictCount = [self numberOfConflictsWithColorNumbers:newColorNumbers];
+	[conflictHistory addObject:@(newConflictCount)];
 	while (newConflictCount) {
 		// if noImprovementCount exceeds its limit, end HC.
 		if (noImprovementCount > limit) { // fail to solve
 			if (newConflictCount < beforeConflictCount) {
-				memcpy(colorNumbers, newColorNumbers, numberOfVertices * sizeof(NSUInteger));
+				memcpy(colorNumbers, newColorNumbers, n * sizeof(int));
 			}
 			return conflictHistory;
 		}
 		
 		// 3. pick a conflict vertex
 		[self updateConflictVertexFlagsWithColorNumbers:newColorNumbers];
-		NSUInteger numberOfConflictVertices = 0;
-		for (int i = 0; i < numberOfVertices; i++) {
+		int numberOfConflictVertices = 0;
+		for (int i = 0; i < n; i++) {
 			numberOfConflictVertices += conflictVertexFlags[i]; // count the number of conflict vetices.
 		}
-		NSUInteger targetConflictVertexOrder = numberOfConflictVertices * (double)rand() / (RAND_MAX + 1.0) + 1;
-		NSUInteger targetConflictVertexIndex = 0;
-		NSUInteger conflictVertexOrder = 0;
-		for (int i = 0; i < numberOfVertices; i++) {
+		int targetConflictVertexOrder = numberOfConflictVertices * (double)rand() / (RAND_MAX + 1.0) + 1;
+		int targetConflictVertexIndex = 0;
+		int conflictVertexOrder = 0;
+		for (int i = 0; i < n; i++) {
 			conflictVertexOrder += conflictVertexFlags[i];
 			if (conflictVertexOrder == targetConflictVertexOrder) { // did find target conflict vertex
 				break;
@@ -228,23 +235,23 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 		}
 		
 		// 4. change a vertex color to minimize the conflict count
-		NSUInteger minConflictCount = newConflictCount;
-		NSUInteger unchangedColorConflictCount = newConflictCount;
-		NSUInteger unchangedTargetColorNumber = newColorNumbers[targetConflictVertexIndex];
-		NSUInteger canditateColorNumbers[numberOfColors - 1];
-		for (int i = 0; i < numberOfColors - 1; i++) {
+		int minConflictCount = newConflictCount;
+		int unchangedColorConflictCount = newConflictCount;
+		int unchangedTargetColorNumber = newColorNumbers[targetConflictVertexIndex];
+		int canditateColorNumbers[c - 1];
+		for (int i = 0; i < c - 1; i++) {
 			canditateColorNumbers[i] = -1; // initialize canditate color numbers with -1 (none)
 		}
-		NSUInteger canditateColorNumberIndex = 0;
-		NSUInteger tempConflictCount;
-		NSUInteger canditateColorNumber = newColorNumbers[targetConflictVertexIndex]; // initialize canditate color number with current color number
-		for (int i = 0; i < numberOfColors - 1; i++) {
-			canditateColorNumber = (canditateColorNumber + 1) % numberOfColors; // next canditate color number
+		int canditateColorNumberIndex = 0;
+		int tempConflictCount;
+		int canditateColorNumber = newColorNumbers[targetConflictVertexIndex]; // initialize canditate color number with current color number
+		for (int i = 0; i < c - 1; i++) {
+			canditateColorNumber = (canditateColorNumber + 1) % c; // next canditate color number
 			newColorNumbers[targetConflictVertexIndex] = canditateColorNumber;
-			tempConflictCount = [self conflictCountWithColorNumbers:newColorNumbers];
+			tempConflictCount = [self numberOfConflictsWithColorNumbers:newColorNumbers];
 			if (tempConflictCount < minConflictCount) {
 				minConflictCount = tempConflictCount;
-				for (int i = 0; i < numberOfColors - 1; i++) {
+				for (int i = 0; i < c - 1; i++) {
 					canditateColorNumbers[i] = -1; // reset canditate color numbers
 				}
 				canditateColorNumberIndex = 0;
@@ -254,37 +261,37 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 				canditateColorNumberIndex++;
 			}
 		}
-		NSUInteger numberOfCanditateColorNumbers = 0;
+		int numberOfCanditateColorNumbers = 0;
 		if (minConflictCount >= unchangedColorConflictCount) { // no improvement...
 			noImprovementCount++;
 			// revert to unchanged color
 			newColorNumbers[targetConflictVertexIndex] = unchangedTargetColorNumber;
 		} else { // improved!
 			noImprovementCount = 0;
-			for (int i = 0; i < numberOfColors - 1; i++) {
+			for (int i = 0; i < c - 1; i++) {
 				if (canditateColorNumbers[i] != -1) {
 					numberOfCanditateColorNumbers++; // count the number of canditate color numbers
 				}
 			}
-			NSUInteger newColorNumberIndex = numberOfCanditateColorNumbers * (double)rand() / (RAND_MAX + 1.0);
-			NSUInteger newColorNumber = canditateColorNumbers[newColorNumberIndex];
+			int newColorNumberIndex = numberOfCanditateColorNumbers * (double)rand() / (RAND_MAX + 1.0);
+			int newColorNumber = canditateColorNumbers[newColorNumberIndex];
 			newColorNumbers[targetConflictVertexIndex] = newColorNumber;
 			newConflictCount = minConflictCount;
 		}
 		generation++;
-		[conflictHistory addObject:[NSNumber numberWithUnsignedInteger:newConflictCount]];
+		[conflictHistory addObject:@(newConflictCount)];
 	}
 	
-	memcpy(colorNumbers, newColorNumbers, numberOfVertices * sizeof(NSUInteger));
+	memcpy(colorNumbers, newColorNumbers, n * sizeof(int));
 	return conflictHistory;
 }
 
-- (NSArray *)solveInIHCWithNoImprovementLimit:(NSUInteger)limit
-							maxIteration:(NSUInteger)maxIteration
+- (NSArray *)solveInIHCWithNoImprovementLimit:(int)limit
+							maxIteration:(int)maxIteration
 {
 	NSMutableArray *conflictCountHistory = [NSMutableArray array];
 
-	for (NSUInteger i = 0; i < maxIteration; i++) {
+	for (int i = 0; i < maxIteration; i++) {
 		NSArray *conflictCountHistoryInHC;
 		conflictCountHistoryInHC = [self solveInHCWithNoImprovementLimit:limit];
 		[conflictCountHistory addObjectsFromArray:conflictCountHistoryInHC];
@@ -297,106 +304,106 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 }
 
 - (NSArray *)solveInESIncludeParents:(BOOL)includeParents
-				numberOfParents:(NSUInteger)numberOfParents
-			   numberOfChildren:(NSUInteger)numberOfChildren
-				  maxNumberOfGenerations:(NSUInteger)maxNumberOfGenerations
+				numberOfParents:(int)numberOfParents
+			   numberOfChildren:(int)numberOfChildren
+				  maxNumberOfGenerations:(int)maxNumberOfGenerations
 {
 //	// Back-up before-state
-	NSUInteger beforeConflictCount = [self conflictCount];
-	NSUInteger *beforeConflictColorNumbers = calloc(numberOfVertices, sizeof(NSUInteger));
-	memcpy(beforeConflictColorNumbers, colorNumbers, numberOfVertices * sizeof(NSUInteger));
+	int beforeConflictCount = [self numberOfConflicts];
+	int *beforeConflictColorNumbers = calloc(n, sizeof(int));
+	memcpy(beforeConflictColorNumbers, colorNumbers, n * sizeof(int));
 	
 	NSMutableArray *conflictHistory = [NSMutableArray array];
-	NSUInteger aveConflictCount = 0;
+	int aveConflictCount = 0;
 	
-	NSUInteger **genes = calloc(numberOfParents + numberOfChildren, sizeof(NSUInteger *));
+	int **genes = calloc(numberOfParents + numberOfChildren, sizeof(int *));
 	for (int i = 0; i < numberOfParents + numberOfChildren; i++) {
-		genes[i] = calloc(numberOfVertices + 1, sizeof(NSUInteger)); // last element is conflictCount
+		genes[i] = calloc(n + 1, sizeof(int)); // last element is conflictCount
 	}
 	
 	// initialize parents with random colors
 	for (int i = 0; i < numberOfParents; i++) {
-		for (int j = 0; j < numberOfVertices; j++) {
-			genes[i][j] = numberOfColors * (double)rand() / (RAND_MAX + 1.0);
+		for (int j = 0; j < n; j++) {
+			genes[i][j] = c * (double)rand() / (RAND_MAX + 1.0);
 		}
-		genes[i][numberOfVertices] = [self conflictCountWithColorNumbers:genes[i]];
-		aveConflictCount += genes[i][numberOfVertices];
+		genes[i][n] = [self numberOfConflictsWithColorNumbers:genes[i]];
+		aveConflictCount += genes[i][n];
 	}
 	aveConflictCount /= numberOfParents;
 
 	// sort parents
-	qsort(genes, numberOfParents, sizeof(NSUInteger *), (int(*)(const void *, const void *))conflictCountCompare);
-	NSUInteger tempMinConflictCount = genes[0][numberOfVertices];
-	NSArray *conflictInfo = @[[NSNumber numberWithUnsignedInteger:genes[0][numberOfVertices]],
-							  [NSNumber numberWithUnsignedInteger:aveConflictCount],
-							  [NSNumber numberWithUnsignedInteger:genes[numberOfParents - 1][numberOfVertices]]];
+	qsort(genes, numberOfParents, sizeof(int *), (int(*)(const void *, const void *))conflictCountCompare);
+	int tempMinConflictCount = genes[0][n];
+	NSArray *conflictInfo = @[@(genes[0][n]),
+							  @(aveConflictCount),
+							  @(genes[numberOfParents - 1][n])];
 	[conflictHistory addObject:conflictInfo];
 	aveConflictCount = 0;
 
 	// evolution start
-	NSUInteger numberOfGenerations = 1;
+	int numberOfGenerations = 1;
 	while (tempMinConflictCount) {
 		// end judgement
 		// if noImprovementCount exceeds its limit, end ES
 		if (numberOfGenerations >= maxNumberOfGenerations) { // fail to solve
 			if (tempMinConflictCount > beforeConflictCount) { // not improved...
 				// If there's no improvement compared with before-state, restore before-state.
-				memcpy(colorNumbers, beforeConflictColorNumbers, numberOfVertices * sizeof(NSUInteger));
+				memcpy(colorNumbers, beforeConflictColorNumbers, n * sizeof(int));
 			} else { // improved!
 				// copy the best parent to colorNumbers
-				memcpy(colorNumbers, genes[0], numberOfVertices * sizeof(NSUInteger));
+				memcpy(colorNumbers, genes[0], n * sizeof(int));
 			}
 			break;
 		}
 		
 		// generate children
 		for (int i = numberOfParents; i < numberOfParents + numberOfChildren; i++) {
-			memcpy(genes[i], genes[(int)(numberOfParents * (double)rand() / (RAND_MAX + 1.0))], numberOfVertices * sizeof(NSUInteger)); // select a parent as a child
-			NSInteger targetIndex = numberOfVertices * (double)rand() / (RAND_MAX + 1.0); // mutate random index
-			NSUInteger tmpColorNumber = genes[i][targetIndex];
+			memcpy(genes[i], genes[(int)(numberOfParents * (double)rand() / (RAND_MAX + 1.0))], n * sizeof(int)); // select a parent as a child
+			NSInteger targetIndex = n * (double)rand() / (RAND_MAX + 1.0); // mutate random index
+			int tmpColorNumber = genes[i][targetIndex];
 			while (tmpColorNumber == genes[i][targetIndex]) { // mutate color at the index into random but different color
-				genes[i][targetIndex] = numberOfColors * (double)rand() / (RAND_MAX + 1.0);
+				genes[i][targetIndex] = c * (double)rand() / (RAND_MAX + 1.0);
 			}
-			genes[i][numberOfVertices] = [self conflictCountWithColorNumbers:genes[i]];
+			genes[i][n] = [self numberOfConflictsWithColorNumbers:genes[i]];
 		}
 
 		if (includeParents) {
 			// sort children and parents
-			qsort(genes, numberOfParents + numberOfChildren, sizeof(NSUInteger *), (int(*)(const void *, const void *))conflictCountCompare);
+			qsort(genes, numberOfParents + numberOfChildren, sizeof(int *), (int(*)(const void *, const void *))conflictCountCompare);
 		} else {
 			// sort children
-			qsort(genes + numberOfParents, numberOfChildren, sizeof(NSUInteger *), (int(*)(const void *, const void *))conflictCountCompare);
+			qsort(genes + numberOfParents, numberOfChildren, sizeof(int *), (int(*)(const void *, const void *))conflictCountCompare);
 			
 			// select good children as parents
 			for (int i = 0; i < numberOfParents; i++) {
-// /*				memcpy(genes[i], genes[numberOfParents + i], sizeof(NSUInteger) * numberOfVertices + 1); // I couldn't figure out why on earth this doesn't work!! */
-				for (int j = 0; j <= numberOfVertices; j++) {
+// /*				memcpy(genes[i], genes[numberOfParents + i], sizeof(int) * _n + 1); // I couldn't figure out why on earth this doesn't work!! */
+				for (int j = 0; j <= n; j++) {
 					genes[i][j] = genes[numberOfParents + i][j];
 				}
 			}
 		}
 		
 		// check if improved
-		if (genes[0][numberOfVertices] < tempMinConflictCount) { // improved
-			tempMinConflictCount = genes[0][numberOfVertices];
+		if (genes[0][n] < tempMinConflictCount) { // improved
+			tempMinConflictCount = genes[0][n];
 		}
 		
 		// add conflictInfo into conflictHistory
 		aveConflictCount = 0;
 		for (int i = 0; i < numberOfParents; i++) {
-			aveConflictCount += genes[i][numberOfVertices];
+			aveConflictCount += genes[i][n];
 		}
 		aveConflictCount /= numberOfParents;
-		conflictInfo = @[[NSNumber numberWithUnsignedInteger:genes[0][numberOfVertices]],
-						 [NSNumber numberWithUnsignedInteger:aveConflictCount],
-						 [NSNumber numberWithUnsignedInteger:genes[numberOfParents - 1][numberOfVertices]]];
+		conflictInfo = @[@(genes[0][n]),
+						 @(aveConflictCount),
+						 @(genes[numberOfParents - 1][n])];
 		[conflictHistory addObject:conflictInfo];
 		
 		numberOfGenerations++;
 	}
 	
 	if (tempMinConflictCount == 0) { // success
-		memcpy(colorNumbers, genes[0], sizeof(NSUInteger) * numberOfVertices);
+		memcpy(colorNumbers, genes[0], sizeof(int) * n);
 	}
 	free(beforeConflictColorNumbers);
 	for (int i = 0; i < numberOfParents + numberOfChildren; i++) {
@@ -407,63 +414,63 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 	return conflictHistory; // success!
 }
 
-- (NSArray *)solveInGAWithPopulationSize:(NSUInteger)populationSize
-					  numberOfCrossovers:(NSUInteger)numberOfCrossovers
+- (NSArray *)solveInGAWithPopulationSize:(int)populationSize
+					  numberOfCrossovers:(int)numberOfCrossovers
 							mutationRate:(double)mutationRate
 								 scaling:(UTGAScaling)scaling
-						  numberOfElites:(NSUInteger)numberOfElites
-				  maxNumberOfGenerations:(NSUInteger)maxNumberOfGenerations
+						  numberOfElites:(int)numberOfElites
+				  maxNumberOfGenerations:(int)maxNumberOfGenerations
 {
 	if (numberOfElites > populationSize) {
 		return nil;
 	}
 	NSMutableArray *fitnessHistory = [NSMutableArray array]; // data to return
 	NSArray *fitnessInfo;
-	NSUInteger numberOfGeneration = 1;
+	int numberOfGeneration = 1;
 	
 	double *parentFitnesses	= calloc(populationSize, sizeof(double));
-	NSUInteger **parents	= calloc(populationSize, sizeof(NSUInteger *));
-	NSUInteger **children	= calloc(populationSize, sizeof(NSUInteger *));
-	for (NSUInteger i = 0; i < populationSize; i++) {
-		parents[i]	= calloc(numberOfVertices + 1, sizeof(NSUInteger)); // last element is conflictCount
+	int **parents	= calloc(populationSize, sizeof(int *));
+	int **children	= calloc(populationSize, sizeof(int *));
+	for (int i = 0; i < populationSize; i++) {
+		parents[i]	= calloc(n + 1, sizeof(int)); // last element is conflictCount
 	}
-	for (NSUInteger i = 0; i < populationSize; i++) {
-		children[i]	= calloc(numberOfVertices + 1, sizeof(NSUInteger)); // last element is conflictCount
+	for (int i = 0; i < populationSize; i++) {
+		children[i]	= calloc(n + 1, sizeof(int)); // last element is conflictCount
 	}
 	
 	// 1. Initialize parents with random colors
-	for (NSUInteger i = 0; i < populationSize; i++) {
-		for (NSUInteger j = 0; j < numberOfVertices; j++) {
-			parents[i][j] = numberOfColors * (double)rand() / (RAND_MAX + 1.0);
+	for (int i = 0; i < populationSize; i++) {
+		for (int j = 0; j < n; j++) {
+			parents[i][j] = c * (double)rand() / (RAND_MAX + 1.0);
 		}
-		parents[i][numberOfVertices] = [self conflictCountWithColorNumbers:parents[i]]; // put conflictCount into the last element
+		parents[i][n] = [self numberOfConflictsWithColorNumbers:parents[i]]; // put conflictCount into the last element
 	}
 	// sort parents by conflictCounts in ascending order.
-	qsort(parents, populationSize, sizeof(NSUInteger *), (int(*)(const void *, const void *))conflictCountCompare);
+	qsort(parents, populationSize, sizeof(int *), (int(*)(const void *, const void *))conflictCountCompare);
 	
 	while (1) {
 		// 3-a. Evaluate parents (Evaluate before end judgement so that it can save fitnessHistory for each generation)
 		// calculate parentFitnesses
 		double totalParentFitness = 0.0;
-		for (NSUInteger i = 0; i < populationSize; i++) {
-			parentFitnesses[i] = 1.0 - ((double)(parents[i][numberOfVertices]) / numberOfEdges);
+		for (int i = 0; i < populationSize; i++) {
+			parentFitnesses[i] = 1.0 - ((double)(parents[i][n]) / m);
 			totalParentFitness += parentFitnesses[i];
 		}
-		fitnessInfo = @[[NSNumber numberWithDouble:parentFitnesses[0]],
-						[NSNumber numberWithDouble:totalParentFitness / populationSize],
-						[NSNumber numberWithDouble:parentFitnesses[populationSize - 1]]];
+		fitnessInfo = @[@(parentFitnesses[0]),
+						@(totalParentFitness / populationSize),
+						@(parentFitnesses[populationSize - 1])];
 		[fitnessHistory addObject:fitnessInfo];
 		
 		// 2-a. End Judgement (SUCCESS)
-		if (parents[0][numberOfVertices] == 0) { // no conflict, success
-			memcpy(colorNumbers, parents[0], numberOfVertices * sizeof(NSUInteger));
+		if (parents[0][n] == 0) { // no conflict, success
+			memcpy(colorNumbers, parents[0], n * sizeof(int));
 			break;
 		}
 		// 2-b. End Judgement (FAILURE)
 		if (numberOfGeneration >= maxNumberOfGenerations) {
 			// compare old color number and new color number
-			if ([self conflictCountWithColorNumbers:parents[0]] < [self conflictCount]) { // improved
-				memcpy(colorNumbers, children[0], numberOfVertices * sizeof(NSUInteger));
+			if ([self numberOfConflictsWithColorNumbers:parents[0]] < [self numberOfConflicts]) { // improved
+				memcpy(colorNumbers, children[0], n * sizeof(int));
 			}
 			break;
 		}
@@ -482,7 +489,7 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 					double a = -parentFitnesses[populationSize - 1] / (parentFitnesses[0] - parentFitnesses[populationSize - 1]);
 					double b = 1.0 / (parentFitnesses[0] - parentFitnesses[populationSize - 1]);
 					totalParentFitness = 0.0;
-					for (NSUInteger i = 0; i < populationSize; i++) {
+					for (int i = 0; i < populationSize; i++) {
 						parentFitnesses[i] = a + b * parentFitnesses[i];
 						totalParentFitness += parentFitnesses[i];
 					}
@@ -493,7 +500,7 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 			{
 				double power = 10.0;
 				totalParentFitness = 0.0;
-				for (NSUInteger i = 0; i < populationSize; i++) {
+				for (int i = 0; i < populationSize; i++) {
 					parentFitnesses[i] = pow(power, parentFitnesses[i]);
 					totalParentFitness += parentFitnesses[i];
 				}
@@ -504,27 +511,27 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 		}
 		
 		// 5-a. Generate crossover mask
-		for (NSUInteger i = 0; i < numberOfVertices; i++) { // initialize
+		for (int i = 0; i < n; i++) { // initialize
 			crossoverMask[i] = 0;
 		}
 		switch (numberOfCrossovers) {
 			case 0: // uniform crossover
-				for (NSUInteger i = 0; i < numberOfVertices; i++) {
+				for (int i = 0; i < n; i++) {
 					crossoverMask[i] = 2.0 * (double)rand() / (RAND_MAX + 1.0); // 0 or 1
 				}
 				break;
 			default: // n-time crossover
 			{
-				NSUInteger crossover = 0;
+				int crossover = 0;
 				while (crossover != numberOfCrossovers) {
-					NSUInteger crossoverIndex = (int)((numberOfVertices - 1) * (double)rand() / (RAND_MAX + 1.0) + 1); // prevent 0
+					int crossoverIndex = (int)((n - 1) * (double)rand() / (RAND_MAX + 1.0) + 1); // prevent 0
 					if (crossoverMask[crossoverIndex] == 0) {
 						crossoverMask[crossoverIndex] = 1;
 						crossover++;
 					};
 				}
-				NSUInteger currentMask = crossoverMask[0];
-				for (NSUInteger i = 1; i < numberOfVertices; i++) {
+				int currentMask = crossoverMask[0];
+				for (int i = 1; i < n; i++) {
 					if (crossoverMask[i] == 1) { // change mask at this point
 						if (crossoverMask[i-1] == 0) {
 							currentMask = 1;
@@ -541,16 +548,16 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 		}
 		
 		// 4. Selection
-		for (NSUInteger i = numberOfElites; i < populationSize; i += 2) {
+		for (int i = numberOfElites; i < populationSize; i += 2) {
 			double winValue1, winValue2;
-			NSUInteger winIndex1 = 0;
-			NSUInteger winIndex2 = 0;
+			int winIndex1 = 0;
+			int winIndex2 = 0;
 			// if rouletteValue get greater than winvalue, the index at that time will be target index.
 			double rouletteValue = 0.0;
 			while (winIndex1 == winIndex2) {
 				winValue1 = totalParentFitness * (double)rand() / (RAND_MAX + 1.0);
 				winValue2 = totalParentFitness * (double)rand() / (RAND_MAX + 1.0);
-				for (NSUInteger j = 0; j < populationSize; j++) {
+				for (int j = 0; j < populationSize; j++) {
 					rouletteValue += parentFitnesses[j];
 					if (rouletteValue > winValue1) {
 						winIndex1 = j;
@@ -558,7 +565,7 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 					}
 				}
 				rouletteValue = 0.0;
-				for (NSUInteger j = 0; j < populationSize; j++) {
+				for (int j = 0; j < populationSize; j++) {
 					rouletteValue += parentFitnesses[j];
 					if (rouletteValue > winValue2) {
 						winIndex2 = j;
@@ -568,7 +575,7 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 			}
 			
 			// 5-b. Crossover
-			for (NSUInteger j = 0; j < numberOfVertices; j++) {
+			for (int j = 0; j < n; j++) {
 				if (i+1 >= populationSize) {
 					if (crossoverMask[i] == 0) {
 						children[i][j] = parents[winIndex1][j];
@@ -588,39 +595,39 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 		}
 		
 		// 6. Mutation
-		for (NSUInteger i = numberOfElites; i < populationSize; i++) {
-			for (NSUInteger j = 0; j < numberOfVertices; j++) {
+		for (int i = numberOfElites; i < populationSize; i++) {
+			for (int j = 0; j < n; j++) {
 				if (((double)rand() / (RAND_MAX + 1.0)) < mutationRate) {
 					// mutate
-					NSUInteger colorIncrement = (numberOfColors - 1) * (double)rand() / (RAND_MAX + 1.0);
-					children[i][j] = (children[i][j] + colorIncrement) % numberOfColors; // change to different color
+					int colorIncrement = (c - 1) * (double)rand() / (RAND_MAX + 1.0);
+					children[i][j] = (children[i][j] + colorIncrement) % c; // change to different color
 				}
 			}
 		}
 		
 		// 7. Insert elites
-		for (NSUInteger i = 0; i < numberOfElites; i++) {
-			memcpy(children[i], parents[i], (numberOfVertices + 1) * sizeof(NSUInteger));
+		for (int i = 0; i < numberOfElites; i++) {
+			memcpy(children[i], parents[i], (n + 1) * sizeof(int));
 		}
 		
 		// calculate conflict counts of children
-		for (NSUInteger i = numberOfElites; i < populationSize; i++) {
-			children[i][numberOfVertices] = [self conflictCountWithColorNumbers:children[i]];
+		for (int i = numberOfElites; i < populationSize; i++) {
+			children[i][n] = [self numberOfConflictsWithColorNumbers:children[i]];
 		}
 		
 		// sort children by conflictCounts in ascending order.
-		qsort(children, populationSize, sizeof(NSUInteger *), (int(*)(const void *, const void *))conflictCountCompare);
+		qsort(children, populationSize, sizeof(int *), (int(*)(const void *, const void *))conflictCountCompare);
 		
 		// change generation
-		for (NSUInteger i = 0; i < populationSize; i++) {
-			memcpy(parents[i], children[i], (numberOfVertices + 1) * sizeof(NSUInteger));
+		for (int i = 0; i < populationSize; i++) {
+			memcpy(parents[i], children[i], (n + 1) * sizeof(int));
 		}
 		
 		numberOfGeneration++;
 	}
 	
 	// free memory
-	for (NSUInteger i = 0; i < populationSize; i++) {
+	for (int i = 0; i < populationSize; i++) {
 		free(parents[i]);
 		free(children[i]);
 	}
@@ -631,67 +638,67 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 	return fitnessHistory;
 }
 
-- (NSArray *)solveInHGAWithPopulationSize:(NSUInteger)populationSize
-					   numberOfCrossovers:(NSUInteger)numberOfCrossovers
+- (NSArray *)solveInHGAWithPopulationSize:(int)populationSize
+					   numberOfCrossovers:(int)numberOfCrossovers
 							 mutationRate:(double)mutationRate
 								  scaling:(UTGAScaling)scaling
-						   numberOfElites:(NSUInteger)numberOfElites
-					numberOfChildrenForHC:(NSUInteger)numberOfChildrenForHC
-					   noImprovementLimit:(NSUInteger)limit
-				   maxNumberOfGenerations:(NSUInteger)maxNumberOfGenerations
+						   numberOfElites:(int)numberOfElites
+					numberOfChildrenForHC:(int)numberOfChildrenForHC
+					   noImprovementLimit:(int)limit
+				   maxNumberOfGenerations:(int)maxNumberOfGenerations
 {
 	if (numberOfElites > populationSize) {
 		return nil;
 	}
 	NSMutableArray *fitnessHistory = [NSMutableArray array]; // data to return
 	NSArray *fitnessInfo;
-	NSUInteger numberOfGeneration = 1;
+	int numberOfGeneration = 1;
 	
 	double *parentFitnesses	= calloc(populationSize, sizeof(double));
-	NSUInteger **parents	= calloc(populationSize, sizeof(NSUInteger *));
-	NSUInteger **children	= calloc(populationSize, sizeof(NSUInteger *));
-	for (NSUInteger i = 0; i < populationSize; i++) {
-		parents[i]	= calloc(numberOfVertices + 1, sizeof(NSUInteger)); // last element is conflictCount
+	int **parents	= calloc(populationSize, sizeof(int *));
+	int **children	= calloc(populationSize, sizeof(int *));
+	for (int i = 0; i < populationSize; i++) {
+		parents[i]	= calloc(n + 1, sizeof(int)); // last element is conflictCount
 	}
-	for (NSUInteger i = 0; i < populationSize; i++) {
-		children[i]	= calloc(numberOfVertices + 1, sizeof(NSUInteger)); // last element is conflictCount
+	for (int i = 0; i < populationSize; i++) {
+		children[i]	= calloc(n + 1, sizeof(int)); // last element is conflictCount
 	}
 	BOOL eliteDidChange = YES;
 	
 	// 1. Initialize parents with random colors
-	for (NSUInteger i = 0; i < populationSize; i++) {
-		for (NSUInteger j = 0; j < numberOfVertices; j++) {
-			parents[i][j] = numberOfColors * (double)rand() / (RAND_MAX + 1.0);
+	for (int i = 0; i < populationSize; i++) {
+		for (int j = 0; j < n; j++) {
+			parents[i][j] = c * (double)rand() / (RAND_MAX + 1.0);
 		}
-		parents[i][numberOfVertices] = [self conflictCountWithColorNumbers:parents[i]]; // put conflictCount into the last element
+		parents[i][n] = [self numberOfConflictsWithColorNumbers:parents[i]]; // put conflictCount into the last element
 	}
 	// sort parents by conflictCounts in ascending order.
-	qsort(parents, populationSize, sizeof(NSUInteger *), (int(*)(const void *, const void *))conflictCountCompare);
+	qsort(parents, populationSize, sizeof(int *), (int(*)(const void *, const void *))conflictCountCompare);
 	
 	while (1) {
 		// 3-a. Evaluate parents (Evaluate before end judgement so that it can save fitnessHistory for each generation)
 		// calculate parentFitnesses
 		double totalParentFitness = 0.0;
-		for (NSUInteger i = 0; i < populationSize; i++) {
-			parentFitnesses[i] = 1.0 - ((double)(parents[i][numberOfVertices]) / numberOfEdges);
+		for (int i = 0; i < populationSize; i++) {
+			parentFitnesses[i] = 1.0 - ((double)(parents[i][n]) / m);
 			totalParentFitness += parentFitnesses[i];
 		}
-		fitnessInfo = @[[NSNumber numberWithDouble:parentFitnesses[0]],
-						[NSNumber numberWithDouble:totalParentFitness / populationSize],
-						[NSNumber numberWithDouble:parentFitnesses[populationSize - 1]]];
+		fitnessInfo = @[@(parentFitnesses[0]),
+						@(totalParentFitness / populationSize),
+						@(parentFitnesses[populationSize - 1])];
 		[fitnessHistory addObject:fitnessInfo];
 		
 		// 2-a. End Judgement (SUCCESS)
-		if (parents[0][numberOfVertices] == 0) { // no conflict, success
-			memcpy(colorNumbers, parents[0], numberOfVertices * sizeof(NSUInteger));
+		if (parents[0][n] == 0) { // no conflict, success
+			memcpy(colorNumbers, parents[0], n * sizeof(int));
 			break;
 		}
 
 		if (numberOfGeneration >= maxNumberOfGenerations
 			|| eliteDidChange == NO) {
 			// compare old color number and new color number
-			if ([self conflictCountWithColorNumbers:parents[0]] < [self conflictCount]) { // improved
-				memcpy(colorNumbers, children[0], numberOfVertices * sizeof(NSUInteger));
+			if ([self numberOfConflictsWithColorNumbers:parents[0]] < [self numberOfConflicts]) { // improved
+				memcpy(colorNumbers, children[0], n * sizeof(int));
 			}
 			break;
 		}
@@ -710,7 +717,7 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 					double a = -parentFitnesses[populationSize - 1] / (parentFitnesses[0] - parentFitnesses[populationSize - 1]);
 					double b = 1.0 / (parentFitnesses[0] - parentFitnesses[populationSize - 1]);
 					totalParentFitness = 0.0;
-					for (NSUInteger i = 0; i < populationSize; i++) {
+					for (int i = 0; i < populationSize; i++) {
 						parentFitnesses[i] = a + b * parentFitnesses[i];
 						totalParentFitness += parentFitnesses[i];
 					}
@@ -721,7 +728,7 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 			{
 				double power = 10.0;
 				totalParentFitness = 0.0;
-				for (NSUInteger i = 0; i < populationSize; i++) {
+				for (int i = 0; i < populationSize; i++) {
 					parentFitnesses[i] = pow(power, parentFitnesses[i]);
 					totalParentFitness += parentFitnesses[i];
 				}
@@ -732,27 +739,27 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 		}
 		
 		// 5-a. Generate crossover mask
-		for (NSUInteger i = 0; i < numberOfVertices; i++) { // initialize
+		for (int i = 0; i < n; i++) { // initialize
 			crossoverMask[i] = 0;
 		}
 		switch (numberOfCrossovers) {
 			case 0: // uniform crossover
-				for (NSUInteger i = 0; i < numberOfVertices; i++) {
+				for (int i = 0; i < n; i++) {
 					crossoverMask[i] = 2.0 * (double)rand() / (RAND_MAX + 1.0); // 0 or 1
 				}
 				break;
 			default: // n-time crossover
 			{
-				NSUInteger crossover = 0;
+				int crossover = 0;
 				while (crossover != numberOfCrossovers) {
-					NSUInteger crossoverIndex = (int)((numberOfVertices - 1) * (double)rand() / (RAND_MAX + 1.0) + 1); // prevent 0
+					int crossoverIndex = (int)((n - 1) * (double)rand() / (RAND_MAX + 1.0) + 1); // prevent 0
 					if (crossoverMask[crossoverIndex] == 0) {
 						crossoverMask[crossoverIndex] = 1;
 						crossover++;
 					};
 				}
-				NSUInteger currentMask = crossoverMask[0];
-				for (NSUInteger i = 1; i < numberOfVertices; i++) {
+				int currentMask = crossoverMask[0];
+				for (int i = 1; i < n; i++) {
 					if (crossoverMask[i] == 1) { // change mask at this point
 						if (crossoverMask[i-1] == 0) {
 							currentMask = 1;
@@ -769,16 +776,16 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 		}
 		
 		// 4. Selection
-		for (NSUInteger i = numberOfElites; i < populationSize; i += 2) {
+		for (int i = numberOfElites; i < populationSize; i += 2) {
 			double winValue1, winValue2;
-			NSUInteger winIndex1 = 0;
-			NSUInteger winIndex2 = 0;
+			int winIndex1 = 0;
+			int winIndex2 = 0;
 			// if rouletteValue get greater than winvalue, the index at that time will be target index.
 			double rouletteValue = 0.0;
 			while (winIndex1 == winIndex2) {
 				winValue1 = totalParentFitness * (double)rand() / (RAND_MAX + 1.0);
 				winValue2 = totalParentFitness * (double)rand() / (RAND_MAX + 1.0);
-				for (NSUInteger j = 0; j < populationSize; j++) {
+				for (int j = 0; j < populationSize; j++) {
 					rouletteValue += parentFitnesses[j];
 					if (rouletteValue > winValue1) {
 						winIndex1 = j;
@@ -786,7 +793,7 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 					}
 				}
 				rouletteValue = 0.0;
-				for (NSUInteger j = 0; j < populationSize; j++) {
+				for (int j = 0; j < populationSize; j++) {
 					rouletteValue += parentFitnesses[j];
 					if (rouletteValue > winValue2) {
 						winIndex2 = j;
@@ -796,7 +803,7 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 			}
 			
 			// 5-b. Crossover
-			for (NSUInteger j = 0; j < numberOfVertices; j++) {
+			for (int j = 0; j < n; j++) {
 				if (i+1 >= populationSize) {
 					if (crossoverMask[i] == 0) {
 						children[i][j] = parents[winIndex1][j];
@@ -816,40 +823,40 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 		}
 		
 		// 6. Mutation
-		for (NSUInteger i = numberOfElites; i < populationSize; i++) {
-			for (NSUInteger j = 0; j < numberOfVertices; j++) {
+		for (int i = numberOfElites; i < populationSize; i++) {
+			for (int j = 0; j < n; j++) {
 				if (((double)rand() / (RAND_MAX + 1.0)) < mutationRate) {
 					// mutate
-					NSUInteger colorIncrement = (numberOfColors - 1) * (double)rand() / (RAND_MAX + 1.0);
-					children[i][j] = (children[i][j] + colorIncrement) % numberOfColors; // change to different color
+					int colorIncrement = (c - 1) * (double)rand() / (RAND_MAX + 1.0);
+					children[i][j] = (children[i][j] + colorIncrement) % c; // change to different color
 				}
 			}
 		}
 		
 		// 7. Insert elites
-		for (NSUInteger i = 0; i < numberOfElites; i++) {
-			memcpy(children[i], parents[i], (numberOfVertices + 1) * sizeof(NSUInteger));
+		for (int i = 0; i < numberOfElites; i++) {
+			memcpy(children[i], parents[i], (n + 1) * sizeof(int));
 		}
 		
 		// calculate conflict counts of children
-		for (NSUInteger i = numberOfElites; i < populationSize; i++) {
-			children[i][numberOfVertices] = [self conflictCountWithColorNumbers:children[i]];
+		for (int i = numberOfElites; i < populationSize; i++) {
+			children[i][n] = [self numberOfConflictsWithColorNumbers:children[i]];
 		}
 		// sort children by conflictCounts in ascending order.
-		qsort(children, populationSize, sizeof(NSUInteger *), (int(*)(const void *, const void *))conflictCountCompare);
+		qsort(children, populationSize, sizeof(int *), (int(*)(const void *, const void *))conflictCountCompare);
 		
 		// 8. Apply Hill Climb method
-		for (NSUInteger i = 0; i < numberOfChildrenForHC; i++) {
+		for (int i = 0; i < numberOfChildrenForHC; i++) {
 			[self applyHCWithNoImprovementLimit:limit colorNumbers:children[i]];
-			if (children[i][numberOfVertices] == 0) {
-				memcpy(colorNumbers, children[i], numberOfVertices * sizeof(NSUInteger));
+			if (children[i][n] == 0) {
+				memcpy(colorNumbers, children[i], n * sizeof(int));
 				
-				fitnessInfo = @[[NSNumber numberWithDouble:1.0],
-								[NSNumber numberWithDouble:[fitnessInfo[1] doubleValue]],
-								[NSNumber numberWithDouble:[fitnessInfo[2] doubleValue]]];
+				fitnessInfo = @[@1.0,
+								@([fitnessInfo[1] doubleValue]),
+								@([fitnessInfo[2] doubleValue])];
 				[fitnessHistory addObject:fitnessInfo];
 				
-				for (NSUInteger i = 0; i < populationSize; i++) {
+				for (int i = 0; i < populationSize; i++) {
 					free(parents[i]);
 					free(children[i]);
 				}
@@ -862,15 +869,15 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 		}
 		
 		// change generation
-		for (NSUInteger i = 0; i < populationSize; i++) {
-			memcpy(parents[i], children[i], (numberOfVertices + 1) * sizeof(NSUInteger));
+		for (int i = 0; i < populationSize; i++) {
+			memcpy(parents[i], children[i], (n + 1) * sizeof(int));
 		}
 		
 		numberOfGeneration++;
 	}
 	
 	// free memory
-	for (NSUInteger i = 0; i < populationSize; i++) {
+	for (int i = 0; i < populationSize; i++) {
 		free(parents[i]);
 		free(children[i]);
 	}
@@ -881,23 +888,23 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 	return fitnessHistory;
 }
 
-- (NSArray *)applyHCWithNoImprovementLimit:(NSUInteger)limit
-						 colorNumbers:(NSUInteger *)numbers
+- (NSArray *)applyHCWithNoImprovementLimit:(int)limit
+						 colorNumbers:(int *)numbers
 
 {
-	NSUInteger newColorNumbers[numberOfVertices + 1]; // the last element is new number of conflicts.
+	int newColorNumbers[n + 1]; // the last element is new number of conflicts.
 //	NSMutableArray *conflictHistory = [NSMutableArray array];
-	NSUInteger noImprovementCount = 0;
-	NSUInteger generation = 1;
+	int noImprovementCount = 0;
+	int generation = 1;
 	
 	// 1. initialize newColorNumbers with numbers
-	for (int i = 0; i < numberOfVertices + 1; i++) {
+	for (int i = 0; i < n + 1; i++) {
 		newColorNumbers[i] = numbers[i];
 	}
 		
 	// 2. end judgement
-//	[conflictHistory addObject:[NSNumber numberWithUnsignedInteger:newColorNumbers[numberOfVertices]]];
-	while (newColorNumbers[numberOfVertices]) {
+//	[conflictHistory addObject:[NSNumber numberWithUnsignedInteger:newColorNumbers[_n]]];
+	while (newColorNumbers[n]) {
 		// if noImprovementCount exceeds its limit, end HC.
 		if (noImprovementCount > limit) { // fail to solve
 //			return conflictHistory; // discard color changes
@@ -906,14 +913,14 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 		
 		// 3. pick a conflict vertex
 		[self updateConflictVertexFlagsWithColorNumbers:newColorNumbers];
-		NSUInteger numberOfConflictVertices = 0;
-		for (int i = 0; i < numberOfVertices; i++) {
+		int numberOfConflictVertices = 0;
+		for (int i = 0; i < n; i++) {
 			numberOfConflictVertices += conflictVertexFlags[i]; // count the number of conflict vetices.
 		}
-		NSUInteger targetConflictVertexOrder = numberOfConflictVertices * (double)rand() / (RAND_MAX + 1.0) + 1;
-		NSUInteger targetConflictVertexIndex = 0;
-		NSUInteger conflictVertexOrder = 0;
-		for (int i = 0; i < numberOfVertices; i++) {
+		int targetConflictVertexOrder = numberOfConflictVertices * (double)rand() / (RAND_MAX + 1.0) + 1;
+		int targetConflictVertexIndex = 0;
+		int conflictVertexOrder = 0;
+		for (int i = 0; i < n; i++) {
 			conflictVertexOrder += conflictVertexFlags[i];
 			if (conflictVertexOrder == targetConflictVertexOrder) { // did find target conflict vertex
 				break;
@@ -922,23 +929,23 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 		}
 		
 		// 4. change a vertex color to minimize the conflict count
-		NSUInteger minConflictCount = newColorNumbers[numberOfVertices];
-		NSUInteger unchangedColorConflictCount = newColorNumbers[numberOfVertices];
-		NSUInteger unchangedTargetColorNumber = newColorNumbers[targetConflictVertexIndex];
-		NSUInteger canditateColorNumbers[numberOfColors - 1];
-		for (int i = 0; i < numberOfColors - 1; i++) {
+		int minConflictCount = newColorNumbers[n];
+		int unchangedColorConflictCount = newColorNumbers[n];
+		int unchangedTargetColorNumber = newColorNumbers[targetConflictVertexIndex];
+		int canditateColorNumbers[c - 1];
+		for (int i = 0; i < c - 1; i++) {
 			canditateColorNumbers[i] = -1; // initialize canditate color numbers with -1 (none)
 		}
-		NSUInteger canditateColorNumberIndex = 0;
-		NSUInteger tempConflictCount;
-		NSUInteger canditateColorNumber = newColorNumbers[targetConflictVertexIndex]; // initialize canditate color number with current color number
-		for (int i = 0; i < numberOfColors - 1; i++) {
-			canditateColorNumber = (canditateColorNumber + 1) % numberOfColors; // next canditate color number
+		int canditateColorNumberIndex = 0;
+		int tempConflictCount;
+		int canditateColorNumber = newColorNumbers[targetConflictVertexIndex]; // initialize canditate color number with current color number
+		for (int i = 0; i < c - 1; i++) {
+			canditateColorNumber = (canditateColorNumber + 1) % c; // next canditate color number
 			newColorNumbers[targetConflictVertexIndex] = canditateColorNumber;
-			tempConflictCount = [self conflictCountWithColorNumbers:newColorNumbers];
+			tempConflictCount = [self numberOfConflictsWithColorNumbers:newColorNumbers];
 			if (tempConflictCount < minConflictCount) {
 				minConflictCount = tempConflictCount;
-				for (int i = 0; i < numberOfColors - 1; i++) {
+				for (int i = 0; i < c - 1; i++) {
 					canditateColorNumbers[i] = -1; // reset canditate color numbers
 				}
 				canditateColorNumberIndex = 0;
@@ -948,29 +955,29 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 				canditateColorNumberIndex++;
 			}
 		}
-		NSUInteger numberOfCanditateColorNumbers = 0;
+		int numberOfCanditateColorNumbers = 0;
 		if (minConflictCount >= unchangedColorConflictCount) { // no improvement...
 			noImprovementCount++;
 			// revert to unchanged color
 			newColorNumbers[targetConflictVertexIndex] = unchangedTargetColorNumber;
 		} else { // improved!
 			noImprovementCount = 0;
-			for (int i = 0; i < numberOfColors - 1; i++) {
+			for (int i = 0; i < c - 1; i++) {
 				if (canditateColorNumbers[i] != -1) {
 					numberOfCanditateColorNumbers++; // count the number of canditate color numbers
 				}
 			}
-			NSUInteger newColorNumberIndex = numberOfCanditateColorNumbers * (double)rand() / (RAND_MAX + 1.0);
-			NSUInteger newColorNumber = canditateColorNumbers[newColorNumberIndex];
+			int newColorNumberIndex = numberOfCanditateColorNumbers * (double)rand() / (RAND_MAX + 1.0);
+			int newColorNumber = canditateColorNumbers[newColorNumberIndex];
 			newColorNumbers[targetConflictVertexIndex] = newColorNumber;
-			newColorNumbers[numberOfVertices] = minConflictCount;
+			newColorNumbers[n] = minConflictCount;
 		}
 		generation++;
-//		[conflictHistory addObject:[NSNumber numberWithUnsignedInteger:newColorNumbers[numberOfVertices]]];
+//		[conflictHistory addObject:[NSNumber numberWithUnsignedInteger:newColorNumbers[_n]]];
 	}
 	
 	// if succeeded, update colorNumbers
-	for (int i = 0; i < numberOfVertices + 1; i++) {
+	for (int i = 0; i < n + 1; i++) {
 		numbers[i] = newColorNumbers[i];
 	}
 //	printf("HC gen = %d\n", generation);
@@ -981,8 +988,8 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 
 - (BOOL)solving
 {
-	NSUInteger editedAmount = 0;
-	for (NSUInteger i = 0; i < numberOfVertices; i++) {
+	int editedAmount = 0;
+	for (int i = 0; i < n; i++) {
 		editedAmount += colorNumbers[i];
 	}
 	if (editedAmount) { // If color numbers are changed, this problem is being solved.
@@ -997,9 +1004,9 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 
 - (void)printMatrix
 {
-	for (NSUInteger i = 0; i < numberOfVertices; i++) {
-		for (NSUInteger j = 0; j < numberOfVertices; j++) {
-			printf("%lu ", (unsigned long)adjacencyMatrix[i * numberOfVertices + j]);
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j < n; j++) {
+			printf("%lu ", (unsigned long)A[i * n + j]);
 		}
 		printf("\n");
 	}
@@ -1008,7 +1015,7 @@ int conflictCountCompare(const NSUInteger *a, const NSUInteger *b)
 
 - (void)dealloc
 {
-	free(adjacencyMatrix);
+	free(A);
 	free(colorNumbers);
 	free(conflictVertexFlags);
 	free(randomIndexMap);

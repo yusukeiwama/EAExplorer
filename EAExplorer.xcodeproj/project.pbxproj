@@ -16,7 +16,6 @@
 		43519B4E180AB3C80068A070 /* UTAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 43519B4D180AB3C80068A070 /* UTAppDelegate.m */; };
 		43519B51180AB3C80068A070 /* Main_iPhone.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 43519B4F180AB3C80068A070 /* Main_iPhone.storyboard */; };
 		43519B54180AB3C80068A070 /* Main_iPad.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 43519B52180AB3C80068A070 /* Main_iPad.storyboard */; };
-		43519B57180AB3C80068A070 /* UTViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 43519B56180AB3C80068A070 /* UTViewController.m */; };
 		43519B59180AB3C80068A070 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 43519B58180AB3C80068A070 /* Images.xcassets */; };
 		43519B60180AB3C80068A070 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 43519B5F180AB3C80068A070 /* XCTest.framework */; };
 		43519B61180AB3C80068A070 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 43519B3D180AB3C70068A070 /* Foundation.framework */; };
@@ -56,8 +55,6 @@
 		43519B4D180AB3C80068A070 /* UTAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = UTAppDelegate.m; sourceTree = "<group>"; };
 		43519B50180AB3C80068A070 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main_iPhone.storyboard; sourceTree = "<group>"; };
 		43519B53180AB3C80068A070 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main_iPad.storyboard; sourceTree = "<group>"; };
-		43519B55180AB3C80068A070 /* UTViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UTViewController.h; sourceTree = "<group>"; };
-		43519B56180AB3C80068A070 /* UTViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = UTViewController.m; sourceTree = "<group>"; };
 		43519B58180AB3C80068A070 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		43519B5E180AB3C80068A070 /* EAExplorerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = EAExplorerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		43519B5F180AB3C80068A070 /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
@@ -105,6 +102,8 @@
 		4319738B1811086C0006B2B2 /* View */ = {
 			isa = PBXGroup;
 			children = (
+				43519B4F180AB3C80068A070 /* Main_iPhone.storyboard */,
+				43519B52180AB3C80068A070 /* Main_iPad.storyboard */,
 				431973881811072E0006B2B2 /* UTRadialButtonView.h */,
 				431973891811072E0006B2B2 /* UTRadialButtonView.m */,
 				43DDDC05181CC79200205322 /* UTPlotView.h */,
@@ -127,6 +126,8 @@
 		4319738D181108790006B2B2 /* Controller */ = {
 			isa = PBXGroup;
 			children = (
+				43519B4C180AB3C80068A070 /* UTAppDelegate.h */,
+				43519B4D180AB3C80068A070 /* UTAppDelegate.m */,
 				43519B82180BF6E40068A070 /* UTGCPViewController.h */,
 				43519B83180BF6E40068A070 /* UTGCPViewController.m */,
 				43ABF0A6180EB5310040A21B /* UTInfoViewController.h */,
@@ -170,12 +171,6 @@
 			isa = PBXGroup;
 			children = (
 				43519B81180BF6B90068A070 /* GCP */,
-				43519B4C180AB3C80068A070 /* UTAppDelegate.h */,
-				43519B4D180AB3C80068A070 /* UTAppDelegate.m */,
-				43519B4F180AB3C80068A070 /* Main_iPhone.storyboard */,
-				43519B52180AB3C80068A070 /* Main_iPad.storyboard */,
-				43519B55180AB3C80068A070 /* UTViewController.h */,
-				43519B56180AB3C80068A070 /* UTViewController.m */,
 				43519B58180AB3C80068A070 /* Images.xcassets */,
 				43519B44180AB3C80068A070 /* Supporting Files */,
 			);
@@ -328,7 +323,6 @@
 				4319738A1811072E0006B2B2 /* UTRadialButtonView.m in Sources */,
 				43519B4A180AB3C80068A070 /* main.m in Sources */,
 				43519B7E180BB9F50068A070 /* UTGCP.m in Sources */,
-				43519B57180AB3C80068A070 /* UTViewController.m in Sources */,
 				43519B4E180AB3C80068A070 /* UTAppDelegate.m in Sources */,
 				43DDDC07181CC79200205322 /* UTPlotView.m in Sources */,
 				43519B84180BF6E40068A070 /* UTGCPViewController.m in Sources */,

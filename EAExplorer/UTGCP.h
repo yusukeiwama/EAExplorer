@@ -9,13 +9,14 @@
 #import <Foundation/Foundation.h>
 
 #define HC_NO_IMPROVEMENT_LIMIT 100
+
 #define IHC_ITERATION
 
 typedef enum UTGCPAlgorithm {
-	UTGCPAlgorithmHillClimbing = 1,
-	UTGCPAlgorithmHC = UTGCPAlgorithmHillClimbing,
+	UTGCPAlgorithmHillClimbing         = 1,
+	UTGCPAlgorithmHC                   = UTGCPAlgorithmHillClimbing,
 	UTGCPAlgorithmIteratedHillClimbing = 2,
-	UTGCPAlgorithmIHC = UTGCPAlgorithmIteratedHillClimbing
+	UTGCPAlgorithmIHC                  = UTGCPAlgorithmIteratedHillClimbing
 } UTGCPAlgorithm;
 
 typedef enum UTGAScaling {
@@ -25,42 +26,35 @@ typedef enum UTGAScaling {
 	UTGAScalingPower
 } UTGAScaling;
 
-/**
- Graph Coloring Problem generator
- */
 @interface UTGCP : NSObject
 
-@property (readonly) NSUInteger numberOfVertices;
-@property (readonly) NSUInteger numberOfEdges;
-@property (readonly) NSUInteger numberOfColors;
+@property (nonatomic, readonly) int numberOfVertices;
+@property (nonatomic, readonly) int numberOfEdges;
+@property (nonatomic, readonly) int numberOfColors;
 
-@property (readonly) NSUInteger *adjacencyMatrix;
-@property (readonly) NSUInteger *randomIndexMap;
-@property (readonly) NSUInteger *colorNumbers;
-@property (readonly) NSUInteger *conflictVertexFlags;
+@property (nonatomic, readonly) int *adjacencyMatrix;
+@property (nonatomic, readonly) int *randomIndexMap;
+@property (nonatomic, readonly) int *colorNumbers;
+@property (nonatomic, readonly) int *conflictVertexFlags;
 
-@property (readonly) BOOL solved;
+@property (nonatomic, readonly) BOOL solved;
 
 /// number of calculation of the number of conflict. it is used in assessment of algorithms.
-@property NSUInteger numberOfCalculations;
+@property (nonatomic, readonly) int numberOfCalculations;
 
-// @property (readonly) NSUInteger numberOfTraials;
+// @property (readonly) int numberOfTraials;
 
-
-/* Graph Coloring Problem Generator ================================ */
-/** 
- designated initializer
- 
- @param v number of vertices
- @param c number of colors
- */
-- (id)initWithNumberOfVertices:(NSUInteger)v numberOfEdges:(NSUInteger)e numberOfColors:(NSUInteger)c;
-+ (id)GCPWithNumberOfVertices:(NSUInteger)v numberOfEdges:(NSUInteger)e numberOfColors:(NSUInteger)c;
+- (id)initWithNumberOfVertices:(int)numberOfVertices
+                 numberOfEdges:(int)numberOfEdges
+                numberOfColors:(int)numberOfColors;
++ (id)GCPWithNumberOfVertices:(int)numberOfVertices
+                numberOfEdges:(int)numberOfEdges
+               numberOfColors:(int)numberOfColors;
 
 // Check if there's no conflict
 - (BOOL)verify;
 
-- (NSUInteger)conflictCount;
+- (int)numberOfConflicts;
 
 /* Algorithms ====================================================== */
 /** 
@@ -68,20 +62,20 @@ typedef enum UTGAScaling {
  @param noImprovementLimit Number of no-improvement generation to abort.
  @return History of conflict count for each generation. 
  */
-- (NSArray *)solveInHCWithNoImprovementLimit:(NSUInteger)limit;
+- (NSArray *)solveInHCWithNoImprovementLimit:(int)limit;
 
 /** 
  solve in Iterated Hill Climbing method. 
  */
-- (NSArray *)solveInIHCWithNoImprovementLimit:(NSUInteger)limit maxIteration:(NSUInteger)maxIteration;
+- (NSArray *)solveInIHCWithNoImprovementLimit:(int)limit maxIteration:(int)maxIteration;
 
 /** 
  solve in Evolutionary Computation (a.k.a. EC). returns YES if succeeds 
  */
 - (NSArray *)solveInESIncludeParents:(BOOL)includeParents
-					 numberOfParents:(NSUInteger)numberOfParents
-					numberOfChildren:(NSUInteger)numberOfChildren
-				  maxNumberOfGenerations:(NSUInteger)maxNumberOfGenerations;
+					 numberOfParents:(int)numberOfParents
+					numberOfChildren:(int)numberOfChildren
+				  maxNumberOfGenerations:(int)maxNumberOfGenerations;
 
 /**
  Solve in Genetic Algorithm.
@@ -92,12 +86,12 @@ typedef enum UTGAScaling {
  @param numberOfElites Number of elite to be selected as next generation. If it is greater than the number of gene loci - 1, number of gene loci - 1 will be used.
  @param maxNumberOfGenerations Max number of generations.
  */
-- (NSArray *)solveInGAWithPopulationSize:(NSUInteger)populationSize
-					  numberOfCrossovers:(NSUInteger)numberOfCrossovers // 0 ... uniform
+- (NSArray *)solveInGAWithPopulationSize:(int)populationSize
+					  numberOfCrossovers:(int)numberOfCrossovers // 0 ... uniform
 							mutationRate:(double)mutationRate
 								 scaling:(UTGAScaling)scaling
-						  numberOfElites:(NSUInteger)numberOfElites
-				  maxNumberOfGenerations:(NSUInteger)maxNumberOfGenerations;
+						  numberOfElites:(int)numberOfElites
+				  maxNumberOfGenerations:(int)maxNumberOfGenerations;
 
 /**
  Solve in Hill Climbing & Genetic Hibrid Algorithm. Fast convergence.
@@ -109,14 +103,14 @@ typedef enum UTGAScaling {
  @param noImprovementLimit Number of no-improvement generation to abort.
  @param maxNumberOfGenerations Max number of generations.
  */
-- (NSArray *)solveInHGAWithPopulationSize:(NSUInteger)populationSize
-					   numberOfCrossovers:(NSUInteger)numberOfCrossovers
+- (NSArray *)solveInHGAWithPopulationSize:(int)populationSize
+					   numberOfCrossovers:(int)numberOfCrossovers
 							 mutationRate:(double)mutationRate
 								  scaling:(UTGAScaling)scaling
-						   numberOfElites:(NSUInteger)numberOfElites
-					numberOfChildrenForHC:(NSUInteger)numberOfChildrenForHC
-					   noImprovementLimit:(NSUInteger)limit
-				   maxNumberOfGenerations:(NSUInteger)maxNumberOfGenerations;
+						   numberOfElites:(int)numberOfElites
+					numberOfChildrenForHC:(int)numberOfChildrenForHC
+					   noImprovementLimit:(int)limit
+				   maxNumberOfGenerations:(int)maxNumberOfGenerations;
 
 - (BOOL)solving;
 
