@@ -22,7 +22,7 @@
 		43519B62180AB3C80068A070 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 43519B41180AB3C80068A070 /* UIKit.framework */; };
 		43519B6A180AB3C80068A070 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 43519B68180AB3C80068A070 /* InfoPlist.strings */; };
 		43519B6C180AB3C80068A070 /* EAExplorerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 43519B6B180AB3C80068A070 /* EAExplorerTests.m */; };
-		43519B7E180BB9F50068A070 /* UTGCP.m in Sources */ = {isa = PBXBuildFile; fileRef = 43519B7D180BB9F50068A070 /* UTGCP.m */; };
+		43519B7E180BB9F50068A070 /* USKGCP.m in Sources */ = {isa = PBXBuildFile; fileRef = 43519B7D180BB9F50068A070 /* USKGCP.m */; };
 		43519B84180BF6E40068A070 /* UTGCPViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 43519B83180BF6E40068A070 /* UTGCPViewController.m */; };
 		43519B86180C9BE20068A070 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 43519B85180C9BE20068A070 /* QuartzCore.framework */; };
 		43AA8B72180D47280039D227 /* UTStopwatch.m in Sources */ = {isa = PBXBuildFile; fileRef = 43AA8B71180D47280039D227 /* UTStopwatch.m */; };
@@ -61,8 +61,8 @@
 		43519B67180AB3C80068A070 /* EAExplorerTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "EAExplorerTests-Info.plist"; sourceTree = "<group>"; };
 		43519B69180AB3C80068A070 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		43519B6B180AB3C80068A070 /* EAExplorerTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = EAExplorerTests.m; sourceTree = "<group>"; };
-		43519B7C180BB9F50068A070 /* UTGCP.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UTGCP.h; sourceTree = "<group>"; };
-		43519B7D180BB9F50068A070 /* UTGCP.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UTGCP.m; sourceTree = "<group>"; };
+		43519B7C180BB9F50068A070 /* USKGCP.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = USKGCP.h; sourceTree = "<group>"; };
+		43519B7D180BB9F50068A070 /* USKGCP.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = USKGCP.m; sourceTree = "<group>"; };
 		43519B82180BF6E40068A070 /* UTGCPViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UTGCPViewController.h; sourceTree = "<group>"; };
 		43519B83180BF6E40068A070 /* UTGCPViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UTGCPViewController.m; sourceTree = "<group>"; };
 		43519B85180C9BE20068A070 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
@@ -115,8 +115,8 @@
 		4319738C181108730006B2B2 /* Model */ = {
 			isa = PBXGroup;
 			children = (
-				43519B7C180BB9F50068A070 /* UTGCP.h */,
-				43519B7D180BB9F50068A070 /* UTGCP.m */,
+				43519B7C180BB9F50068A070 /* USKGCP.h */,
+				43519B7D180BB9F50068A070 /* USKGCP.m */,
 				43AA8B70180D47280039D227 /* UTStopwatch.h */,
 				43AA8B71180D47280039D227 /* UTStopwatch.m */,
 			);
@@ -265,7 +265,7 @@
 				ORGANIZATIONNAME = "College of Information Science, University of Tsukuba";
 				TargetAttributes = {
 					43519B39180AB3C70068A070 = {
-						DevelopmentTeam = RM3N4N4RRF;
+						DevelopmentTeam = VV4XJ6D4G4;
 					};
 					43519B5D180AB3C80068A070 = {
 						TestTargetID = 43519B39180AB3C70068A070;
@@ -322,7 +322,7 @@
 				43ABF0A8180EB5310040A21B /* UTInfoViewController.m in Sources */,
 				4319738A1811072E0006B2B2 /* UTRadialButtonView.m in Sources */,
 				43519B4A180AB3C80068A070 /* main.m in Sources */,
-				43519B7E180BB9F50068A070 /* UTGCP.m in Sources */,
+				43519B7E180BB9F50068A070 /* USKGCP.m in Sources */,
 				43519B4E180AB3C80068A070 /* UTAppDelegate.m in Sources */,
 				43DDDC07181CC79200205322 /* UTPlotView.m in Sources */,
 				43519B84180BF6E40068A070 /* UTGCPViewController.m in Sources */,

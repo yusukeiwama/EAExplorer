@@ -6,36 +6,36 @@
 //  Copyright (c) 2013 College of Information Science, University of Tsukuba. All rights reserved.
 //
 
-#import "UTGCP.h"
+#import "USKGCP.h"
 
-static int order;
+static int indexForNumConflicts; // = n. Used for C function.
 
-int conflictCountCompare(const int *a, const int *b)
+int conflictCountCompare(const void *a, const void *b)
 {
-	return ((int *)(*a))[order] - ((int *)(*b))[order];
+	return (*(int **)a)[indexForNumConflicts] - (*(int **)b)[indexForNumConflicts];
 }
 
-@implementation UTGCP {
-	int *crossoverMask;
+@implementation USKGCP {
+    int *_conflictVertexFlags;
+	int *_crossoverMask;
 }
 
 /*
  CAUTION:
- n, m, ...
- provides direct access to the instance variables. It's not safe for future reuse
- in which KVC is required. But now, to keep convenience for maintainance, 
- direct access is being used.
+ n, m, c, A
+ provides direct access to the instance variables in a single character.
+ It's not safe for future reuse in which KVC is required.
+ But now, to keep convenience for maintainance, direct access is being used.
  */
-// Fundamental Information for a GCP.
-@synthesize numberOfVertices = n; // The size of a problem.
-@synthesize numberOfEdges    = m; // The number of constraints in a problem.
+// Fundamental Information for this COP(Combinatorial Optimization Problem).
+@synthesize numberOfVertices = n; // The number of variables this problem has.
+@synthesize numberOfEdges    = m; // The number of constraints in this problem.
 @synthesize numberOfColors   = c; // The number of possible values that variables can be.
 
-// Generated Information for a GCP.
+// Generated Information for this GCP.
 @synthesize adjacencyMatrix  = A;
-@synthesize randomIndexMap;
-@synthesize colorNumbers;
-@synthesize conflictVertexFlags;
+@synthesize colorNumbers     = C;
+
 @synthesize solved;
 @synthesize numberOfCalculations;
 
@@ -50,13 +50,14 @@ int conflictCountCompare(const int *a, const int *b)
         m = numberOfEdges;
 		c = numberOfColors;
 
-		order = numberOfVertices;
+		indexForNumConflicts = n;
 
 		A = calloc(n * n, sizeof(int));
-		colorNumbers			= calloc(n,     sizeof(int));
-		conflictVertexFlags		= calloc(n,     sizeof(int));
-		randomIndexMap			= calloc(n,     sizeof(int));
-		crossoverMask			= calloc(n,     sizeof(int));
+		C = calloc(n, sizeof(int));
+        
+		_conflictVertexFlags = calloc(n, sizeof(int));
+		_randomIndexMap		 = calloc(n, sizeof(int));
+		_crossoverMask	     = calloc(n, sizeof(int));
 		
 		[self generateAdjacencyMatrix];
         [self generateRandomIndexMap];
@@ -69,7 +70,7 @@ int conflictCountCompare(const int *a, const int *b)
                 numberOfEdges:(int)numberOfEdges
                numberOfColors:(int)numberOfColors
 {
-	return [[UTGCP alloc] initWithNumberOfVertices:numberOfVertices
+	return [[USKGCP alloc] initWithNumberOfVertices:numberOfVertices
                                      numberOfEdges:numberOfEdges
                                     numberOfColors:numberOfColors];
 }
@@ -132,7 +133,7 @@ int conflictCountCompare(const int *a, const int *b)
     // Generate random index map by choosing a value from ordered index map randomly.
     for (int i = 0; i < n; i++) {
         int r = (n - i) * (double)rand() / (RAND_MAX + 1.0);
-        randomIndexMap[i] = orderedIndexMap[r];
+        _randomIndexMap[i] = orderedIndexMap[r];
         // Overwrite used value in the range with the unused value out of the range.
         orderedIndexMap[r] = orderedIndexMap[(n -1) - i];
     }
@@ -141,9 +142,9 @@ int conflictCountCompare(const int *a, const int *b)
 - (BOOL)verify
 {
 	for (int i = 0; i < n - 1; i++) {
-		int colorNumber = colorNumbers[i];
+		int colorNumber = C[i];
 		for (int j = i + 1; j < n; j++) {
-			if (A[i * n + j] && colorNumbers[j] == colorNumber) {
+			if (A[i * n + j] && C[j] == colorNumber) {
                 return NO;
 			}
 		}
@@ -152,18 +153,30 @@ int conflictCountCompare(const int *a, const int *b)
 	return YES;
 }
 
-- (int)numberOfConflicts
-{
-	return [self numberOfConflictsWithColorNumbers:colorNumbers];
-}
 
-- (int)numberOfConflictsWithColorNumbers:(int *)numbers
+- (int)numberOfConflicts
 {
 	int numConflicts = 0;
     
 	for (int i = 0; i < n - 1; i++) {
 		for (int j = i + 1; j < n; j++) {
-			if (A[i * n + j] && numbers[i] == numbers[j]) {
+			if (A[i * n + j] && C[i] == C[j]) {
+				numConflicts++;
+			}
+		}
+	}
+	
+	numberOfCalculations++;
+	return numConflicts;
+}
+
+- (int)numberOfConflictsWithColorNumbers:(int *)colorNo
+{
+	int numConflicts = 0;
+    
+	for (int i = 0; i < n - 1; i++) {
+		for (int j = i + 1; j < n; j++) {
+			if (A[i * n + j] && colorNo[i] == colorNo[j]) {
 				numConflicts++;
 			}
 		}
@@ -175,18 +188,42 @@ int conflictCountCompare(const int *a, const int *b)
 
 - (void)updateConflictIndices
 {
-    [self updateConflictVertexFlagsWithColorNumbers:colorNumbers];
+	// clear conflict indices to 0
+	for (int i = 0; i < n - 1; i++) {
+		for (int j = i + 1; j < n; j++) {
+            _conflictVertexFlags[i] = 0;
+		}
+	}
+	
+	// set conflict indices
+	for (int i = 0; i < n - 1; i++) {
+		for (int j = i + 1; j < n; j++) {
+			if (A[i * n + j]
+				&& C[i] == C[j]) {
+				// conflict occurs between i and j
+				_conflictVertexFlags[i] = 1;
+				_conflictVertexFlags[j] = 1;
+			}
+		}
+	}
 }
 
 - (void)updateConflictVertexFlagsWithColorNumbers:(int *)numbers
 {
+	// clear conflict indices to 0
+	for (int i = 0; i < n - 1; i++) {
+		_conflictVertexFlags[i] = 0;
+	}
+	
+	// set conflict indices
 	for (int i = 0; i < n - 1; i++) {
 		for (int j = i + 1; j < n; j++) {
-			if (A[i * n + j] && numbers[i] == numbers[j]) {
-				conflictVertexFlags[i] = conflictVertexFlags[j] = 1;
-			} else {
-                conflictVertexFlags[i] = conflictVertexFlags[j] = 0;
-            }
+			if (A[i * n + j]	// if vertex i and j are adjacent
+				&& numbers[i] == numbers[j]) {	// and their colors are the same
+				// conflict occurs between i and j
+				_conflictVertexFlags[i] = 1;
+				_conflictVertexFlags[j] = 1;
+			}
 		}
 	}
 }
@@ -212,7 +249,7 @@ int conflictCountCompare(const int *a, const int *b)
 		// if noImprovementCount exceeds its limit, end HC.
 		if (noImprovementCount > limit) { // fail to solve
 			if (newConflictCount < beforeConflictCount) {
-				memcpy(colorNumbers, newColorNumbers, n * sizeof(int));
+				memcpy(C, newColorNumbers, n * sizeof(int));
 			}
 			return conflictHistory;
 		}
@@ -221,13 +258,13 @@ int conflictCountCompare(const int *a, const int *b)
 		[self updateConflictVertexFlagsWithColorNumbers:newColorNumbers];
 		int numberOfConflictVertices = 0;
 		for (int i = 0; i < n; i++) {
-			numberOfConflictVertices += conflictVertexFlags[i]; // count the number of conflict vetices.
+			numberOfConflictVertices += _conflictVertexFlags[i]; // count the number of conflict vetices.
 		}
 		int targetConflictVertexOrder = numberOfConflictVertices * (double)rand() / (RAND_MAX + 1.0) + 1;
 		int targetConflictVertexIndex = 0;
 		int conflictVertexOrder = 0;
 		for (int i = 0; i < n; i++) {
-			conflictVertexOrder += conflictVertexFlags[i];
+			conflictVertexOrder += _conflictVertexFlags[i];
 			if (conflictVertexOrder == targetConflictVertexOrder) { // did find target conflict vertex
 				break;
 			}
@@ -238,7 +275,7 @@ int conflictCountCompare(const int *a, const int *b)
 		int minConflictCount = newConflictCount;
 		int unchangedColorConflictCount = newConflictCount;
 		int unchangedTargetColorNumber = newColorNumbers[targetConflictVertexIndex];
-		int canditateColorNumbers[c - 1];
+		int canditateColorNumbers[c - 1]; 
 		for (int i = 0; i < c - 1; i++) {
 			canditateColorNumbers[i] = -1; // initialize canditate color numbers with -1 (none)
 		}
@@ -282,7 +319,7 @@ int conflictCountCompare(const int *a, const int *b)
 		[conflictHistory addObject:@(newConflictCount)];
 	}
 	
-	memcpy(colorNumbers, newColorNumbers, n * sizeof(int));
+	memcpy(C, newColorNumbers, n * sizeof(int));
 	return conflictHistory;
 }
 
@@ -311,7 +348,7 @@ int conflictCountCompare(const int *a, const int *b)
 //	// Back-up before-state
 	int beforeConflictCount = [self numberOfConflicts];
 	int *beforeConflictColorNumbers = calloc(n, sizeof(int));
-	memcpy(beforeConflictColorNumbers, colorNumbers, n * sizeof(int));
+	memcpy(beforeConflictColorNumbers, C, n * sizeof(int));
 	
 	NSMutableArray *conflictHistory = [NSMutableArray array];
 	int aveConflictCount = 0;
@@ -348,10 +385,10 @@ int conflictCountCompare(const int *a, const int *b)
 		if (numberOfGenerations >= maxNumberOfGenerations) { // fail to solve
 			if (tempMinConflictCount > beforeConflictCount) { // not improved...
 				// If there's no improvement compared with before-state, restore before-state.
-				memcpy(colorNumbers, beforeConflictColorNumbers, n * sizeof(int));
+				memcpy(C, beforeConflictColorNumbers, n * sizeof(int));
 			} else { // improved!
 				// copy the best parent to colorNumbers
-				memcpy(colorNumbers, genes[0], n * sizeof(int));
+				memcpy(C, genes[0], n * sizeof(int));
 			}
 			break;
 		}
@@ -359,7 +396,7 @@ int conflictCountCompare(const int *a, const int *b)
 		// generate children
 		for (int i = numberOfParents; i < numberOfParents + numberOfChildren; i++) {
 			memcpy(genes[i], genes[(int)(numberOfParents * (double)rand() / (RAND_MAX + 1.0))], n * sizeof(int)); // select a parent as a child
-			NSInteger targetIndex = n * (double)rand() / (RAND_MAX + 1.0); // mutate random index
+			int targetIndex = n * (double)rand() / (RAND_MAX + 1.0); // mutate random index
 			int tmpColorNumber = genes[i][targetIndex];
 			while (tmpColorNumber == genes[i][targetIndex]) { // mutate color at the index into random but different color
 				genes[i][targetIndex] = c * (double)rand() / (RAND_MAX + 1.0);
@@ -403,7 +440,7 @@ int conflictCountCompare(const int *a, const int *b)
 	}
 	
 	if (tempMinConflictCount == 0) { // success
-		memcpy(colorNumbers, genes[0], sizeof(int) * n);
+		memcpy(C, genes[0], sizeof(int) * n);
 	}
 	free(beforeConflictColorNumbers);
 	for (int i = 0; i < numberOfParents + numberOfChildren; i++) {
@@ -463,14 +500,14 @@ int conflictCountCompare(const int *a, const int *b)
 		
 		// 2-a. End Judgement (SUCCESS)
 		if (parents[0][n] == 0) { // no conflict, success
-			memcpy(colorNumbers, parents[0], n * sizeof(int));
+			memcpy(C, parents[0], n * sizeof(int));
 			break;
 		}
 		// 2-b. End Judgement (FAILURE)
 		if (numberOfGeneration >= maxNumberOfGenerations) {
 			// compare old color number and new color number
 			if ([self numberOfConflictsWithColorNumbers:parents[0]] < [self numberOfConflicts]) { // improved
-				memcpy(colorNumbers, children[0], n * sizeof(int));
+				memcpy(C, children[0], n * sizeof(int));
 			}
 			break;
 		}
@@ -512,12 +549,12 @@ int conflictCountCompare(const int *a, const int *b)
 		
 		// 5-a. Generate crossover mask
 		for (int i = 0; i < n; i++) { // initialize
-			crossoverMask[i] = 0;
+			_crossoverMask[i] = 0;
 		}
 		switch (numberOfCrossovers) {
 			case 0: // uniform crossover
 				for (int i = 0; i < n; i++) {
-					crossoverMask[i] = 2.0 * (double)rand() / (RAND_MAX + 1.0); // 0 or 1
+					_crossoverMask[i] = 2.0 * (double)rand() / (RAND_MAX + 1.0); // 0 or 1
 				}
 				break;
 			default: // n-time crossover
@@ -525,22 +562,22 @@ int conflictCountCompare(const int *a, const int *b)
 				int crossover = 0;
 				while (crossover != numberOfCrossovers) {
 					int crossoverIndex = (int)((n - 1) * (double)rand() / (RAND_MAX + 1.0) + 1); // prevent 0
-					if (crossoverMask[crossoverIndex] == 0) {
-						crossoverMask[crossoverIndex] = 1;
+					if (_crossoverMask[crossoverIndex] == 0) {
+						_crossoverMask[crossoverIndex] = 1;
 						crossover++;
 					};
 				}
-				int currentMask = crossoverMask[0];
+				int currentMask = _crossoverMask[0];
 				for (int i = 1; i < n; i++) {
-					if (crossoverMask[i] == 1) { // change mask at this point
-						if (crossoverMask[i-1] == 0) {
+					if (_crossoverMask[i] == 1) { // change mask at this point
+						if (_crossoverMask[i-1] == 0) {
 							currentMask = 1;
 						} else {
-							crossoverMask[i] = 0;
+							_crossoverMask[i] = 0;
 							currentMask = 0;
 						}
 					} else {
-						crossoverMask[i] = currentMask;
+						_crossoverMask[i] = currentMask;
 					}
 				}
 				break;
@@ -577,13 +614,13 @@ int conflictCountCompare(const int *a, const int *b)
 			// 5-b. Crossover
 			for (int j = 0; j < n; j++) {
 				if (i+1 >= populationSize) {
-					if (crossoverMask[i] == 0) {
+					if (_crossoverMask[i] == 0) {
 						children[i][j] = parents[winIndex1][j];
 					} else {
 						children[i][j] = parents[winIndex2][j];
 					}
 				} else {
-					if (crossoverMask[i] == 0) {
+					if (_crossoverMask[i] == 0) {
 						children[i	][j]	= parents[winIndex1][j];
 						children[i+1][j]	= parents[winIndex2][j];
 					} else {
@@ -690,7 +727,7 @@ int conflictCountCompare(const int *a, const int *b)
 		
 		// 2-a. End Judgement (SUCCESS)
 		if (parents[0][n] == 0) { // no conflict, success
-			memcpy(colorNumbers, parents[0], n * sizeof(int));
+			memcpy(C, parents[0], n * sizeof(int));
 			break;
 		}
 
@@ -698,7 +735,7 @@ int conflictCountCompare(const int *a, const int *b)
 			|| eliteDidChange == NO) {
 			// compare old color number and new color number
 			if ([self numberOfConflictsWithColorNumbers:parents[0]] < [self numberOfConflicts]) { // improved
-				memcpy(colorNumbers, children[0], n * sizeof(int));
+				memcpy(C, children[0], n * sizeof(int));
 			}
 			break;
 		}
@@ -740,12 +777,12 @@ int conflictCountCompare(const int *a, const int *b)
 		
 		// 5-a. Generate crossover mask
 		for (int i = 0; i < n; i++) { // initialize
-			crossoverMask[i] = 0;
+			_crossoverMask[i] = 0;
 		}
 		switch (numberOfCrossovers) {
 			case 0: // uniform crossover
 				for (int i = 0; i < n; i++) {
-					crossoverMask[i] = 2.0 * (double)rand() / (RAND_MAX + 1.0); // 0 or 1
+					_crossoverMask[i] = 2.0 * (double)rand() / (RAND_MAX + 1.0); // 0 or 1
 				}
 				break;
 			default: // n-time crossover
@@ -753,22 +790,22 @@ int conflictCountCompare(const int *a, const int *b)
 				int crossover = 0;
 				while (crossover != numberOfCrossovers) {
 					int crossoverIndex = (int)((n - 1) * (double)rand() / (RAND_MAX + 1.0) + 1); // prevent 0
-					if (crossoverMask[crossoverIndex] == 0) {
-						crossoverMask[crossoverIndex] = 1;
+					if (_crossoverMask[crossoverIndex] == 0) {
+						_crossoverMask[crossoverIndex] = 1;
 						crossover++;
 					};
 				}
-				int currentMask = crossoverMask[0];
+				int currentMask = _crossoverMask[0];
 				for (int i = 1; i < n; i++) {
-					if (crossoverMask[i] == 1) { // change mask at this point
-						if (crossoverMask[i-1] == 0) {
+					if (_crossoverMask[i] == 1) { // change mask at this point
+						if (_crossoverMask[i-1] == 0) {
 							currentMask = 1;
 						} else {
-							crossoverMask[i] = 0;
+							_crossoverMask[i] = 0;
 							currentMask = 0;
 						}
 					} else {
-						crossoverMask[i] = currentMask;
+						_crossoverMask[i] = currentMask;
 					}
 				}
 				break;
@@ -805,13 +842,13 @@ int conflictCountCompare(const int *a, const int *b)
 			// 5-b. Crossover
 			for (int j = 0; j < n; j++) {
 				if (i+1 >= populationSize) {
-					if (crossoverMask[i] == 0) {
+					if (_crossoverMask[i] == 0) {
 						children[i][j] = parents[winIndex1][j];
 					} else {
 						children[i][j] = parents[winIndex2][j];
 					}
 				} else {
-					if (crossoverMask[i] == 0) {
+					if (_crossoverMask[i] == 0) {
 						children[i	][j]	= parents[winIndex1][j];
 						children[i+1][j]	= parents[winIndex2][j];
 					} else {
@@ -849,7 +886,7 @@ int conflictCountCompare(const int *a, const int *b)
 		for (int i = 0; i < numberOfChildrenForHC; i++) {
 			[self applyHCWithNoImprovementLimit:limit colorNumbers:children[i]];
 			if (children[i][n] == 0) {
-				memcpy(colorNumbers, children[i], n * sizeof(int));
+				memcpy(C, children[i], n * sizeof(int));
 				
 				fitnessInfo = @[@1.0,
 								@([fitnessInfo[1] doubleValue]),
@@ -903,7 +940,7 @@ int conflictCountCompare(const int *a, const int *b)
 	}
 		
 	// 2. end judgement
-//	[conflictHistory addObject:[NSNumber numberWithUnsignedInteger:newColorNumbers[_n]]];
+//	[conflictHistory addObject:[NSNumber numberWithUnsignedinteger:newColorNumbers[_n]]];
 	while (newColorNumbers[n]) {
 		// if noImprovementCount exceeds its limit, end HC.
 		if (noImprovementCount > limit) { // fail to solve
@@ -915,13 +952,13 @@ int conflictCountCompare(const int *a, const int *b)
 		[self updateConflictVertexFlagsWithColorNumbers:newColorNumbers];
 		int numberOfConflictVertices = 0;
 		for (int i = 0; i < n; i++) {
-			numberOfConflictVertices += conflictVertexFlags[i]; // count the number of conflict vetices.
+			numberOfConflictVertices += _conflictVertexFlags[i]; // count the number of conflict vetices.
 		}
 		int targetConflictVertexOrder = numberOfConflictVertices * (double)rand() / (RAND_MAX + 1.0) + 1;
 		int targetConflictVertexIndex = 0;
 		int conflictVertexOrder = 0;
 		for (int i = 0; i < n; i++) {
-			conflictVertexOrder += conflictVertexFlags[i];
+			conflictVertexOrder += _conflictVertexFlags[i];
 			if (conflictVertexOrder == targetConflictVertexOrder) { // did find target conflict vertex
 				break;
 			}
@@ -973,7 +1010,7 @@ int conflictCountCompare(const int *a, const int *b)
 			newColorNumbers[n] = minConflictCount;
 		}
 		generation++;
-//		[conflictHistory addObject:[NSNumber numberWithUnsignedInteger:newColorNumbers[_n]]];
+//		[conflictHistory addObject:[NSNumber numberWithUnsignedinteger:newColorNumbers[_n]]];
 	}
 	
 	// if succeeded, update colorNumbers
@@ -990,7 +1027,7 @@ int conflictCountCompare(const int *a, const int *b)
 {
 	int editedAmount = 0;
 	for (int i = 0; i < n; i++) {
-		editedAmount += colorNumbers[i];
+		editedAmount += C[i];
 	}
 	if (editedAmount) { // If color numbers are changed, this problem is being solved.
 //		if ([self verify]) { // If the problem has already been solved, it is regarded as solved
@@ -1016,10 +1053,10 @@ int conflictCountCompare(const int *a, const int *b)
 - (void)dealloc
 {
 	free(A);
-	free(colorNumbers);
-	free(conflictVertexFlags);
-	free(randomIndexMap);
-	free(crossoverMask);
+	free(C);
+	free(_conflictVertexFlags);
+	free(_randomIndexMap);
+	free(_crossoverMask);
 }
 
 @end

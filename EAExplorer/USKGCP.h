@@ -26,7 +26,7 @@ typedef enum UTGAScaling {
 	UTGAScalingPower
 } UTGAScaling;
 
-@interface UTGCP : NSObject
+@interface USKGCP : NSObject
 
 @property (nonatomic, readonly) int numberOfVertices;
 @property (nonatomic, readonly) int numberOfEdges;
@@ -35,9 +35,9 @@ typedef enum UTGAScaling {
 @property (nonatomic, readonly) int *adjacencyMatrix;
 @property (nonatomic, readonly) int *randomIndexMap;
 @property (nonatomic, readonly) int *colorNumbers;
-@property (nonatomic, readonly) int *conflictVertexFlags;
 
-@property (nonatomic, readonly) BOOL solved;
+@property (nonatomic, readonly, getter = isSolved) BOOL solved;
+- (BOOL)solving;
 
 /// number of calculation of the number of conflict. it is used in assessment of algorithms.
 @property (nonatomic, readonly) int numberOfCalculations;
@@ -112,7 +112,6 @@ typedef enum UTGAScaling {
 					   noImprovementLimit:(int)limit
 				   maxNumberOfGenerations:(int)maxNumberOfGenerations;
 
-- (BOOL)solving;
 
 - (void)printMatrix;
 

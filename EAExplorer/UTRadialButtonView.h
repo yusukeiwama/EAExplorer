@@ -10,7 +10,7 @@
 
 @protocol UTRadialButtonViewProtocol <NSObject>
 
-- (void)radialButtonActionWithIndex:(NSUInteger)i sender:(id)sender;
+- (void)radialButtonActionWithIndex:(int)i sender:(id)sender;
 
 @end
 

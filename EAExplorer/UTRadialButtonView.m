@@ -65,7 +65,7 @@
 
 - (void)buttonAction:(id)sender
 {
-	NSUInteger i = [buttons indexOfObject:sender];
+	int i = (int)[buttons indexOfObject:sender];
 	[delegate radialButtonActionWithIndex:i sender:self];
 }
 

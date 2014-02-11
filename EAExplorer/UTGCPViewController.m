@@ -27,6 +27,26 @@ typedef enum ExperimentMode {
 
 @interface UTGCPViewController ()
 
+@property (weak, nonatomic) IBOutlet UILabel *titleLabel;
+@property (weak, nonatomic) IBOutlet UIView  *graphView;
+
+@property (weak, nonatomic) IBOutlet UIImageView *edgeImageView;
+@property (weak, nonatomic) IBOutlet UIImageView *circleImageView;
+
+@property (weak, nonatomic) IBOutlet UILabel    *resultLabel;
+
+@property (weak, nonatomic) IBOutlet UTPlotView *plotView;
+@property (weak, nonatomic) IBOutlet UILabel    *generationLabel;
+
+@property (weak, nonatomic) IBOutlet UITextField *numberOfColorsField;
+@property (weak, nonatomic) IBOutlet UITextField *numberOfVerticesField;
+@property (weak, nonatomic) IBOutlet UITextField *numberOfEdgesField;
+
+@property (weak, nonatomic) IBOutlet UIButton *generateButton;
+@property (weak, nonatomic) IBOutlet UIButton *verificationButton;
+
+@property (weak, nonatomic) IBOutlet UIActivityIndicatorView *indicator;
+
 @end
 
 @implementation UTGCPViewController {
@@ -39,9 +59,9 @@ typedef enum ExperimentMode {
 	UTRadialButtonView *radialButtonView;
 	
 	// Graph information
-	NSUInteger numberOfColors;
-	NSUInteger numberOfVertices;
-	NSUInteger numberOfEdges;
+	int numberOfColors;
+	int numberOfVertices;
+	int numberOfEdges;
 }
 
 @synthesize showVertexNumber;
@@ -108,7 +128,7 @@ typedef enum ExperimentMode {
 	[self.view bringSubviewToFront:resultLabel];
 	
 	plotView.delegate = self;
-	
+    
 	showVertexNumber = YES;
 	
 	[self generateNewGCP];
@@ -117,7 +137,7 @@ typedef enum ExperimentMode {
 		// general experiment settings
 		NSArray *plotDataArray;
 		NSMutableString *resultCSVString = [NSMutableString string];
-		NSUInteger numberOfExperimentsForEachCondition = 10;
+		int numberOfExperimentsForEachCondition = 10;
 		BOOL sparse = YES;
 		
 		// prepare output file
@@ -129,7 +149,7 @@ typedef enum ExperimentMode {
 			case ExperimentModeHC:
 			{
 				outputPath = [documentDir stringByAppendingPathComponent:@"resultHC.csv"];
-				NSUInteger noImprovementLimit = 100;
+				int noImprovementLimit = 100;
 				[resultCSVString appendString:@"seed,noImprovementLimit,maxIteration,numberOfVertices,numberOfEdges,experimentNo,success\n"];
 			HC:
 				for (numberOfVertices = 30; numberOfVertices <= 150; numberOfVertices += 30) { // 5 patterns
@@ -139,7 +159,7 @@ typedef enum ExperimentMode {
 						numberOfEdges	= numberOfVertices * (numberOfVertices - 1) / 4;
 					}
 					[self generateNewGCP];
-					for (NSInteger i = 0; i < numberOfExperimentsForEachCondition; i++) {
+					for (int i = 0; i < numberOfExperimentsForEachCondition; i++) {
 						plotDataArray = [self.gcp solveInHCWithNoImprovementLimit:noImprovementLimit];
 						[self saveConflictHistory:plotDataArray
 										 fileName:[NSString stringWithFormat:@"conflictHistoryInHCWithSd%dLmt%luV%dE%dNo%d.txt", SEED, (unsigned long)noImprovementLimit, numberOfVertices, numberOfEdges, i]];
@@ -155,8 +175,8 @@ typedef enum ExperimentMode {
 			case ExperimentModeIHC:
 			{
 				outputPath = [documentDir stringByAppendingPathComponent:@"resultIHC.csv"];
-				NSUInteger noImprovementLimit = 100;
-				NSUInteger maxIteration = 5;
+				int noImprovementLimit = 100;
+				int maxIteration = 5;
 			IHC:
 				for (numberOfVertices = 30; numberOfVertices <= 150; numberOfVertices += 30) { // 5 patterns
 					if (sparse) { // sparse
@@ -165,7 +185,7 @@ typedef enum ExperimentMode {
 						numberOfEdges	= numberOfVertices * (numberOfVertices - 1) / 4;
 					}
 					[self generateNewGCP];
-					for (NSInteger i = 0; i < numberOfExperimentsForEachCondition; i++) {
+					for (int i = 0; i < numberOfExperimentsForEachCondition; i++) {
 						plotDataArray = [self.gcp solveInIHCWithNoImprovementLimit:noImprovementLimit maxIteration:maxIteration];
 						[self saveConflictHistory:plotDataArray
 										 fileName:[NSString stringWithFormat:@"conflictHistoryInIHCWithSd%dLmt%luIt%dV%dE%dNo%d.txt", SEED, (unsigned long)noImprovementLimit, maxIteration, numberOfVertices, numberOfEdges, i]];
@@ -191,13 +211,13 @@ typedef enum ExperimentMode {
 					}
 					[self generateNewGCP];
 					
-					for (NSUInteger g = 40; g <= 200; g += 40) { // 5 patterns
-						//								for (NSUInteger p = 40; p <= 200; p += 40) { // 5 patterns
-						NSUInteger p = 80;
-						//									for (NSUInteger k = 2; k <= 10; k += 2) { // 5 patterns
-						NSUInteger k = 8;
-						for (NSInteger i = 0; i < numberOfExperimentsForEachCondition; i++) {
-							NSUInteger c = p * k;
+					for (int g = 40; g <= 200; g += 40) { // 5 patterns
+						//								for (int p = 40; p <= 200; p += 40) { // 5 patterns
+						int p = 80;
+						//									for (int k = 2; k <= 10; k += 2) { // 5 patterns
+						int k = 8;
+						for (int i = 0; i < numberOfExperimentsForEachCondition; i++) {
+							int c = p * k;
 							plotDataArray = [self.gcp solveInESIncludeParents:NO numberOfParents:p numberOfChildren:c maxNumberOfGenerations:g];
 							[self saveConflictHistory:plotDataArray
 											 fileName:[NSString stringWithFormat:@"conflictHistoryInESWithSd%dGen%ldP%ldC%ldIn%dV%ldE%ldNo%ld.txt", SEED, (unsigned long)g, (unsigned long)p, (unsigned long)c, NO, (unsigned long)numberOfVertices, (unsigned long)numberOfEdges, (unsigned long)i]];
@@ -226,13 +246,13 @@ typedef enum ExperimentMode {
 						numberOfEdges	= numberOfVertices * (numberOfVertices - 1) / 4;
 					}
 					[self generateNewGCP];
-					for (NSUInteger g = 40; g <= 200; g += 40) { // 5 patterns
-						//								for (NSUInteger p = 40; p <= 200; p += 40) { // 5 patterns
-						NSUInteger p = 80;
-						//									for (NSUInteger k = 2; k <= 10; k += 2) { // 5 patterns
-						NSUInteger k = 8;
-						NSUInteger c = p * k;
-						for (NSUInteger i = 0; i < numberOfExperimentsForEachCondition; i++) {
+					for (int g = 40; g <= 200; g += 40) { // 5 patterns
+						//								for (int p = 40; p <= 200; p += 40) { // 5 patterns
+						int p = 80;
+						//									for (int k = 2; k <= 10; k += 2) { // 5 patterns
+						int k = 8;
+						int c = p * k;
+						for (int i = 0; i < numberOfExperimentsForEachCondition; i++) {
 							plotDataArray = [self.gcp solveInESIncludeParents:YES numberOfParents:p numberOfChildren:c maxNumberOfGenerations:g];
 							[self saveConflictHistory:plotDataArray
 											 fileName:[NSString stringWithFormat:@"conflictHistoryInESplusWithSd%dGen%ldP%ldC%ldIn%dV%ldE%ldNo%ld.txt", SEED, (unsigned long)g, (unsigned long)p, (unsigned long)c, YES, (unsigned long)numberOfVertices, (unsigned long)numberOfEdges, (unsigned long)i]];
@@ -261,13 +281,13 @@ typedef enum ExperimentMode {
 						numberOfEdges	= numberOfVertices * (numberOfVertices - 1) / 4;
 					}
 					[self generateNewGCP];
-					NSUInteger p = 100; // best: 100
-					NSUInteger c = 0; // uniform crossover
+					int p = 100; // best: 100
+					int c = 0; // uniform crossover
 					double m = 0.01; // best: 1%
 					UTGAScaling s = UTGAScalingLinear; // best: Linear
-					NSUInteger e = p * 0.1; // best: 10%
-					NSUInteger mg = 200; // best: 200
-					for (NSUInteger i = 0; i < numberOfExperimentsForEachCondition; i++) {
+					int e = p * 0.1; // best: 10%
+					int mg = 200; // best: 200
+					for (int i = 0; i < numberOfExperimentsForEachCondition; i++) {
 						plotDataArray = [self.gcp solveInGAWithPopulationSize:p numberOfCrossovers:c mutationRate:m scaling:s numberOfElites:e maxNumberOfGenerations:mg];
 						[self saveConflictHistory:plotDataArray
 										 fileName:[NSString stringWithFormat:@"GAResultWithSd%dPop%ldCrs%ldMut%1.3fSc%dElt%ldMxGen%ldGen%ldV%ldE%ldNo%ldFit%1.3f.txt", SEED, (unsigned long)p, (unsigned long)c, m, s, (unsigned long)e, (unsigned long)mg, (unsigned long)(plotDataArray.count), (unsigned long)numberOfVertices, (unsigned long)numberOfEdges, (unsigned long)i,  [(NSNumber *)((plotDataArray.lastObject)[0]) doubleValue]]];
@@ -307,18 +327,18 @@ typedef enum ExperimentMode {
 	if ([history[0] isKindOfClass:[NSArray class]]) {
 		switch (experimentMode) {
 			case ExperimentModeGA:
-				for (NSUInteger i = 0; i < history.count; i++) {
+				for (int i = 0; i < history.count; i++) {
 					[stringRepresentationOfConflictHistory appendFormat:@"%1.3f, %1.3f, %1.3f\n", [history[i][0] doubleValue], [history[i][1] doubleValue], [history[i][2] doubleValue]];
 				}
 				break;
 			default:
-				for (NSUInteger i = 0; i < history.count; i++) {
+				for (int i = 0; i < history.count; i++) {
 					[stringRepresentationOfConflictHistory appendFormat:@"%lu, %lu, %lu\n", (unsigned long)[history[i][0] unsignedIntegerValue], (unsigned long)[history[i][1] unsignedIntegerValue], (unsigned long)[history[i][2] unsignedIntegerValue]];
 				}
 				break;
 		}
 	} else {
-		for (NSUInteger i = 0; i < history.count; i++) {
+		for (int i = 0; i < history.count; i++) {
 			[stringRepresentationOfConflictHistory appendFormat:@"%lu\n", (unsigned long)[history[i] unsignedIntegerValue]];
 		}
 	}
@@ -420,13 +440,13 @@ typedef enum ExperimentMode {
 {
 	
 	UIButton *button = sender;
-	NSInteger i = [vertexButtons indexOfObject:sender];
+	int i = (int)[vertexButtons indexOfObject:sender];
 	self.gcp.colorNumbers[i] = (self.gcp.colorNumbers[i] + 1) % self.gcp.numberOfColors;
 	[button setBackgroundColor:[self colorWithTapCount:self.gcp.colorNumbers[i]]]; // change color with tap count
 	ConflictCountLabel.text = [NSString stringWithFormat:@"%lu Conflicts", (unsigned long)[self.gcp numberOfConflicts]];
 }
 
-- (UIColor *)colorWithTapCount:(NSUInteger)t
+- (UIColor *)colorWithTapCount:(int)t
 {
 	switch (t) {
 		case 0: return [UIColor colorWithRed:1.0 green:0.5 blue:0.5 alpha:1.0]; // red
@@ -453,7 +473,7 @@ typedef enum ExperimentMode {
 	}
 
 	// alart when solving
-	if (self.gcp.solved || self.gcp.solving == NO) {
+	if (self.gcp.isSolved || self.gcp.solving == NO) {
 		[indicator startAnimating];
 //		if (radialButtonView.selectingMenus) { // hide radial menus when generate button action occurs
 //			[radialButtonView hideMenus];
@@ -472,7 +492,7 @@ typedef enum ExperimentMode {
 - (void)generateNewGCP
 {
 	// Generate a new Graph Coloring Problem.
-	self.gcp = [[UTGCP alloc] initWithNumberOfVertices:numberOfVertices numberOfEdges:numberOfEdges numberOfColors:numberOfColors];
+	self.gcp = [[USKGCP alloc] initWithNumberOfVertices:numberOfVertices numberOfEdges:numberOfEdges numberOfColors:numberOfColors];
 	[self updateGraphView];
 	ConflictCountLabel.text = [NSString stringWithFormat:@"%lu Conflicts", (unsigned long)[self.gcp numberOfConflicts]];
 
@@ -498,7 +518,7 @@ typedef enum ExperimentMode {
 - (IBAction)verificationButtonAction:(id)sender {
 	NSTimeInterval t = stopwatch.time;
 	BOOL shouldUpdateStopwatchLabel;
-	if (self.gcp.solved == NO) {
+	if (self.gcp.isSolved == NO) {
 		shouldUpdateStopwatchLabel = YES;
 	}
 	BOOL OK = [self.gcp verify];
@@ -535,8 +555,8 @@ typedef enum ExperimentMode {
 
 - (void)updateVertexButtonLabels
 {
-	for (NSUInteger i = 0; i < [vertexButtons count]; i++) {
-		NSUInteger r = 0;
+	for (int i = 0; i < [vertexButtons count]; i++) {
+		int r = 0;
 		for (r = 0; r < self.gcp.numberOfVertices; r++) {
 			if (i == self.gcp.randomIndexMap[r]) {
 				break;
@@ -581,9 +601,9 @@ typedef enum ExperimentMode {
 {
 	[textField resignFirstResponder];
 	
-	numberOfColors = [numberOfColorsField.text integerValue];		// number of colors
-	numberOfVertices = [numberOfVerticesField.text integerValue];	// number of vertices
-	numberOfEdges = [numberOfEdgesField.text integerValue];			// number of edges
+	numberOfColors   = (int)[numberOfColorsField.text integerValue];		// number of colors
+	numberOfVertices = (int)[numberOfVerticesField.text integerValue];	// number of vertices
+	numberOfEdges    = (int)[numberOfEdgesField.text integerValue];			// number of edges
 	
 	// check c
 	if (numberOfColors < 2) { // 2 <= c <= 8
@@ -620,44 +640,44 @@ typedef enum ExperimentMode {
 	destinationViewController.delegate = self;
 }
 
-- (void)radialButtonActionWithIndex:(NSUInteger)i sender:(id)sender
+- (void)radialButtonActionWithIndex:(int)i sender:(id)sender
 {
 	// for HC
-	NSUInteger noImprovementLimit = 1000;	// OPTIMIZED
+	int noImprovementLimit = 1000;	// OPTIMIZED
 	
 	// for IHC
-	NSUInteger maxIteration = 10;	// OPTIMIZED
+	int maxIteration = 10;	// OPTIMIZED
 	
 	// for ES
-	NSUInteger numberOfParents = 80;	// OPTIMIZED
-	NSUInteger numberOfChildren = numberOfParents * 8;	// OPTIMIZED
-	NSUInteger maxNumberOfGenerationsES = 160;	// OPTIMIZED
-	NSUInteger maxNumberOfGenerationsESplus = 120;	// OPTIMIZED
+	int numberOfParents = 80;	// OPTIMIZED
+	int numberOfChildren = numberOfParents * 8;	// OPTIMIZED
+	int maxNumberOfGenerationsES = 160;	// OPTIMIZED
+	int maxNumberOfGenerationsESplus = 120;	// OPTIMIZED
 	
 	// for GA
-	NSUInteger populationSize = 100;	// OPTIMIZED
+	int populationSize = 100;	// OPTIMIZED
 //	populationSize = 50;
-	NSUInteger numberOfCrossovers = 0; // if 0, uniform crossover will be used.	// OPTIMIZED
+	int numberOfCrossovers = 0; // if 0, uniform crossover will be used.	// OPTIMIZED
 	double mutationRate = 0.01;	// OPTIMIZED
 //	mutationRate = 0.014;
 	UTGAScaling scaling = UTGAScalingLinear;	// OPTIMIZED
 //	double eliteRate = 0.10;	// OPTIMIZED
-	NSUInteger numberOfElites = 1; // REQUIRED in this experiment.
+	int numberOfElites = 1; // REQUIRED in this experiment.
 //	numberOfElites = 0;
 //	numberOfElites = populationSize * eliteRate;
-	NSUInteger maxNumberOfGenerationsGA = 1000;	// OPTIMIZED
+	int maxNumberOfGenerationsGA = 1000;	// OPTIMIZED
 	
 	// for HGA
-	NSUInteger populationSizeHGA = 100;
-	NSUInteger noImprovementLimitHGA = 100;
+	int populationSizeHGA = 100;
+	int noImprovementLimitHGA = 100;
 	double mutationRateHGA = 0.01;
 //	double eliteRateHGA = 0.02;
-//	NSUInteger numberOfElitesHGA = populationSizeHGA * eliteRateHGA;
+//	int numberOfElitesHGA = populationSizeHGA * eliteRateHGA;
 	UTGAScaling scalingHGA = UTGAScalingNone;
-	NSUInteger numberOfElitesHGA = 1;
+	int numberOfElitesHGA = 1;
 	double HCRate = 0.05;
-	NSUInteger numberOfChildrenForHC = populationSizeHGA * HCRate;
-	NSUInteger maxNumberOfGenerationsHGA = 300;
+	int numberOfChildrenForHC = populationSizeHGA * HCRate;
+	int maxNumberOfGenerationsHGA = 300;
 		
 	// for plot
 	NSArray *plotData;
