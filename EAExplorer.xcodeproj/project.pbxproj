@@ -28,6 +28,7 @@
 		43AA8B72180D47280039D227 /* UTStopwatch.m in Sources */ = {isa = PBXBuildFile; fileRef = 43AA8B71180D47280039D227 /* UTStopwatch.m */; };
 		43ABF0A8180EB5310040A21B /* UTInfoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 43ABF0A7180EB5310040A21B /* UTInfoViewController.m */; };
 		43DDDC07181CC79200205322 /* UTPlotView.m in Sources */ = {isa = PBXBuildFile; fileRef = 43DDDC06181CC79200205322 /* UTPlotView.m */; };
+		43FA38CD18AAF3340050065F /* USKQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = 43FA38CC18AAF3340050065F /* USKQueue.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -72,6 +73,8 @@
 		43ABF0A7180EB5310040A21B /* UTInfoViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UTInfoViewController.m; sourceTree = "<group>"; };
 		43DDDC05181CC79200205322 /* UTPlotView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UTPlotView.h; sourceTree = "<group>"; };
 		43DDDC06181CC79200205322 /* UTPlotView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UTPlotView.m; sourceTree = "<group>"; };
+		43FA38CB18AAF3340050065F /* USKQueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = USKQueue.h; sourceTree = "<group>"; };
+		43FA38CC18AAF3340050065F /* USKQueue.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = USKQueue.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -117,6 +120,8 @@
 			children = (
 				43519B7C180BB9F50068A070 /* USKGCP.h */,
 				43519B7D180BB9F50068A070 /* USKGCP.m */,
+				43FA38CB18AAF3340050065F /* USKQueue.h */,
+				43FA38CC18AAF3340050065F /* USKQueue.m */,
 				43AA8B70180D47280039D227 /* UTStopwatch.h */,
 				43AA8B71180D47280039D227 /* UTStopwatch.m */,
 			);
@@ -326,6 +331,7 @@
 				43519B4E180AB3C80068A070 /* UTAppDelegate.m in Sources */,
 				43DDDC07181CC79200205322 /* UTPlotView.m in Sources */,
 				43519B84180BF6E40068A070 /* UTGCPViewController.m in Sources */,
+				43FA38CD18AAF3340050065F /* USKQueue.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -463,7 +469,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_OPTIMIZATION_LEVEL = fast;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "EAExplorer/EAExplorer-Prefix.pch";
 				INFOPLIST_FILE = "EAExplorer/EAExplorer-Info.plist";

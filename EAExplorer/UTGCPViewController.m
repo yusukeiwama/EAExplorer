@@ -22,7 +22,8 @@ typedef enum ExperimentMode {
 	ExperimentModeIHC,
 	ExperimentModeES,
 	ExperimentModeESplus,
-	ExperimentModeGA
+	ExperimentModeGA,
+    ExperimentModeHGA,
 } ExperimentMode;
 
 @interface UTGCPViewController ()
@@ -89,7 +90,7 @@ typedef enum ExperimentMode {
 {
     [super viewDidLoad];
 
-	experimentMode = ExperimentModeSeed;
+	experimentMode = ExperimentModeHGA;
 	
 	stopwatch = [[UTStopwatch alloc] init];
 	timerTimeInterval = 1.0;
@@ -141,7 +142,7 @@ typedef enum ExperimentMode {
 		BOOL sparse = YES;
 		
 		// prepare output file
-		NSArray *filePaths = NSSearchPathForDirectoriesInDomains(NSDocumentationDirectory, NSUserDomainMask, YES);
+		NSArray *filePaths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
 		NSString *documentDir = filePaths[0];
 		NSString *outputPath;
 		
@@ -300,10 +301,50 @@ typedef enum ExperimentMode {
 				}
 				break;
 			}
+            case ExperimentModeHGA:
+			{
+				outputPath = [documentDir stringByAppendingPathComponent:@"resultHGA.csv"];
+				[resultCSVString appendString:@"sd,pop,crs,mut,sc,elt,mxgen,gen,vtx,edge,no,fit\n"];
+			HGAEXPERIMENT:
+				for (numberOfVertices = 30; numberOfVertices <= 150; numberOfVertices += 30) { // change vertices(5 patterns)
+					if (sparse) { // sparse
+						numberOfEdges	= 3 * numberOfVertices;
+					} else { // dense
+						numberOfEdges	= numberOfVertices * (numberOfVertices - 1) / 4;
+					}
+					[self generateNewGCP];
+					int p = 100; // best: 100
+					int c = 0; // uniform crossover
+					double m = 0.01; // best: 1%
+					UTGAScaling s = UTGAScalingLinear; // best: Linear
+					int e = p * 0.1; // best: 10%
+					int mg = 200; // best: 200
+					for (int i = 0; i < numberOfExperimentsForEachCondition; i++) {
+						plotDataArray = [self.gcp solveInHGAWithPopulationSize:100
+                                                                          numberOfCrossovers:0
+                                                                                mutationRate:0.01
+                                                                                     scaling:UTGAScalingNone
+                                                                              numberOfElites:1
+                                                                       numberOfChildrenForHC:5
+                                                                          noImprovementLimit:100
+                                                                      maxNumberOfGenerations:300];
+
+						[self saveConflictHistory:plotDataArray
+										 fileName:[NSString stringWithFormat:@"HGAResultWithSd%dPop%ldCrs%ldMut%1.3fSc%dElt%ldMxGen%ldGen%ldV%ldE%ldNo%ldFit%1.3f.txt", SEED, (unsigned long)p, (unsigned long)c, m, s, (unsigned long)e, (unsigned long)mg, (unsigned long)(plotDataArray.count), (unsigned long)numberOfVertices, (unsigned long)numberOfEdges, (unsigned long)i,  [(NSNumber *)((plotDataArray.lastObject)[0]) doubleValue]]];
+						[resultCSVString appendFormat:@"%d,%ld,%ld,%1.3f,%d,%ld,%ld,%ld,%ld,%ld,%ld,%1.3f\n", SEED, (unsigned long)p, (unsigned long)c, m, s, (unsigned long)e, (unsigned long)mg, (unsigned long)(plotDataArray.count), (unsigned long)numberOfVertices, (unsigned long)numberOfEdges, (unsigned long)i, [(NSNumber *)((plotDataArray.lastObject)[0]) doubleValue]];
+					}
+				}
+				if (sparse) { // change density(2 patterns)
+					sparse = NO;
+					goto HGAEXPERIMENT;
+				}
+				break;
+			}
 			default:
 			{
 				break;
 			}
+                
 		}
 		// save csv file
 		if (experimentMode != ExperimentModeSeed) {
@@ -432,7 +473,7 @@ typedef enum ExperimentMode {
 {
 	for (int i = 0; i < self.gcp.numberOfVertices; i++) {
 		UIButton *aButton = vertexButtons[i];
-		[aButton setBackgroundColor:[self colorWithTapCount:self.gcp.colorNumbers[i]]];
+		[aButton setBackgroundColor:[self colorWithTapCount:self.gcp.currentColoring[i]]];
 	}
 }
 
@@ -441,8 +482,8 @@ typedef enum ExperimentMode {
 	
 	UIButton *button = sender;
 	int i = (int)[vertexButtons indexOfObject:sender];
-	self.gcp.colorNumbers[i] = (self.gcp.colorNumbers[i] + 1) % self.gcp.numberOfColors;
-	[button setBackgroundColor:[self colorWithTapCount:self.gcp.colorNumbers[i]]]; // change color with tap count
+	self.gcp.currentColoring[i] = (self.gcp.currentColoring[i] + 1) % self.gcp.numberOfColors;
+	[button setBackgroundColor:[self colorWithTapCount:self.gcp.currentColoring[i]]]; // change color with tap count
 	ConflictCountLabel.text = [NSString stringWithFormat:@"%lu Conflicts", (unsigned long)[self.gcp numberOfConflicts]];
 }
 
@@ -492,7 +533,7 @@ typedef enum ExperimentMode {
 - (void)generateNewGCP
 {
 	// Generate a new Graph Coloring Problem.
-	self.gcp = [[USKGCP alloc] initWithNumberOfVertices:numberOfVertices numberOfEdges:numberOfEdges numberOfColors:numberOfColors];
+	self.gcp = [[USKGCP alloc] initWithNumberOfColors:numberOfColors vertices:numberOfVertices edges:numberOfEdges];
 	[self updateGraphView];
 	ConflictCountLabel.text = [NSString stringWithFormat:@"%lu Conflicts", (unsigned long)[self.gcp numberOfConflicts]];
 
@@ -718,14 +759,14 @@ typedef enum ExperimentMode {
 //			NSLog(@"%@\n%@", [fitnessHistory[0] description], [fitnessHistory[1] description]);
 			break;
 		case 5: // HGA
-			plotData = [self.gcp solveInHGAWithPopulationSize:populationSizeHGA
-									  numberOfCrossovers:numberOfCrossovers
-											mutationRate:mutationRateHGA
-												 scaling:scalingHGA
-										  numberOfElites:numberOfElitesHGA
-								   numberOfChildrenForHC:numberOfChildrenForHC
-									  noImprovementLimit:noImprovementLimitHGA
-								  maxNumberOfGenerations:maxNumberOfGenerationsHGA];
+			plotData = [self.gcp solveInHGAWithPopulationSize:100
+									  numberOfCrossovers:0
+											mutationRate:0.01
+												 scaling:UTGAScalingNone
+										  numberOfElites:1
+								   numberOfChildrenForHC:5
+									  noImprovementLimit:100
+								  maxNumberOfGenerations:300];
 			[plotView multiplePlotWithX:nil Y:plotData type:UTYTypeDouble];
 			break;
 		default:

@@ -8,12 +8,29 @@
 
 #import "USKGCP.h"
 
-static int indexForNumConflicts; // = n. Used for C function.
+static int indexForConflicts; // = n. Used for C function.
 
-int conflictCountCompare(const void *a, const void *b)
+int countConflicts(USKGCPColoringRef c, int n, int *A)
 {
-	return (*(int **)a)[indexForNumConflicts] - (*(int **)b)[indexForNumConflicts];
+    int numConflicts = 0;
+    
+    for (int i = 0; i < n; i++) {
+        for (int j = i + 1; j < n; j++) {
+            // Count the number of pairs that are adjacent and the same color.
+            if (A[i * n + j] == 1 && c[i] == c[j]) {
+                numConflicts++;
+            }
+        }
+    }
+    
+    return numConflicts;
+};
+
+int compareConflicts(const void *a, const void *b)
+{
+	return (*((USKGCPColoringRef *)a))[indexForConflicts] - (*((USKGCPColoringRef *)b))[indexForConflicts];
 }
+
 
 @implementation USKGCP {
     int *_conflictVertexFlags;
@@ -22,59 +39,58 @@ int conflictCountCompare(const void *a, const void *b)
 
 /*
  CAUTION:
- n, m, c, A
+ c, n, m, A
  provides direct access to the instance variables in a single character.
  It's not safe for future reuse in which KVC is required.
  But now, to keep convenience for maintainance, direct access is being used.
  */
 // Fundamental Information for this COP(Combinatorial Optimization Problem).
-@synthesize numberOfVertices = n; // The number of variables this problem has.
-@synthesize numberOfEdges    = m; // The number of constraints in this problem.
 @synthesize numberOfColors   = c; // The number of possible values that variables can be.
+@synthesize numberOfVertices = n; // The number of variables this problem has.(a.k.a. order in graph theory.)
+@synthesize numberOfEdges    = m; // The number of constraints in this problem. (a.k.a. size in graph theory.)
 
 // Generated Information for this GCP.
 @synthesize adjacencyMatrix  = A;
-@synthesize colorNumbers     = C;
 
 @synthesize solved;
 @synthesize numberOfCalculations;
 
 // @synthesize numberOfTraials;
 
-- (id)initWithNumberOfVertices:(int)numberOfVertices
-                 numberOfEdges:(int)numberOfEdges
-                numberOfColors:(int)numberOfColors
+- (id)initWithNumberOfColors:(int)numColors vertices:(int)numVertices edges:(int)numEdges
 {
 	if (self = [super init]) {
-		n = numberOfVertices;
-        m = numberOfEdges;
-		c = numberOfColors;
-
-		indexForNumConflicts = n;
-
-		A = calloc(n * n, sizeof(int));
-		C = calloc(n, sizeof(int));
+        c = numColors;
+		n = numVertices;
+        m = numEdges;
         
-		_conflictVertexFlags = calloc(n, sizeof(int));
-		_randomIndexMap		 = calloc(n, sizeof(int));
-		_crossoverMask	     = calloc(n, sizeof(int));
+		indexForConflicts = n;
+
+		A = calloc(n * n, sizeof(int)); // Adjacency matrix.
+		
+        _currentColoring     = calloc(n + 1, sizeof(int));
+		_conflictVertexFlags = calloc(n,     sizeof(int));
+		_randomIndexMap		 = calloc(n,     sizeof(int));
+		_crossoverMask	     = calloc(n,     sizeof(int));
 		
 		[self generateAdjacencyMatrix];
         [self generateRandomIndexMap];
+        [self reInitializeColoring];
 	}
 	
 	return self;
 }
 
-+ (id)GCPWithNumberOfVertices:(int)numberOfVertices
-                numberOfEdges:(int)numberOfEdges
-               numberOfColors:(int)numberOfColors
++ (id)GCPWithNumberOfColors:(int)numColors vertices:(int)numVertices edges:(int)numEdges
 {
-	return [[USKGCP alloc] initWithNumberOfVertices:numberOfVertices
-                                     numberOfEdges:numberOfEdges
-                                    numberOfColors:numberOfColors];
+	return [[USKGCP alloc] initWithNumberOfColors:numColors vertices:numVertices edges:numEdges];
 }
 
+- (void)reInitializeColoring
+{
+    bzero(_currentColoring, n * sizeof(int));
+    _currentColoring[n] = countConflicts(_currentColoring, n, A);
+}
 
 - (void)generateAdjacencyMatrix
 {
@@ -142,9 +158,9 @@ int conflictCountCompare(const void *a, const void *b)
 - (BOOL)verify
 {
 	for (int i = 0; i < n - 1; i++) {
-		int colorNumber = C[i];
+		int colorNumber = _currentColoring[i];
 		for (int j = i + 1; j < n; j++) {
-			if (A[i * n + j] && C[j] == colorNumber) {
+			if (A[i * n + j] && _currentColoring[j] == colorNumber) {
                 return NO;
 			}
 		}
@@ -160,7 +176,7 @@ int conflictCountCompare(const void *a, const void *b)
     
 	for (int i = 0; i < n - 1; i++) {
 		for (int j = i + 1; j < n; j++) {
-			if (A[i * n + j] && C[i] == C[j]) {
+			if (A[i * n + j] && _currentColoring[i] == _currentColoring[j]) {
 				numConflicts++;
 			}
 		}
@@ -199,7 +215,7 @@ int conflictCountCompare(const void *a, const void *b)
 	for (int i = 0; i < n - 1; i++) {
 		for (int j = i + 1; j < n; j++) {
 			if (A[i * n + j]
-				&& C[i] == C[j]) {
+				&& _currentColoring[i] == _currentColoring[j]) {
 				// conflict occurs between i and j
 				_conflictVertexFlags[i] = 1;
 				_conflictVertexFlags[j] = 1;
@@ -249,7 +265,7 @@ int conflictCountCompare(const void *a, const void *b)
 		// if noImprovementCount exceeds its limit, end HC.
 		if (noImprovementCount > limit) { // fail to solve
 			if (newConflictCount < beforeConflictCount) {
-				memcpy(C, newColorNumbers, n * sizeof(int));
+				memcpy(_currentColoring, newColorNumbers, n * sizeof(int));
 			}
 			return conflictHistory;
 		}
@@ -319,7 +335,7 @@ int conflictCountCompare(const void *a, const void *b)
 		[conflictHistory addObject:@(newConflictCount)];
 	}
 	
-	memcpy(C, newColorNumbers, n * sizeof(int));
+	memcpy(_currentColoring, newColorNumbers, n * sizeof(int));
 	return conflictHistory;
 }
 
@@ -348,7 +364,7 @@ int conflictCountCompare(const void *a, const void *b)
 //	// Back-up before-state
 	int beforeConflictCount = [self numberOfConflicts];
 	int *beforeConflictColorNumbers = calloc(n, sizeof(int));
-	memcpy(beforeConflictColorNumbers, C, n * sizeof(int));
+	memcpy(beforeConflictColorNumbers, _currentColoring, n * sizeof(int));
 	
 	NSMutableArray *conflictHistory = [NSMutableArray array];
 	int aveConflictCount = 0;
@@ -369,7 +385,7 @@ int conflictCountCompare(const void *a, const void *b)
 	aveConflictCount /= numberOfParents;
 
 	// sort parents
-	qsort(genes, numberOfParents, sizeof(int *), (int(*)(const void *, const void *))conflictCountCompare);
+	qsort(genes, numberOfParents, sizeof(int *), (int(*)(const void *, const void *))compareConflicts);
 	int tempMinConflictCount = genes[0][n];
 	NSArray *conflictInfo = @[@(genes[0][n]),
 							  @(aveConflictCount),
@@ -385,10 +401,10 @@ int conflictCountCompare(const void *a, const void *b)
 		if (numberOfGenerations >= maxNumberOfGenerations) { // fail to solve
 			if (tempMinConflictCount > beforeConflictCount) { // not improved...
 				// If there's no improvement compared with before-state, restore before-state.
-				memcpy(C, beforeConflictColorNumbers, n * sizeof(int));
+				memcpy(_currentColoring, beforeConflictColorNumbers, n * sizeof(int));
 			} else { // improved!
 				// copy the best parent to colorNumbers
-				memcpy(C, genes[0], n * sizeof(int));
+				memcpy(_currentColoring, genes[0], n * sizeof(int));
 			}
 			break;
 		}
@@ -406,10 +422,10 @@ int conflictCountCompare(const void *a, const void *b)
 
 		if (includeParents) {
 			// sort children and parents
-			qsort(genes, numberOfParents + numberOfChildren, sizeof(int *), (int(*)(const void *, const void *))conflictCountCompare);
+			qsort(genes, numberOfParents + numberOfChildren, sizeof(int *), (int(*)(const void *, const void *))compareConflicts);
 		} else {
 			// sort children
-			qsort(genes + numberOfParents, numberOfChildren, sizeof(int *), (int(*)(const void *, const void *))conflictCountCompare);
+			qsort(genes + numberOfParents, numberOfChildren, sizeof(int *), (int(*)(const void *, const void *))compareConflicts);
 			
 			// select good children as parents
 			for (int i = 0; i < numberOfParents; i++) {
@@ -440,7 +456,7 @@ int conflictCountCompare(const void *a, const void *b)
 	}
 	
 	if (tempMinConflictCount == 0) { // success
-		memcpy(C, genes[0], sizeof(int) * n);
+		memcpy(_currentColoring, genes[0], sizeof(int) * n);
 	}
 	free(beforeConflictColorNumbers);
 	for (int i = 0; i < numberOfParents + numberOfChildren; i++) {
@@ -483,7 +499,7 @@ int conflictCountCompare(const void *a, const void *b)
 		parents[i][n] = [self numberOfConflictsWithColorNumbers:parents[i]]; // put conflictCount into the last element
 	}
 	// sort parents by conflictCounts in ascending order.
-	qsort(parents, populationSize, sizeof(int *), (int(*)(const void *, const void *))conflictCountCompare);
+	qsort(parents, populationSize, sizeof(int *), (int(*)(const void *, const void *))compareConflicts);
 	
 	while (1) {
 		// 3-a. Evaluate parents (Evaluate before end judgement so that it can save fitnessHistory for each generation)
@@ -500,14 +516,14 @@ int conflictCountCompare(const void *a, const void *b)
 		
 		// 2-a. End Judgement (SUCCESS)
 		if (parents[0][n] == 0) { // no conflict, success
-			memcpy(C, parents[0], n * sizeof(int));
+			memcpy(_currentColoring, parents[0], n * sizeof(int));
 			break;
 		}
 		// 2-b. End Judgement (FAILURE)
 		if (numberOfGeneration >= maxNumberOfGenerations) {
 			// compare old color number and new color number
 			if ([self numberOfConflictsWithColorNumbers:parents[0]] < [self numberOfConflicts]) { // improved
-				memcpy(C, children[0], n * sizeof(int));
+				memcpy(_currentColoring, children[0], n * sizeof(int));
 			}
 			break;
 		}
@@ -653,7 +669,7 @@ int conflictCountCompare(const void *a, const void *b)
 		}
 		
 		// sort children by conflictCounts in ascending order.
-		qsort(children, populationSize, sizeof(int *), (int(*)(const void *, const void *))conflictCountCompare);
+		qsort(children, populationSize, sizeof(int *), (int(*)(const void *, const void *))compareConflicts);
 		
 		// change generation
 		for (int i = 0; i < populationSize; i++) {
@@ -710,7 +726,7 @@ int conflictCountCompare(const void *a, const void *b)
 		parents[i][n] = [self numberOfConflictsWithColorNumbers:parents[i]]; // put conflictCount into the last element
 	}
 	// sort parents by conflictCounts in ascending order.
-	qsort(parents, populationSize, sizeof(int *), (int(*)(const void *, const void *))conflictCountCompare);
+	qsort(parents, populationSize, sizeof(int *), (int(*)(const void *, const void *))compareConflicts);
 	
 	while (1) {
 		// 3-a. Evaluate parents (Evaluate before end judgement so that it can save fitnessHistory for each generation)
@@ -727,7 +743,7 @@ int conflictCountCompare(const void *a, const void *b)
 		
 		// 2-a. End Judgement (SUCCESS)
 		if (parents[0][n] == 0) { // no conflict, success
-			memcpy(C, parents[0], n * sizeof(int));
+			memcpy(_currentColoring, parents[0], n * sizeof(int));
 			break;
 		}
 
@@ -735,7 +751,7 @@ int conflictCountCompare(const void *a, const void *b)
 			|| eliteDidChange == NO) {
 			// compare old color number and new color number
 			if ([self numberOfConflictsWithColorNumbers:parents[0]] < [self numberOfConflicts]) { // improved
-				memcpy(C, children[0], n * sizeof(int));
+				memcpy(_currentColoring, children[0], n * sizeof(int));
 			}
 			break;
 		}
@@ -880,13 +896,13 @@ int conflictCountCompare(const void *a, const void *b)
 			children[i][n] = [self numberOfConflictsWithColorNumbers:children[i]];
 		}
 		// sort children by conflictCounts in ascending order.
-		qsort(children, populationSize, sizeof(int *), (int(*)(const void *, const void *))conflictCountCompare);
+		qsort(children, populationSize, sizeof(int *), (int(*)(const void *, const void *))compareConflicts);
 		
 		// 8. Apply Hill Climb method
 		for (int i = 0; i < numberOfChildrenForHC; i++) {
 			[self applyHCWithNoImprovementLimit:limit colorNumbers:children[i]];
 			if (children[i][n] == 0) {
-				memcpy(C, children[i], n * sizeof(int));
+				memcpy(_currentColoring, children[i], n * sizeof(int));
 				
 				fitnessInfo = @[@1.0,
 								@([fitnessInfo[1] doubleValue]),
@@ -1027,7 +1043,7 @@ int conflictCountCompare(const void *a, const void *b)
 {
 	int editedAmount = 0;
 	for (int i = 0; i < n; i++) {
-		editedAmount += C[i];
+		editedAmount += _currentColoring[i];
 	}
 	if (editedAmount) { // If color numbers are changed, this problem is being solved.
 //		if ([self verify]) { // If the problem has already been solved, it is regarded as solved
@@ -1053,7 +1069,7 @@ int conflictCountCompare(const void *a, const void *b)
 - (void)dealloc
 {
 	free(A);
-	free(C);
+	free(_currentColoring);
 	free(_conflictVertexFlags);
 	free(_randomIndexMap);
 	free(_crossoverMask);

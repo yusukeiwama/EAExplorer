@@ -7,36 +7,66 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "USKQueue.h"
 
 #define HC_NO_IMPROVEMENT_LIMIT 100
 
 #define IHC_ITERATION
 
-typedef enum UTGCPAlgorithm {
+enum UTGCPAlgorithm {
 	UTGCPAlgorithmHillClimbing         = 1,
 	UTGCPAlgorithmHC                   = UTGCPAlgorithmHillClimbing,
 	UTGCPAlgorithmIteratedHillClimbing = 2,
 	UTGCPAlgorithmIHC                  = UTGCPAlgorithmIteratedHillClimbing
-} UTGCPAlgorithm;
+};
+typedef enum _UTGCPAlgorithm UTGCPAlgorithm;
 
-typedef enum UTGAScaling {
+enum _UTGAScaling {
 	UTGAScalingNone = 0,
 	UTGAScalingLinear,
 	UTGAScalingSigma,
 	UTGAScalingPower
-} UTGAScaling;
+};
+typedef enum _UTGAScaling UTGAScaling;
+
+enum _USKGCPSolverAlgorithm {
+    USKGCPAlgorithmHC,
+    USKGCPAlgorithmIHC,
+    USKGCPAlgorithmES,
+    USKGCPAlgorithmESplus,
+    USKGCPAlgorithmGA,
+    USKGCPAlgorithmHGA
+};
+typedef enum _USKGCPSolverAlgorithm USKGCPAlgorithm;
+
+/*
+ In this GCP class, the colors of vertices are represented by a ColoringRef type,
+ which is an array of int. The size of the array is n + 1 and the last element
+ has the number of conflicts in that coloring. (n is a.k.a. the order of the graph.)
+ */
+typedef int *USKGCPColoringRef;
 
 @interface USKGCP : NSObject
 
+@property (nonatomic, readonly) int numberOfColors;
 @property (nonatomic, readonly) int numberOfVertices;
 @property (nonatomic, readonly) int numberOfEdges;
-@property (nonatomic, readonly) int numberOfColors;
 
 @property (nonatomic, readonly) int *adjacencyMatrix;
+
+@property (nonatomic, readonly) USKGCPColoringRef currentColoring;
+@property (nonatomic, readonly) int currentNumberOfConflicts; // deprecated.=> numberOfConflicts will be made
+
 @property (nonatomic, readonly) int *randomIndexMap;
-@property (nonatomic, readonly) int *colorNumbers;
 
 @property (nonatomic, readonly, getter = isSolved) BOOL solved;
+
+/*
+ Each algorithm returns the best-so-far coloring.
+ Separately, each algorithm enqueues all the colorings generated in its procedure into a log queue.
+ */
+@property (nonatomic, readonly) USKQueue *logQueue;
+
 - (BOOL)solving;
 
 /// number of calculation of the number of conflict. it is used in assessment of algorithms.
@@ -44,17 +74,23 @@ typedef enum UTGAScaling {
 
 // @property (readonly) int numberOfTraials;
 
-- (id)initWithNumberOfVertices:(int)numberOfVertices
-                 numberOfEdges:(int)numberOfEdges
-                numberOfColors:(int)numberOfColors;
-+ (id)GCPWithNumberOfVertices:(int)numberOfVertices
-                numberOfEdges:(int)numberOfEdges
-               numberOfColors:(int)numberOfColors;
+- (id)initWithNumberOfColors:(int)numColors vertices:(int)numVertices edges:(int)numEdges;
++ (id)GCPWithNumberOfColors:(int)numColors vertices:(int)numVertices edges:(int)numEdges;
+- (void)reInitializeColoring;
 
 // Check if there's no conflict
 - (BOOL)verify;
 
 - (int)numberOfConflicts;
+
+
+
+- (USKGCPColoringRef)coloringsByHillClimbingWithMaxGenerationWithoutImprovement:(int)maxGenerationWithoutImprovement
+                                                                    MaxGeneration:(int)maxGeneration;
+
+
+// Solve GCP by using a pre-tuned algorithm.
+//- (USKGCPColoringRef)coloringByAlgorithm:(USKGCPAlgorithm)alg;
 
 /* Algorithms ====================================================== */
 /** 
@@ -128,7 +164,6 @@ typedef enum UTGAScaling {
 /*
  実験したいこと
  制約密度による各アルゴリズムの特性を比較プロット
- 
  */
 
 
