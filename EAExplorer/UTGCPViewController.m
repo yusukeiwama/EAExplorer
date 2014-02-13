@@ -24,6 +24,7 @@ typedef enum ExperimentMode {
 	ExperimentModeESplus,
 	ExperimentModeGA,
     ExperimentModeHGA,
+    ExperimentModeCompare,
 } ExperimentMode;
 
 @interface UTGCPViewController ()
@@ -90,7 +91,7 @@ typedef enum ExperimentMode {
 {
     [super viewDidLoad];
 
-	experimentMode = ExperimentModeHGA;
+	experimentMode = ExperimentModeNone;
 	
 	stopwatch = [[UTStopwatch alloc] init];
 	timerTimeInterval = 1.0;
@@ -103,8 +104,8 @@ typedef enum ExperimentMode {
 	
 	// Set parameters.
 	numberOfColors		= 3;
-	numberOfVertices	= 3 * numberOfColors;
-	numberOfEdges		= 2 * numberOfVertices; // sparse
+	numberOfVertices	= 30 * numberOfColors;
+	numberOfEdges		= 3 * numberOfVertices; // sparse
 //	numberOfEdges	= numberOfVertices * (numberOfVertices - 1) / 4; // dense
 	[self updateFields]; // update fields for number of colors, vertices, edges.
 	
@@ -337,6 +338,45 @@ typedef enum ExperimentMode {
 				if (sparse) { // change density(2 patterns)
 					sparse = NO;
 					goto HGAEXPERIMENT;
+				}
+				break;
+			}
+            case ExperimentModeCompare:
+			{
+				outputPath = [documentDir stringByAppendingPathComponent:@"resultCompare.csv"];
+				[resultCSVString appendString:@"sd,pop,crs,mut,sc,elt,mxgen,gen,vtx,edge,no,fit\n"];
+			COMPARE_EXPERIMENT:
+				for (numberOfVertices = 30; numberOfVertices <= 150; numberOfVertices += 30) { // change vertices(5 patterns)
+					if (sparse) { // sparse
+						numberOfEdges	= 3 * numberOfVertices;
+					} else { // dense
+						numberOfEdges	= numberOfVertices * (numberOfVertices - 1) / 4;
+					}
+					[self generateNewGCP];
+					int p = 100; // best: 100
+					int c = 0; // uniform crossover
+					double m = 0.01; // best: 1%
+					UTGAScaling s = UTGAScalingLinear; // best: Linear
+					int e = p * 0.1; // best: 10%
+					int mg = 200; // best: 200
+					for (int i = 0; i < numberOfExperimentsForEachCondition; i++) {
+						plotDataArray = [self.gcp solveInHGAWithPopulationSize:100
+                                                            numberOfCrossovers:0
+                                                                  mutationRate:0.01
+                                                                       scaling:UTGAScalingNone
+                                                                numberOfElites:1
+                                                         numberOfChildrenForHC:5
+                                                            noImprovementLimit:100
+                                                        maxNumberOfGenerations:300];
+                        
+						[self saveConflictHistory:plotDataArray
+										 fileName:[NSString stringWithFormat:@"CompareResultWithSd%dPop%ldCrs%ldMut%1.3fSc%dElt%ldMxGen%ldGen%ldV%ldE%ldNo%ldFit%1.3f.txt", SEED, (unsigned long)p, (unsigned long)c, m, s, (unsigned long)e, (unsigned long)mg, (unsigned long)(plotDataArray.count), (unsigned long)numberOfVertices, (unsigned long)numberOfEdges, (unsigned long)i,  [(NSNumber *)((plotDataArray.lastObject)[0]) doubleValue]]];
+						[resultCSVString appendFormat:@"%d,%ld,%ld,%1.3f,%d,%ld,%ld,%ld,%ld,%ld,%ld,%1.3f\n", SEED, (unsigned long)p, (unsigned long)c, m, s, (unsigned long)e, (unsigned long)mg, (unsigned long)(plotDataArray.count), (unsigned long)numberOfVertices, (unsigned long)numberOfEdges, (unsigned long)i, [(NSNumber *)((plotDataArray.lastObject)[0]) doubleValue]];
+					}
+				}
+				if (sparse) { // change density(2 patterns)
+					sparse = NO;
+					goto COMPARE_EXPERIMENT;
 				}
 				break;
 			}

@@ -155,6 +155,18 @@ int compareConflicts(const void *a, const void *b)
     }
 }
 
+- (USKGCPColoringRef)coloringsByHillClimbingWithMaxGeneration:(int)maxGeneration
+                              maxGenerationWithoutImprovement:(int)maxGenerationWithoutImprovement
+                                 maxNumberOfCountingConflicts:(int)maxNumberOfCountingConflicts
+                            shouldReInitializeCurrentColoring:(BOOL)shouldReInitializeCurrentColoring
+{
+    if (shouldReInitializeCurrentColoring) {
+        [self reInitializeColoring];
+    }
+    
+    return NULL;
+}
+
 - (BOOL)verify
 {
 	for (int i = 0; i < n - 1; i++) {

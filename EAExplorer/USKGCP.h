@@ -84,9 +84,18 @@ typedef int *USKGCPColoringRef;
 - (int)numberOfConflicts;
 
 
-
-- (USKGCPColoringRef)coloringsByHillClimbingWithMaxGenerationWithoutImprovement:(int)maxGenerationWithoutImprovement
-                                                                    MaxGeneration:(int)maxGeneration;
+/*
+ @param maxGeneration                     The maximum number of generations to run.
+ @param maxGenerationWithoutImprovement   The maximum number of generations wihout improvement.
+ @param maxNumberOfCountingConflicts      The maximum number of times to call the function that counts the number of conflicts.
+ @param shouldReInitializeCurrentColoring If YES, solve GCP from the re-initialized state(reset and solve). If NO, solve GCP from current coloring state(resume solving).
+ 
+ @return The best-so-far coloring for this GCP.
+ */
+- (USKGCPColoringRef)coloringsByHillClimbingWithMaxGeneration:(int)maxGeneration
+                              maxGenerationWithoutImprovement:(int)maxGenerationWithoutImprovement
+                                 maxNumberOfCountingConflicts:(int)maxNumberOfCountingConflicts
+                            shouldReInitializeCurrentColoring:(BOOL)shouldReInitializeCurrentColoring;
 
 
 // Solve GCP by using a pre-tuned algorithm.
